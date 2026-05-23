@@ -7,6 +7,7 @@ import androidx.navigation.compose.rememberNavController
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.PantryRoute
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.pantryScreen
 
+
 @Composable
 fun SaveEatNavHost(modifier: Modifier = Modifier) {
     val navController = rememberNavController()
