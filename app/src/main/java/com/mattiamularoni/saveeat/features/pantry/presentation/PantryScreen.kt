@@ -40,14 +40,10 @@ import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryE
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
 import org.koin.androidx.compose.koinViewModel
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun PantryScreen(
     viewModel: PantryViewModel = koinViewModel(),
-    onNavigateToHome: () -> Unit = {},
-    onNavigateToRecipes: () -> Unit = {},
-    onNavigateToLeaderboard: () -> Unit = {},
-    onNavigateToScan: () -> Unit = {},
-    onNavigateToManualAdd: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -64,20 +60,6 @@ fun PantryScreen(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = { PantryTopBar() },
-        bottomBar = {
-            PantryBottomBar(
-                currentRoute = "pantry",
-                onNavigateToHome = onNavigateToHome,
-                onNavigateToRecipes = onNavigateToRecipes,
-                onNavigateToLeaderboard = onNavigateToLeaderboard
-            )
-        },
-        floatingActionButton = {
-            ScanFab(
-                onNavigateToScan = onNavigateToScan,
-                onNavigateToManualAdd = onNavigateToManualAdd
-            )
-        }
     ) { padding ->
         when (val state = uiState) {
             PantryUiState.Loading -> LoadingPantryContent(

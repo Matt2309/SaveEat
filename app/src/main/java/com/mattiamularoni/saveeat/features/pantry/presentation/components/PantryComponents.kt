@@ -1,20 +1,12 @@
 package com.mattiamularoni.saveeat.features.pantry.presentation.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Add
-import androidx.compose.material.icons.rounded.Home
-import androidx.compose.material.icons.rounded.Leaderboard
-import androidx.compose.material.icons.rounded.RestaurantMenu
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material.icons.rounded.ShoppingCart
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Card
@@ -22,11 +14,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -44,49 +33,6 @@ fun PantryTopBar() {
     )
 }
 
-@Composable
-fun PantryBottomBar(
-    currentRoute: String,
-    onNavigateToHome: () -> Unit,
-    onNavigateToRecipes: () -> Unit,
-    onNavigateToLeaderboard: () -> Unit
-) {
-    NavigationBar {
-        NavigationBarItem(
-            selected = currentRoute == "home",
-            onClick = onNavigateToHome,
-            icon = { Icon(Icons.Rounded.Home, contentDescription = null) },
-            label = { Text("Home") }
-        )
-        NavigationBarItem(
-            selected = currentRoute == "recipes",
-            onClick = onNavigateToRecipes,
-            icon = { Icon(Icons.Rounded.RestaurantMenu, contentDescription = null) },
-            label = { Text("Ricette") }
-        )
-        NavigationBarItem(
-            selected = currentRoute == "leaderboard",
-            onClick = onNavigateToLeaderboard,
-            icon = { Icon(Icons.Rounded.Leaderboard, contentDescription = null) },
-            label = { Text("Classifica") }
-        )
-    }
-}
-
-@Composable
-fun ScanFab(
-    onNavigateToScan: () -> Unit,
-    onNavigateToManualAdd: () -> Unit
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        FloatingActionButton(onClick = onNavigateToManualAdd) {
-            Icon(Icons.Rounded.Add, contentDescription = null)
-        }
-        FloatingActionButton(onClick = onNavigateToScan) {
-            Icon(Icons.Rounded.Search, contentDescription = null)
-        }
-    }
-}
 
 @Composable
 fun CategoryFilterRow(
