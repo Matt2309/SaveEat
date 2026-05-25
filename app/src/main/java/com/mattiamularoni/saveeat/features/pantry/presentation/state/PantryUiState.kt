@@ -1,9 +1,15 @@
 package com.mattiamularoni.saveeat.features.pantry.presentation.state
 
-import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem
+import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
+import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 
-data class PantryUiState(
-    val isLoading: Boolean = true,
-    val items: List<PantryItem> = emptyList(),
-    val errorMessage: String? = null
-)
+sealed class PantryUiState {
+    data object Loading : PantryUiState()
+
+    data class Success(
+        val items: List<PantryItem>,
+        val selectedCategory: PantryCategory
+    ) : PantryUiState()
+
+    data class Error(val message: String) : PantryUiState()
+}
