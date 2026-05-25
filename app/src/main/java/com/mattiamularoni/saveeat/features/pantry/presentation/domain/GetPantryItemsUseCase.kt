@@ -21,37 +21,38 @@ class GetPantryItemsUseCase(
     }
 
     private fun DomainPantryItem.toUiModel(): PantryItem {
-        val category = resolveCategory(name)
-        val freshnessLevel = resolveFreshness(expiresAt)
+        val freshnessLevel = resolveFreshness(expirationDate)
 
         return PantryItem(
             id = id,
             name = name,
             quantity = formatQuantity(quantity, unit),
-            expirationLabel = formatExpirationLabel(expiresAt),
+            expirationLabel = formatExpirationLabel(expirationDate),
             freshnessLevel = freshnessLevel,
             imageUrl = null,
-            category = category,
-            isPlaceholder = false
+            category = mapDomainCategory(category),
+            isPlaceholder = isPlaceholder
         )
     }
-}
 
-private fun resolveCategory(name: String): PantryCategory {
-    val normalized = name.lowercase()
-    return when {
-        listOf("milk", "latte", "yogurt", "burro", "butter", "cheese", "formaggio", "egg", "uova", "cream").any { normalized.contains(it) } ->
-            PantryCategory.FRIDGE
-        listOf("frozen", "freezer", "gelato", "ice", "surgel", "spinaci", "peas").any { normalized.contains(it) } ->
-            PantryCategory.FREEZER
-        else -> PantryCategory.PANTRY
+    /**
+     * Mappa il valore stringa category dal domain al PantryCategory enum.
+     * Fallback a PANTRY se categoria non riconosciuta.
+     */
+    private fun mapDomainCategory(categoryString: String): PantryCategory {
+        return when (categoryString.uppercase()) {
+            "FRIDGE" -> PantryCategory.FRIDGE
+            "FREEZER" -> PantryCategory.FREEZER
+            "PANTRY" -> PantryCategory.PANTRY
+            else -> PantryCategory.PANTRY
+        }
     }
 }
 
-private fun resolveFreshness(expiresAt: Long?): FreshnessLevel {
-    if (expiresAt == null) return FreshnessLevel.HIGH
+private fun resolveFreshness(expirationDate: Long?): FreshnessLevel {
+    if (expirationDate == null) return FreshnessLevel.HIGH
 
-    val daysUntilExpiry = ChronoUnit.DAYS.between(Instant.now(), Instant.ofEpochMilli(expiresAt))
+    val daysUntilExpiry = ChronoUnit.DAYS.between(Instant.now(), Instant.ofEpochMilli(expirationDate))
     return when {
         daysUntilExpiry <= 1 -> FreshnessLevel.CRITICAL
         daysUntilExpiry <= 5 -> FreshnessLevel.MEDIUM
@@ -59,10 +60,10 @@ private fun resolveFreshness(expiresAt: Long?): FreshnessLevel {
     }
 }
 
-private fun formatExpirationLabel(expiresAt: Long?): String {
-    if (expiresAt == null) return "Lunga conservazione"
+private fun formatExpirationLabel(expirationDate: Long?): String {
+    if (expirationDate == null) return "Lunga conservazione"
 
-    val daysUntilExpiry = Duration.between(Instant.now(), Instant.ofEpochMilli(expiresAt)).toDays()
+    val daysUntilExpiry = Duration.between(Instant.now(), Instant.ofEpochMilli(expirationDate)).toDays()
     return when {
         daysUntilExpiry < 0 -> "Scaduto"
         daysUntilExpiry == 0L -> "Scade oggi!"
@@ -79,3 +80,4 @@ private fun formatQuantity(quantity: Double, unit: String?): String {
     }
     return if (unit.isNullOrBlank()) formattedQuantity else "$formattedQuantity $unit"
 }
+

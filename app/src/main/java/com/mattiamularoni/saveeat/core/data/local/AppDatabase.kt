@@ -7,9 +7,10 @@ import com.mattiamularoni.saveeat.features.pantry.data.local.PantryEntity
 
 @Database(
     entities = [PantryEntity::class],
-    version = 1,
+    version = 2,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun pantryDao(): PantryDao
 }
+

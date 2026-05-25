@@ -31,10 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.CategoryFilterRow
-import com.mattiamularoni.saveeat.features.pantry.presentation.components.PantryBottomBar
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.PantrySection
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.PantryTopBar
-import com.mattiamularoni.saveeat.features.pantry.presentation.components.ScanFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.state.PantryUiState
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryEffect
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
