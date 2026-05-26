@@ -17,7 +17,8 @@ object SupabaseClientProvider {
                 supabaseUrl = SUPABASE_URL,
                 supabaseKey = SUPABASE_ANON_KEY
             ) {
-                // TODO: Install Supabase plugins (Auth/Postgrest/Storage) when remote flows are implemented.
+                // TODO: Install Postgrest plugin when ready
+                // install(Postgrest)
             }.also { client = it }
         }
     }
@@ -26,3 +27,4 @@ object SupabaseClientProvider {
         client = null
     }
 }
+
