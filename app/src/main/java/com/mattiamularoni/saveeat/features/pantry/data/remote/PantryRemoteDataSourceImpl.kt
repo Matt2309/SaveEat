@@ -1,6 +1,7 @@
 package com.mattiamularoni.saveeat.features.pantry.data.remote
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -32,9 +33,14 @@ class PantryRemoteDataSourceImpl(
     override suspend fun getPantryItems(userId: String): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Integrate Postgrest query builder when available
-                // For MVP: return empty list, implement real queries when Postgrest SDK ready
-                emptyList()
+                supabaseClient
+                    .from("pantry_items")
+                    .select {
+                        filter {
+                            eq("user_id", userId)
+                        }
+                    }
+                    .decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch pantry items: ${e.message}", e)
             }
@@ -49,8 +55,10 @@ class PantryRemoteDataSourceImpl(
     override suspend fun addPantryItem(item: PantryItemDto): PantryItemDto =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest insert
-                item.copy(id = "server-generated-id")
+                supabaseClient
+                    .from("pantry_items")
+                    .insert(item)
+                    .decodeSingle<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to add pantry item: ${e.message}", e)
             }
@@ -69,8 +77,15 @@ class PantryRemoteDataSourceImpl(
     ): PantryItemDto =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest update
-                throw NotImplementedError("Postgrest update not yet implemented")
+                supabaseClient
+                    .from("pantry_items")
+                    .update(updates) {
+                        filter {
+                            eq("id", itemId)
+                        }
+                        select()
+                    }
+                    .decodeSingle<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to update pantry item: ${e.message}", e)
             }
@@ -85,7 +100,13 @@ class PantryRemoteDataSourceImpl(
     override suspend fun deletePantryItem(itemId: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest delete
+                supabaseClient
+                    .from("pantry_items")
+                    .delete {
+                        filter {
+                            eq("id", itemId)
+                        }
+                    }
                 true
             } catch (e: Exception) {
                 throw Exception("Failed to delete pantry item: ${e.message}", e)
@@ -101,8 +122,15 @@ class PantryRemoteDataSourceImpl(
     override suspend fun getPlaceholders(userId: String): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest select with is_placeholder=true filter
-                emptyList()
+                supabaseClient
+                    .from("pantry_items")
+                    .select {
+                        filter {
+                            eq("user_id", userId)
+                            eq("is_placeholder", true)
+                        }
+                    }
+                    .decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch placeholders: ${e.message}", e)
             }
@@ -118,8 +146,15 @@ class PantryRemoteDataSourceImpl(
     override suspend fun searchPlaceholders(userId: String, query: String): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest select with name LIKE filter
-                emptyList()
+                supabaseClient
+                    .from("pantry_items")
+                    .select {
+                        filter {
+                            eq("user_id", userId)
+                            ilike("name", "%$query%")
+                        }
+                    }
+                    .decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to search placeholders: ${e.message}", e)
             }
@@ -135,8 +170,16 @@ class PantryRemoteDataSourceImpl(
     override suspend fun getExpiringItems(userId: String, thresholdMs: Long): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest select with expiration_date <= threshold filter
-                emptyList()
+                val thresholdInstant = java.time.Instant.ofEpochMilli(thresholdMs).toString()
+                supabaseClient
+                    .from("pantry_items")
+                    .select {
+                        filter {
+                            eq("user_id", userId)
+                            lte("expiration_date", thresholdInstant)
+                        }
+                    }
+                    .decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch expiring items: ${e.message}", e)
             }
@@ -157,8 +200,10 @@ class PantryRemoteDataSourceImpl(
     ): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest batch insert
-                items.map { it.copy(id = "server-generated-id") }
+                supabaseClient
+                    .from("pantry_items")
+                    .insert(items)
+                    .decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to save receipt items: ${e.message}", e)
             }

@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.pantry.data.repository
 
+import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.data.local.PantryDao
 import com.mattiamularoni.saveeat.features.pantry.data.local.PantryEntity
 import com.mattiamularoni.saveeat.features.pantry.data.mapper.PantryMapper
@@ -28,11 +29,9 @@ import java.util.UUID
  */
 class PantryRepositoryImpl(
     private val pantryDao: PantryDao,
-    private val remoteDataSource: PantryRemoteDataSource
+    private val remoteDataSource: PantryRemoteDataSource,
+    private val sessionProvider: SessionProvider
 ) : PantryRepository {
-
-    // Placeholder per userId (da integrare con Auth quando disponibile)
-    private val currentUserId = "test-user-uuid"
 
     // ===== OBSERVE & SYNC =====
 
@@ -57,7 +56,7 @@ class PantryRepositoryImpl(
         }
 
         return pantryDao
-            .getPantryItems(currentUserId)
+            .getPantryItems(sessionProvider.getCurrentUserId())
             .map { entities -> entities.map { entity -> entityToDomain(entity) } }
     }
 
@@ -76,7 +75,7 @@ class PantryRepositoryImpl(
      */
     override suspend fun syncPantry(): Int = withContext(Dispatchers.IO) {
         try {
-            val remoteItems = remoteDataSource.getPantryItems(currentUserId)
+            val remoteItems = remoteDataSource.getPantryItems(sessionProvider.getCurrentUserId())
             val entities = PantryMapper.dtosToEntities(remoteItems)
             pantryDao.insertPantryItems(entities)
             entities.size
@@ -123,7 +122,7 @@ class PantryRepositoryImpl(
 
                 val entity = PantryEntity(
                     id = newId,
-                    userId = currentUserId,
+                    userId = sessionProvider.getCurrentUserId(),
                     receiptId = item.receiptId,
                     name = item.name,
                     category = item.category,
@@ -251,7 +250,7 @@ class PantryRepositoryImpl(
 
                 val entity = PantryEntity(
                     id = placeholderId,
-                    userId = currentUserId,
+                    userId = sessionProvider.getCurrentUserId(),
                     receiptId = null,
                     name = name,
                     category = category,
@@ -347,7 +346,7 @@ class PantryRepositoryImpl(
     override suspend fun findMatchingPlaceholder(itemName: String): PantryItem? =
         withContext(Dispatchers.IO) {
             try {
-                val placeholders = pantryDao.getPlaceholders(currentUserId)
+                val placeholders = pantryDao.getPlaceholders(sessionProvider.getCurrentUserId())
 
                 val bestMatch = placeholders
                     .filter { placeholder ->
@@ -520,7 +519,7 @@ class PantryRepositoryImpl(
 
             // Fetch all pantry items from local cache
             var allItems: List<PantryEntity> = emptyList()
-            pantryDao.getPantryItems(currentUserId).collect { entities ->
+            pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).collect { entities ->
                 allItems = entities
             }
 
@@ -633,7 +632,7 @@ class PantryRepositoryImpl(
         val threshold = now.plus(thresholdDays.toLong(), ChronoUnit.DAYS).toEpochMilli()
 
         return pantryDao
-            .getExpiringItems(currentUserId, threshold)
+            .getExpiringItems(sessionProvider.getCurrentUserId(), threshold)
             .map { entities ->
                 entities
                     .filter { !it.isPlaceholder && it.status == "active" }
