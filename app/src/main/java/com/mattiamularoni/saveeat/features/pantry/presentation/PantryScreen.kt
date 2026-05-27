@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,11 +13,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.AcUnit
-import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.DocumentScanner
 import androidx.compose.material.icons.rounded.Inventory2
 import androidx.compose.material.icons.rounded.Kitchen
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -37,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.CategoryFilterRow
+import com.mattiamularoni.saveeat.features.pantry.presentation.components.ExpandableFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormDialog
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.PantrySection
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.PantryTopBar
@@ -78,26 +76,10 @@ fun PantryScreen(
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = { PantryTopBar() },
         floatingActionButton = {
-            Row(
-                modifier = Modifier
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                FloatingActionButton(
-                    onClick = { showManualForm = true },
-                    modifier = Modifier,
-                    containerColor = MaterialTheme.colorScheme.secondary
-                ) {
-                    Icon(Icons.Rounded.Add, contentDescription = "Aggiungi manualmente")
-                }
-                FloatingActionButton(
-                    onClick = onNavigateToScan,
-                    modifier = Modifier
-                ) {
-                    Icon(Icons.Rounded.DocumentScanner, contentDescription = "Scansiona scontrino")
-                }
-            }
+            ExpandableFab(
+                onScannerClick = onNavigateToScan,
+                onManualInsertClick = { showManualForm = true }
+            )
         }
     ) { padding ->
         when (val state = uiState) {

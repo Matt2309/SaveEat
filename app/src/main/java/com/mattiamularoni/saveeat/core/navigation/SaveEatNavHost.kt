@@ -36,7 +36,11 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                     navController.navigate(ScanReceiptRoute)
                 }
             )
-            pantryScreen()
+            pantryScreen(
+                onNavigateToScan = {
+                    navController.navigate(ScanReceiptRoute)
+                }
+            )
             recipeScreen(
                 onNavigateBack = {
                     navController.popBackStack()
