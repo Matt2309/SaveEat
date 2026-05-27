@@ -28,7 +28,7 @@ interface SessionProvider {
  */
 object MockSessionProvider : SessionProvider {
     // UUID di test per MVP - verrà sostituito da Auth module
-    private const val MOCK_USER_ID = "test-user-uuid"
+    private const val MOCK_USER_ID = "11111111-1111-1111-1111-111111111111"
 
     override fun getCurrentUserId(): String = MOCK_USER_ID
 }
