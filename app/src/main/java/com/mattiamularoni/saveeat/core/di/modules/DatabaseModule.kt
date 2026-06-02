@@ -14,4 +14,5 @@ val databaseModule = module {
         ).fallbackToDestructiveMigration(dropAllTables = false).build()
     }
     single { get<AppDatabase>().pantryDao() }
+    single { get<AppDatabase>().recipeDao() }
 }
