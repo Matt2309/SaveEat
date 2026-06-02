@@ -2,6 +2,7 @@ package com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
@@ -26,7 +27,8 @@ sealed interface PantryEffect {
 
 class PantryViewModel(
     private val getPantryItemsUseCase: GetPantryItemsUseCase,
-    private val pantryRepository: PantryRepository
+    private val pantryRepository: PantryRepository,
+    private val sessionProvider: SessionProvider
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
     private val _uiState = MutableStateFlow<PantryUiState>(PantryUiState.Loading)
@@ -41,6 +43,13 @@ class PantryViewModel(
 
     init {
         observePantryItems()
+        viewModelScope.launch {
+            try {
+                pantryRepository.syncPantry()
+            } catch (e: Exception) {
+                android.util.Log.e("PantryViewModel", "Sync fallito: ${e.message}")
+            }
+        }
     }
 
     fun onCategorySelected(category: PantryCategory) {
@@ -79,7 +88,7 @@ class PantryViewModel(
 
                 val newItem = com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem(
                     id = UUID.randomUUID().toString(),
-                    userId = "11111111-1111-1111-1111-111111111111",
+                    userId = sessionProvider.getCurrentUserId(),
                     receiptId = null,
                     name = formState.itemName,
                     category = categoryString,
