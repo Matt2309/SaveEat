@@ -2,14 +2,13 @@ package com.mattiamularoni.saveeat.features.pantry.presentation.navigation
 
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
-import com.mattiamularoni.saveeat.features.pantry.presentation.ui.PantryScreen
-import kotlinx.serialization.Serializable
+import com.mattiamularoni.saveeat.core.navigation.PantryRoute
+import com.mattiamularoni.saveeat.features.pantry.presentation.PantryScreen
 
-@Serializable
-object PantryRoute
-
-fun NavGraphBuilder.pantryScreen() {
+fun NavGraphBuilder.pantryScreen(
+    onNavigateToScan: () -> Unit = {}
+) {
     composable<PantryRoute> {
-        PantryScreen()
+        PantryScreen(onNavigateToScan = onNavigateToScan)
     }
 }
