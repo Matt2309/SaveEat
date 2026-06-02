@@ -15,7 +15,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mattiamularoni.saveeat.features.home.presentation.viewmodel.HomeViewModel
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ExpandableFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormDialog
 import org.koin.androidx.compose.koinViewModel
@@ -25,7 +25,8 @@ import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryV
 fun HomeScreen(
     modifier: Modifier = Modifier,
     onNavigateToScan: () -> Unit = {},
-    pantryViewModel: PantryViewModel = koinViewModel()
+    pantryViewModel: PantryViewModel = koinViewModel(),
+    homeViewModel: HomeViewModel = koinViewModel()
 ) {
     var showManualForm by remember { mutableStateOf(false) }
 
@@ -57,9 +58,13 @@ fun HomeScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Text(
-                text = "Welcome to SaveEat",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
+                text = "Ciao, ${homeViewModel.currentUserName}!",
+                style = MaterialTheme.typography.headlineMedium
+            )
+            Text(
+                text = "ID: ${homeViewModel.currentUserId}",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
                 text = "Dashboard",

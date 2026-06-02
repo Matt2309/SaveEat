@@ -1,34 +1,39 @@
 package com.mattiamularoni.saveeat.core.data.remote
 
-/**
- * Interface to provide current session user ID.
- *
- * Responsabilità:
- * - Fornire ID utente corrente
- * - Decoupling dall'Auth module (non ancora disponibile)
- * - Punto di integrazione per Auth quando disponibile
- *
- * Implementazione attuale: Mock con UUID di test.
- * Quando Auth module sarà pronto, sostituire MockSessionProvider con AuthSessionProvider
- * senza modificare codice nel repository o remote datasource.
- */
+import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.auth.auth
+import kotlinx.serialization.json.jsonPrimitive
+
 interface SessionProvider {
-    /**
-     * Restituisce UUID dell'utente corrente.
-     *
-     * @return UUID stringa dell'utente sessione attuale
-     */
     fun getCurrentUserId(): String
+    fun getUserDisplayName(): String
 }
 
 /**
- * Mock implementation di SessionProvider per MVP.
- *
- * Usa UUID fisso di test. Sarà sostituito quando Auth module è pronto.
+ * Implementazione reale di SessionProvider.
+ * Estrae l'ID e i metadati direttamente dalla sessione attiva di Supabase.
  */
-object MockSessionProvider : SessionProvider {
-    // UUID di test per MVP - verrà sostituito da Auth module
-    private const val MOCK_USER_ID = "11111111-1111-1111-1111-111111111111"
+class AuthSessionProviderImpl(
+    private val supabaseClient: SupabaseClient
+) : SessionProvider {
 
-    override fun getCurrentUserId(): String = MOCK_USER_ID
+    override fun getCurrentUserId(): String {
+        // Estrae l'ID dell'utente attualmente loggato (grazie al token JWT)
+        return supabaseClient.auth.currentUserOrNull()?.id ?: ""
+    }
+
+    override fun getUserDisplayName(): String {
+        val user = supabaseClient.auth.currentUserOrNull()
+        val metadata = user?.userMetadata
+
+        // Estraiamo il JSON e lo convertiamo in stringhe in modo sicuro
+        val firstName = metadata?.get("first_name")?.jsonPrimitive?.content ?: ""
+        val lastName = metadata?.get("last_name")?.jsonPrimitive?.content ?: ""
+
+        return if (firstName.isNotBlank() || lastName.isNotBlank()) {
+            "$firstName $lastName".trim()
+        } else {
+            user?.email ?: "Utente"
+        }
+    }
 }

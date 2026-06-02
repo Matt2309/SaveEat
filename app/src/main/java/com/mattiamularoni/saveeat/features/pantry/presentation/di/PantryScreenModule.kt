@@ -1,6 +1,6 @@
 package com.mattiamularoni.saveeat.features.pantry.presentation.di
 
-import com.mattiamularoni.saveeat.core.data.remote.MockSessionProvider
+import com.mattiamularoni.saveeat.core.data.remote.AuthSessionProviderImpl
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.data.remote.PantryRemoteDataSource
 import com.mattiamularoni.saveeat.features.pantry.data.remote.PantryRemoteDataSourceImpl
@@ -12,7 +12,7 @@ import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val pantryScreenModule = module {
-    single<SessionProvider> { MockSessionProvider }
+    single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
     factory<PantryRemoteDataSource> {
         PantryRemoteDataSourceImpl(supabaseClient = get())
     }
