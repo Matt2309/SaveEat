@@ -17,7 +17,10 @@ object SupabaseClientProvider {
                 supabaseKey = BuildConfig.SUPABASE_ANON_KEY
             ) {
                 install(Postgrest)
-                install(Auth)
+                install(Auth) {
+                    scheme = "saveeat"
+                    host = "callback"
+                }
             }.also { client = it }
         }
     }
