@@ -2,6 +2,7 @@ package com.mattiamularoni.saveeat.features.home.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashboardUseCase
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -25,12 +26,14 @@ import kotlinx.coroutines.launch
  * - viewModelScope per coroutine lifecycle-aware
  * - UseCase per aggregazione logica business
  *
- * NOTE: userId è gestito internamente nel repository (MVP: "test-user-uuid")
- * TODO: Integrare userId dinamico quando Auth module è disponibile
  */
 class HomeViewModel(
-    private val getHomeDashboardUseCase: GetHomeDashboardUseCase
+    private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
+    private val sessionProvider: SessionProvider
 ) : ViewModel() {
+
+    val currentUserName = sessionProvider.getUserDisplayName()
+    val currentUserId = sessionProvider.getCurrentUserId()
 
     // State: HomeUiState (Loading, Success, Error, Empty)
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)

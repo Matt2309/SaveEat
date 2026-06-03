@@ -15,4 +15,5 @@ val databaseModule = module {
     }
     single { get<AppDatabase>().pantryDao() }
     single { get<AppDatabase>().recipeDao() }
+    single { get<AppDatabase>().homeDao() }
 }
