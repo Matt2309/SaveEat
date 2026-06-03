@@ -22,7 +22,7 @@ class ProcessReceiptUseCase(
                 throw Exception("Nessun prodotto alimentare trovato nello scontrino.")
             }
 
-            val receiptId = UUID.randomUUID().toString()
+            val receiptId = ""
 
             // save items to repository
             pantryRepository.saveReceiptItems(receiptId, scannedItems)
