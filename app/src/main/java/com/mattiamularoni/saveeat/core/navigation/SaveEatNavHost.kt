@@ -69,6 +69,20 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
             homeScreen(
                 onNavigateToScan = {
                     navController.navigate(ScanReceiptRoute)
+                },
+                onNavigateToPantry = {
+                    navController.navigate(PantryRoute) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                onNavigateToRecipes = {
+                    navController.navigate(RecipeRoute) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
                 }
             )
             pantryScreen(

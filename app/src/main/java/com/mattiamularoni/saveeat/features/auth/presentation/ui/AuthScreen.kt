@@ -1,18 +1,40 @@
 package com.mattiamularoni.saveeat.features.auth.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.text.KeyboardOptions
 import com.mattiamularoni.saveeat.features.auth.presentation.util.AuthValidation
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthEffect
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthUiState
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -23,13 +45,14 @@ fun AuthScreen(
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    // Nuovi campi
     var firstName by remember { mutableStateOf("") }
     var lastName by remember { mutableStateOf("") }
 
     var isLoginMode by remember { mutableStateOf(true) }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val authUiState by viewModel.authUiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -48,7 +71,6 @@ fun AuthScreen(
     val emailError = AuthValidation.getEmailError(email)
     val passwordError = AuthValidation.getPasswordError(password)
 
-    // Validazione dinamica: se siamo in registrazione, nome e cognome non devono essere vuoti
     val isFormValid = if (isLoginMode) {
         emailError == null && passwordError == null && email.isNotEmpty() && password.isNotEmpty()
     } else {
@@ -56,138 +78,375 @@ fun AuthScreen(
                 firstName.isNotBlank() && lastName.isNotBlank()
     }
 
+    val isLoading = authUiState is AuthUiState.Loading
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        topBar = {
-            TopAppBar(
-                title = { Text(if (isLoginMode) "Login" else "Register") }
-            )
-        },
+        containerColor = MaterialTheme.colorScheme.background,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.Center
         ) {
-
-            // NOME E COGNOME (Visibili solo in registrazione)
-            AnimatedVisibility(visible = !isLoginMode) {
-                Column {
-                    TextField(
-                        value = firstName,
-                        onValueChange = { firstName = it },
-                        label = { Text("Nome") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = authUiState !is AuthUiState.Loading,
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    TextField(
-                        value = lastName,
-                        onValueChange = { lastName = it },
-                        label = { Text("Cognome") },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = authUiState !is AuthUiState.Loading,
-                        singleLine = true
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                }
-            }
-
-            // Email input field
-            TextField(
-                value = email,
-                onValueChange = { email = it },
-                label = { Text("Email") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = authUiState !is AuthUiState.Loading,
-                isError = emailError != null && email.isNotEmpty(),
-                singleLine = true
-            )
-            if (emailError != null && email.isNotEmpty()) {
-                Text(
-                    text = emailError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Password input field
-            TextField(
-                value = password,
-                onValueChange = { password = it },
-                label = { Text("Password") },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = authUiState !is AuthUiState.Loading,
-                visualTransformation = PasswordVisualTransformation(),
-                isError = passwordError != null && password.isNotEmpty(),
-                singleLine = true
-            )
-            if (passwordError != null && password.isNotEmpty()) {
-                Text(
-                    text = passwordError,
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp, start = 16.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Action button
-            Box(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(48.dp),
-                contentAlignment = Alignment.Center
+                    .widthIn(max = 448.dp),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = Color.White),
+                border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
-                if (authUiState is AuthUiState.Loading) {
-                    CircularProgressIndicator()
-                } else {
-                    Button(
-                        onClick = {
-                            if (isLoginMode) {
-                                viewModel.signIn(email, password)
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    // ---------- Header ----------
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        Text(
+                            text = "SaveEat",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 28.sp,
+                            lineHeight = 36.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        Text(
+                            text = if (isLoginMode)
+                                "Bentornato! Accedi al tuo account."
+                            else
+                                "Crea un account per iniziare a salvare cibo.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+
+                    // ---------- Form ----------
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+
+                        // Nome / Cognome (solo registrazione)
+                        AnimatedVisibility(visible = !isLoginMode) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                LabeledField(
+                                    label = "Nome",
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    SaveEatTextField(
+                                        value = firstName,
+                                        onValueChange = { firstName = it },
+                                        placeholder = "Mario",
+                                        enabled = !isLoading
+                                    )
+                                }
+                                LabeledField(
+                                    label = "Cognome",
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    SaveEatTextField(
+                                        value = lastName,
+                                        onValueChange = { lastName = it },
+                                        placeholder = "Rossi",
+                                        enabled = !isLoading
+                                    )
+                                }
+                            }
+                        }
+
+                        // Email
+                        LabeledField(label = "Email") {
+                            SaveEatTextField(
+                                value = email,
+                                onValueChange = { email = it },
+                                placeholder = "mario.rossi@example.com",
+                                enabled = !isLoading,
+                                isError = emailError != null && email.isNotEmpty(),
+                                keyboardType = KeyboardType.Email,
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.Email,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            )
+                            if (emailError != null && email.isNotEmpty()) {
+                                FieldError(emailError)
+                            }
+                        }
+
+                        // Password
+                        LabeledField(label = "Password") {
+                            SaveEatTextField(
+                                value = password,
+                                onValueChange = { password = it },
+                                placeholder = "••••••••",
+                                enabled = !isLoading,
+                                isError = passwordError != null && password.isNotEmpty(),
+                                keyboardType = KeyboardType.Password,
+                                visualTransformation = if (passwordVisible)
+                                    VisualTransformation.None
+                                else
+                                    PasswordVisualTransformation(),
+                                leadingIcon = {
+                                    Icon(
+                                        Icons.Filled.Lock,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                },
+                                trailingIcon = {
+                                    IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                                        Icon(
+                                            imageVector = if (passwordVisible)
+                                                Icons.Filled.Visibility
+                                            else
+                                                Icons.Filled.VisibilityOff,
+                                            contentDescription = if (passwordVisible)
+                                                "Nascondi password" else "Mostra password",
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            )
+                            if (passwordError != null && password.isNotEmpty()) {
+                                FieldError(passwordError)
+                            }
+                        }
+
+                        // Pulsante principale
+                        Button(
+                            onClick = {
+                                if (isLoginMode) {
+                                    viewModel.signIn(email, password)
+                                } else {
+                                    viewModel.signUp(email, password, firstName, lastName)
+                                }
+                            },
+                            enabled = isFormValid && !isLoading,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(52.dp)
+                                .padding(top = 4.dp),
+                            shape = CircleShape,
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.primary,
+                                contentColor = MaterialTheme.colorScheme.onPrimary
+                            )
+                        ) {
+                            if (isLoading) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
                             } else {
-                                viewModel.signUp(email, password, firstName, lastName)
+                                Text(
+                                    text = if (isLoginMode) "Accedi" else "Registrati",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                            }
+                        }
+                    }
+
+                    // ---------- Divider ----------
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                        Text(
+                            text = "Oppure continua con",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.labelSmall
+                        )
+                        HorizontalDivider(
+                            modifier = Modifier.weight(1f),
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
+                    }
+
+                    // ---------- Google (solo visivo, non ancora collegato) ----------
+                    OutlinedButton(
+                        onClick = {
+                            // TODO: collegare il login Google quando il backend lo supporta
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    "Accesso con Google non ancora disponibile",
+                                    duration = SnackbarDuration.Short
+                                )
                             }
                         },
-                        enabled = isFormValid,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(52.dp),
+                        shape = CircleShape,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+                        colors = ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        )
                     ) {
-                        Text(if (isLoginMode) "Login" else "Registrati")
+                        GoogleLogo(modifier = Modifier.size(20.dp))
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text(
+                            text = "Accedi con Google",
+                            style = MaterialTheme.typography.titleMedium
+                        )
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Toggle
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = if (isLoginMode) "Non hai un account?" else "Hai già un account?",
-                    modifier = Modifier.align(Alignment.CenterVertically)
-                )
-                TextButton(
-                    onClick = {
-                        isLoginMode = !isLoginMode
-                        viewModel.resetState()
+                    // ---------- Footer toggle ----------
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (isLoginMode) "Non hai un account?" else "Hai già un account?",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                        TextButton(
+                            onClick = {
+                                isLoginMode = !isLoginMode
+                                viewModel.resetState()
+                            }
+                        ) {
+                            Text(
+                                text = if (isLoginMode) "Registrati" else "Accedi",
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Medium,
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
                     }
-                ) {
-                    Text(if (isLoginMode) "Registrati" else "Login")
                 }
             }
         }
+    }
+}
+
+/** Etichetta piccola sopra al campo, come nel mockup. */
+@Composable
+private fun LabeledField(
+    label: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        Text(
+            text = label,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.labelSmall
+        )
+        content()
+    }
+}
+
+@Composable
+private fun FieldError(message: String) {
+    Text(
+        text = message,
+        color = MaterialTheme.colorScheme.error,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+    )
+}
+
+/** Campo di testo con stile "filled" chiaro e angoli arrotondati come nel mockup. */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+private fun SaveEatTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    placeholder: String,
+    enabled: Boolean = true,
+    isError: Boolean = false,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    leadingIcon: (@Composable () -> Unit)? = null,
+    trailingIcon: (@Composable () -> Unit)? = null
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = onValueChange,
+        modifier = Modifier.fillMaxWidth(),
+        enabled = enabled,
+        isError = isError,
+        singleLine = true,
+        placeholder = {
+            Text(
+                text = placeholder,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        },
+        leadingIcon = leadingIcon,
+        trailingIcon = trailingIcon,
+        visualTransformation = visualTransformation,
+        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+        shape = RoundedCornerShape(8.dp),
+        colors = OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = Color(0xFFF7F2F8),
+            unfocusedContainerColor = Color(0xFFF7F2F8),
+            disabledContainerColor = Color(0xFFF7F2F8),
+            focusedBorderColor = MaterialTheme.colorScheme.primary,
+            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    )
+}
+
+/** Logo Google "G" multicolore disegnato a mano (nessun asset esterno). */
+@Composable
+private fun GoogleLogo(modifier: Modifier = Modifier) {
+    val blue = Color(0xFF4285F4)
+    val red = Color(0xFFEA4335)
+    val yellow = Color(0xFFFBBC05)
+    val green = Color(0xFF34A853)
+
+    Canvas(modifier = modifier) {
+        val strokeWidth = size.minDimension * 0.22f
+        val inset = strokeWidth / 2f
+        val arcTopLeft = Offset(inset, inset)
+        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
+        val stroke = Stroke(width = strokeWidth)
+
+        // Angoli in convenzione Compose: 0° = destra, 90° = basso (y verso il basso).
+        // Apertura sulla destra per il "trattino" del G.
+        drawArc(red, startAngle = 200f, sweepAngle = 70f,
+            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-sinistra
+        drawArc(blue, startAngle = 270f, sweepAngle = 70f,
+            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-destra
+        drawArc(yellow, startAngle = 130f, sweepAngle = 70f,
+            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // sinistra
+        drawArc(green, startAngle = 70f, sweepAngle = 60f,
+            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // basso
+
+        // Trattino orizzontale blu (dal centro verso destra)
+        drawRect(
+            color = blue,
+            topLeft = Offset(size.width / 2f, size.height / 2f - strokeWidth / 2f),
+            size = Size(size.width / 2f - inset, strokeWidth)
+        )
     }
 }

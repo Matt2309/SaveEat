@@ -6,9 +6,15 @@ import com.mattiamularoni.saveeat.core.navigation.HomeRoute
 import com.mattiamularoni.saveeat.features.home.presentation.ui.HomeScreen
 
 fun NavGraphBuilder.homeScreen(
-    onNavigateToScan: () -> Unit = {}
+    onNavigateToScan: () -> Unit = {},
+    onNavigateToPantry: () -> Unit = {},
+    onNavigateToRecipes: () -> Unit = {}
 ) {
     composable<HomeRoute> {
-        HomeScreen(onNavigateToScan = onNavigateToScan)
+        HomeScreen(
+            onNavigateToScan = onNavigateToScan,
+            onNavigateToPantry = onNavigateToPantry,
+            onNavigateToRecipes = onNavigateToRecipes
+        )
     }
 }
