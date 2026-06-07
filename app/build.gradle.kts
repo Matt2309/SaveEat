@@ -40,6 +40,11 @@ android {
             "SUPABASE_ANON_KEY",
             localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\""
         )
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\""
+        )
     }
 
     buildTypes {
@@ -82,6 +87,9 @@ dependencies {
     implementation(libs.koin.androidx.compose.navigation)
     implementation(libs.coil.compose)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.identity.googleid)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.supabase.kt)
     implementation(libs.ktor.client.android)

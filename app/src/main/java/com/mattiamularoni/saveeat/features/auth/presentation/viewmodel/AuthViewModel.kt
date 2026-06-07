@@ -1,7 +1,16 @@
 package com.mattiamularoni.saveeat.features.auth.presentation.viewmodel
 
+import android.content.Context
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.GetCredentialCancellationException
+import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.mattiamularoni.saveeat.BuildConfig
 import com.mattiamularoni.saveeat.features.auth.domain.model.BiometricAvailabilityStatus
 import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepository
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.CheckBiometricAvailabilityUseCase
@@ -10,6 +19,7 @@ import com.mattiamularoni.saveeat.features.auth.domain.usecase.EnableBiometricUs
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.ObserveSessionStatusUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.RestoreAuthenticatedSessionUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithEmailUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithGoogleUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignOutUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignUpWithEmailUseCase
 import io.github.jan.supabase.auth.status.SessionStatus
@@ -95,6 +105,7 @@ class AuthViewModel(
     private val signInWithEmailUseCase: SignInWithEmailUseCase,
     private val signUpWithEmailUseCase: SignUpWithEmailUseCase,
     private val signOutUseCase: SignOutUseCase,
+    private val signInWithGoogleUseCase: SignInWithGoogleUseCase,
     private val enableBiometricUseCase: EnableBiometricUseCase,
     private val disableBiometricUseCase: DisableBiometricUseCase,
     private val checkBiometricAvailabilityUseCase: CheckBiometricAvailabilityUseCase,
@@ -169,6 +180,63 @@ class AuthViewModel(
                 val errorMessage = e.message ?: "Sign-in failed. Please try again."
                 _authUiState.value = AuthUiState.Error(errorMessage)
                 _authEffect.emit(AuthEffect.ShowSnackbar(errorMessage))
+            }
+        }
+    }
+
+    /**
+     * Avvia il flusso Google Sign-In tramite Credential Manager API.
+     *
+     * Mostra il picker account Google, estrae l'ID Token e lo usa per autenticarsi
+     * su Supabase. Al successo, esegue l'upsert del profilo nella tabella `users`
+     * e, se la biometria è disponibile ma non abilitata, propone di attivarla.
+     *
+     * @param context Activity context richiesto da [CredentialManager] per il picker.
+     */
+    fun signInWithGoogle(context: Context) {
+        viewModelScope.launch {
+            _authUiState.value = AuthUiState.Loading
+            try {
+                val credentialManager = CredentialManager.create(context)
+                val googleIdOption = GetGoogleIdOption.Builder()
+                    .setFilterByAuthorizedAccounts(false)
+                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                    .setAutoSelectEnabled(true)
+                    .build()
+                val request = GetCredentialRequest.Builder()
+                    .addCredentialOption(googleIdOption)
+                    .build()
+                val result = credentialManager.getCredential(context, request)
+                val credential = result.credential
+                if (credential is CustomCredential &&
+                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+                ) {
+                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
+                    signInWithGoogleUseCase(idToken)
+                    biometricRepository.confirmSession()
+                    _authUiState.value = AuthUiState.Success()
+
+                    val availability = checkBiometricAvailabilityUseCase()
+                    if (availability == BiometricAvailabilityStatus.Available &&
+                        !biometricRepository.isBiometricLoginEnabled()
+                    ) {
+                        _biometricEffect.emit(BiometricEffect.ProposeEnablement)
+                    }
+                } else {
+                    val msg = "Credenziale non supportata"
+                    _authUiState.value = AuthUiState.Error(msg)
+                    _authEffect.emit(AuthEffect.ShowSnackbar(msg))
+                }
+            } catch (e: GetCredentialCancellationException) {
+                _authUiState.value = AuthUiState.Idle
+            } catch (e: GetCredentialException) {
+                val msg = "Accesso con Google non riuscito. Riprova."
+                _authUiState.value = AuthUiState.Error(msg)
+                _authEffect.emit(AuthEffect.ShowSnackbar(msg))
+            } catch (e: Exception) {
+                val msg = e.message ?: "Errore imprevisto. Riprova."
+                _authUiState.value = AuthUiState.Error(msg)
+                _authEffect.emit(AuthEffect.ShowSnackbar(msg))
             }
         }
     }

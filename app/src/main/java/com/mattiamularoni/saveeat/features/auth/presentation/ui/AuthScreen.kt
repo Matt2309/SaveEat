@@ -29,12 +29,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalContext
 import com.mattiamularoni.saveeat.features.auth.presentation.util.AuthValidation
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthEffect
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthUiState
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -51,8 +51,8 @@ fun AuthScreen(
     var isLoginMode by remember { mutableStateOf(true) }
     var passwordVisible by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     val authUiState by viewModel.authUiState.collectAsState()
 
     LaunchedEffect(Unit) {
@@ -283,17 +283,9 @@ fun AuthScreen(
                         )
                     }
 
-                    // ---------- Google (solo visivo, non ancora collegato) ----------
+                    // ---------- Google Sign-In ----------
                     OutlinedButton(
-                        onClick = {
-                            // TODO: collegare il login Google quando il backend lo supporta
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    "Accesso con Google non ancora disponibile",
-                                    duration = SnackbarDuration.Short
-                                )
-                            }
-                        },
+                        onClick = { viewModel.signInWithGoogle(context) },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(52.dp),

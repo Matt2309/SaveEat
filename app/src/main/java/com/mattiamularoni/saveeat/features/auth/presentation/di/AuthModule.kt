@@ -12,6 +12,7 @@ import com.mattiamularoni.saveeat.features.auth.domain.usecase.EnableBiometricUs
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.ObserveSessionStatusUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.RestoreAuthenticatedSessionUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithEmailUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithGoogleUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignOutUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignUpWithEmailUseCase
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
@@ -53,11 +54,12 @@ val authModule = module {
         )
     }
 
-    // ---- Domain Layer — Use Cases Email/Password ----
+    // ---- Domain Layer — Use Cases Email/Password + Google ----
 
     factory { SignInWithEmailUseCase(authRepository = get()) }
     factory { SignUpWithEmailUseCase(authRepository = get()) }
     factory { SignOutUseCase(authRepository = get()) }
+    factory { SignInWithGoogleUseCase(authRepository = get()) }
     factory { ObserveSessionStatusUseCase(authRepository = get()) }
 
     // ---- Domain Layer — Use Cases Biometria ----
