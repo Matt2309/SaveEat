@@ -9,16 +9,16 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.mattiamularoni.saveeat.core.ui.MainScaffold
 import com.mattiamularoni.saveeat.features.auth.presentation.navigation.authScreen
+import com.mattiamularoni.saveeat.features.auth.presentation.navigation.biometricScreen
+import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import com.mattiamularoni.saveeat.features.home.presentation.navigation.homeScreen
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.navigation.leaderboardScreen
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.pantryScreen
-import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeDetailScreen
+import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.navigation.scanReceiptScreen
-import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
-import org.koin.androidx.compose.koinViewModel
 import io.github.jan.supabase.auth.status.SessionStatus
-
+import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun SaveEatNavHost(modifier: Modifier = Modifier) {
@@ -27,29 +27,42 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
     val authViewModel: AuthViewModel = koinViewModel()
     val sessionStatus by authViewModel.sessionStatus.collectAsState()
 
-    LaunchedEffect(sessionStatus) {
+    // null = sessione Supabase non ancora risolta, nessuna navigazione finché non è risolto
+    val biometricRequired by authViewModel.biometricRequired.collectAsState()
+
+    LaunchedEffect(sessionStatus, biometricRequired) {
         val currentDestination = navController.currentDestination?.route
-        // Controlliamo se siamo sulla rotta di Login
-        val isOnLoginRoute = currentDestination == LoginRoute::class.qualifiedName || currentDestination == "LoginRoute"
+        val isOnLoginRoute = currentDestination == LoginRoute::class.qualifiedName ||
+                currentDestination == "LoginRoute"
+
+        // Attendiamo che biometricRequired sia risolto prima di navigare
+        val bioRequired = biometricRequired ?: return@LaunchedEffect
 
         when (sessionStatus) {
             is SessionStatus.Authenticated -> {
+                // Navighiamo solo da LoginRoute: la navigazione da BiometricRoute
+                // è gestita dai callback del composable (successo) o dal nav guard
+                // NotAuthenticated (fallback password dopo sign-out).
                 if (isOnLoginRoute) {
-                    // Utente loggato ma è sul Login: caccialo sulla Home!
-                    navController.navigate(HomeRoute) {
-                        popUpTo(LoginRoute) { inclusive = true }
+                    if (bioRequired) {
+                        navController.navigate(BiometricRoute) {
+                            popUpTo(LoginRoute) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(HomeRoute) {
+                            popUpTo(0) { inclusive = true }
+                        }
                     }
                 }
             }
             is SessionStatus.NotAuthenticated -> {
                 if (!isOnLoginRoute) {
-                    // Utente NON loggato ma cerca di vedere l'app: caccialo sul Login!
                     navController.navigate(LoginRoute) {
-                        popUpTo(0) // Pulisce tutto lo stack
+                        popUpTo(0)
                     }
                 }
             }
-            else -> { /* Loading o NetworkError, non facciamo nulla */ }
+            else -> { /* SessionStatus.Loading o NetworkError: attendiamo */ }
         }
     }
 
@@ -66,6 +79,15 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                     }
                 }
             )
+
+            biometricScreen(
+                onNavigateToHome = {
+                    navController.navigate(HomeRoute) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+
             homeScreen(
                 onNavigateToScan = {
                     navController.navigate(ScanReceiptRoute)
@@ -113,4 +135,3 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
         }
     }
 }
-

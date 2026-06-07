@@ -81,6 +81,7 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.androidx.compose.navigation)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.biometric)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.supabase.kt)
     implementation(libs.ktor.client.android)

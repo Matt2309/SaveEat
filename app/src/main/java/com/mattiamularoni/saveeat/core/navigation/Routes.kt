@@ -22,3 +22,6 @@ data class RecipeDetailRoute(val id: String)
 
 @Serializable
 object LeaderboardRoute
+
+@Serializable
+object BiometricRoute
