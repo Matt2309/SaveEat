@@ -1,10 +1,14 @@
 package com.mattiamularoni.saveeat.core.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.mattiamularoni.saveeat.core.ui.MainScaffold
@@ -27,28 +31,43 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
     val authViewModel: AuthViewModel = koinViewModel()
     val sessionStatus by authViewModel.sessionStatus.collectAsState()
 
-    // null = sessione Supabase non ancora risolta, nessuna navigazione finché non è risolto
     val biometricRequired by authViewModel.biometricRequired.collectAsState()
 
-    LaunchedEffect(sessionStatus, biometricRequired) {
+    // Blocca la transizione immediata a HomeRoute se l'utente ha il dialog aperto
+    val showBiometricProposal by authViewModel.showBiometricProposal.collectAsState()
+
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_START) {
+                authViewModel.onAppForeground()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+    }
+
+    LaunchedEffect(sessionStatus, biometricRequired, showBiometricProposal) {
         val currentDestination = navController.currentDestination?.route
         val isOnLoginRoute = currentDestination == LoginRoute::class.qualifiedName ||
                 currentDestination == "LoginRoute"
+        val isOnBiometricRoute = currentDestination?.contains(
+            BiometricRoute::class.qualifiedName.orEmpty()
+        ) == true
 
-        // Attendiamo che biometricRequired sia risolto prima di navigare
         val bioRequired = biometricRequired ?: return@LaunchedEffect
 
         when (sessionStatus) {
             is SessionStatus.Authenticated -> {
-                // Navighiamo solo da LoginRoute: la navigazione da BiometricRoute
-                // è gestita dai callback del composable (successo) o dal nav guard
-                // NotAuthenticated (fallback password dopo sign-out).
-                if (isOnLoginRoute) {
-                    if (bioRequired) {
+                when {
+                    bioRequired && !isOnBiometricRoute -> {
                         navController.navigate(BiometricRoute) {
-                            popUpTo(LoginRoute) { inclusive = true }
+                            if (isOnLoginRoute) popUpTo(LoginRoute) { inclusive = true }
+                            launchSingleTop = true
                         }
-                    } else {
+                    }
+                    !bioRequired && isOnLoginRoute && !showBiometricProposal -> {
+                        // Naviga a Home SOLO se l'utente non deve visualizzare il dialog biometrico
                         navController.navigate(HomeRoute) {
                             popUpTo(0) { inclusive = true }
                         }
@@ -73,6 +92,7 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
             modifier = modifier
         ) {
             authScreen(
+                authViewModel = authViewModel,
                 onNavigateToPantry = {
                     navController.navigate(HomeRoute) {
                         popUpTo(LoginRoute) { inclusive = true }
@@ -81,6 +101,7 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
             )
 
             biometricScreen(
+                authViewModel = authViewModel,
                 onNavigateToHome = {
                     navController.navigate(HomeRoute) {
                         popUpTo(0) { inclusive = true }

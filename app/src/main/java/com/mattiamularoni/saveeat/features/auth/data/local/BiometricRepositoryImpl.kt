@@ -2,7 +2,7 @@ package com.mattiamularoni.saveeat.features.auth.data.local
 
 import android.content.Context
 import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
+import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_WEAK
 import com.mattiamularoni.saveeat.features.auth.domain.model.BiometricAvailabilityStatus
 import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepository
 import io.github.jan.supabase.SupabaseClient
@@ -38,7 +38,7 @@ class BiometricRepositoryImpl(
      * @return lo stato di disponibilità hardware della biometria.
      */
     override fun getBiometricAvailabilityStatus(): BiometricAvailabilityStatus =
-        when (biometricManager.canAuthenticate(BIOMETRIC_STRONG)) {
+        when (biometricManager.canAuthenticate(BIOMETRIC_WEAK)) {
             BiometricManager.BIOMETRIC_SUCCESS -> BiometricAvailabilityStatus.Available
             BiometricManager.BIOMETRIC_ERROR_NONE_ENROLLED -> BiometricAvailabilityStatus.NotEnrolled
             else -> BiometricAvailabilityStatus.NotAvailable

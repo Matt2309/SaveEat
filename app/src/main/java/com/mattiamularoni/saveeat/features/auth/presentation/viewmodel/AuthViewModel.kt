@@ -60,28 +60,13 @@ sealed class AuthEffect {
 }
 
 /**
- * Effetti one-time relativi al flusso biometrico.
- *
- * Separati da [AuthEffect] per non interferire con la gestione esistente
- * in [AuthScreen], che non deve essere modificata.
- */
-sealed class BiometricEffect {
-    /**
-     * Emessa dopo un login email/password riuscito quando la biometria
-     * è disponibile sul dispositivo ma non ancora abilitata dall'utente.
-     * Usata da [AuthNavigation] per mostrare il dialog di proposta.
-     */
-    object ProposeEnablement : BiometricEffect()
-}
-
-/**
  * ViewModel per le schermate di autenticazione.
  *
  * Gestisce login/registrazione email, logout, flusso biometrico e UI state.
  *
  * ### biometricRequired e multi-istanza
  * Il NavHost usa il ViewModel Activity-scoped per osservare [biometricRequired].
- * Le schermate all'interno del NavHost usano istanze NavBackStackEntry-scoped.
+ * Selezionando le schermate all'interno del NavHost vengono usate istanze NavBackStackEntry-scoped.
  * Per garantire coerenza, il flag di sessione confermata è mantenuto nel
  * [BiometricRepository] (Koin `single`), condiviso tra tutte le istanze.
  *
@@ -114,8 +99,12 @@ class AuthViewModel(
     private val _biometricUiState = MutableStateFlow<BiometricUiState>(BiometricUiState.Idle)
     val biometricUiState: StateFlow<BiometricUiState> = _biometricUiState.asStateFlow()
 
-    private val _biometricEffect = MutableSharedFlow<BiometricEffect>()
-    val biometricEffect: SharedFlow<BiometricEffect> = _biometricEffect.asSharedFlow()
+    /**
+     * Stato reattivo per la proposta del dialog biometrico post-login.
+     * Impedisce la navigazione prematura verso la Home se impostato su true.
+     */
+    private val _showBiometricProposal = MutableStateFlow(false)
+    val showBiometricProposal: StateFlow<Boolean> = _showBiometricProposal.asStateFlow()
 
     /**
      * Indica se la schermata di sblocco biometrico deve essere mostrata.
@@ -156,18 +145,20 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 _authUiState.value = AuthUiState.Loading
-                signInWithEmailUseCase(email, password)
-                // Il login esplicito con password conta come conferma identità per questa sessione
-                biometricRepository.confirmSession()
-                _authUiState.value = AuthUiState.Success("Signed in successfully")
-
+                // Pre-confirm and pre-check before the network call to avoid the race where
+                // SessionStatus.Authenticated fires before _showBiometricProposal is set.
                 val availability = checkBiometricAvailabilityUseCase()
                 if (availability == BiometricAvailabilityStatus.Available &&
                     !biometricRepository.isBiometricLoginEnabled()
                 ) {
-                    _biometricEffect.emit(BiometricEffect.ProposeEnablement)
+                    _showBiometricProposal.value = true
                 }
+                biometricRepository.confirmSession()
+                signInWithEmailUseCase(email, password)
+                _authUiState.value = AuthUiState.Success("Signed in successfully")
             } catch (e: Exception) {
+                _showBiometricProposal.value = false
+                biometricRepository.resetSessionConfirmation()
                 val errorMessage = e.message ?: "Sign-in failed. Please try again."
                 _authUiState.value = AuthUiState.Error(errorMessage)
                 _authEffect.emit(AuthEffect.ShowSnackbar(errorMessage))
@@ -188,17 +179,20 @@ class AuthViewModel(
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             try {
-                signInWithGoogleUseCase(idToken)
-                biometricRepository.confirmSession()
-                _authUiState.value = AuthUiState.Success()
-
+                // Pre-confirm and pre-check before the network call to avoid the race where
+                // SessionStatus.Authenticated fires before _showBiometricProposal is set.
                 val availability = checkBiometricAvailabilityUseCase()
                 if (availability == BiometricAvailabilityStatus.Available &&
                     !biometricRepository.isBiometricLoginEnabled()
                 ) {
-                    _biometricEffect.emit(BiometricEffect.ProposeEnablement)
+                    _showBiometricProposal.value = true
                 }
+                biometricRepository.confirmSession()
+                signInWithGoogleUseCase(idToken)
+                _authUiState.value = AuthUiState.Success()
             } catch (e: Exception) {
+                _showBiometricProposal.value = false
+                biometricRepository.resetSessionConfirmation()
                 val msg = e.message ?: "Errore imprevisto. Riprova."
                 _authUiState.value = AuthUiState.Error(msg)
                 _authEffect.emit(AuthEffect.ShowSnackbar(msg))
@@ -319,6 +313,26 @@ class AuthViewModel(
                 _authEffect.emit(AuthEffect.ShowSnackbar("Accesso biometrico disabilitato"))
             } catch (e: Exception) {
                 _authEffect.emit(AuthEffect.ShowSnackbar("Errore nella disabilitazione biometrica"))
+            }
+        }
+    }
+
+    /** Chiude la proposta del dialog biometrico sbloccando la coda del NavHost. */
+    fun onBiometricProposalDismissed() {
+        _showBiometricProposal.value = false
+    }
+
+    /**
+     * Chiamata ogni volta che l'app torna in foreground (ON_START).
+     *
+     * Se c'è una sessione attiva, azzera la conferma biometrica in modo che il nav guard
+     * possa richiedere lo sblocco biometrico all'utente ad ogni apertura dell'app.
+     */
+    fun onAppForeground() {
+        if (sessionStatus.value is SessionStatus.Authenticated) {
+            biometricRepository.resetSessionConfirmation()
+            viewModelScope.launch {
+                _biometricRequired.value = restoreAuthenticatedSessionUseCase()
             }
         }
     }

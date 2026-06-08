@@ -12,9 +12,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavGraphBuilder
@@ -24,58 +21,50 @@ import com.mattiamularoni.saveeat.core.navigation.LoginRoute
 import com.mattiamularoni.saveeat.features.auth.presentation.ui.AuthScreen
 import com.mattiamularoni.saveeat.features.auth.presentation.ui.BiometricUnlockScreen
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
-import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.BiometricEffect
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.BiometricUiState
-import kotlinx.coroutines.flow.collectLatest
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * Composable di navigazione per la schermata di autenticazione email/password.
  *
- * Oltre a mostrare [AuthScreen], osserva [AuthViewModel.biometricEffect] per
- * intercettare [BiometricEffect.ProposeEnablement] ed esporre un [AlertDialog]
- * che propone l'attivazione del login biometrico subito dopo il primo accesso.
+ * Oltre a mostrare [AuthScreen], osserva lo stato di proposta biometrica per
+ * esporre un [AlertDialog] che propone l'attivazione del login biometrico subito dopo il primo accesso.
  *
  * Il dialog è gestito qui (non in [AuthScreen]) per evitare modifiche alla UI esistente
  * e rispettare la separazione tra navigazione e schermata.
  */
 fun NavGraphBuilder.authScreen(
+    authViewModel: AuthViewModel,
     onNavigateToPantry: () -> Unit = {}
 ) {
     composable<LoginRoute> {
-        val viewModel: AuthViewModel = koinViewModel()
-        var showBiometricDialog by remember { mutableStateOf(false) }
-
-        LaunchedEffect(Unit) {
-            viewModel.biometricEffect.collectLatest { effect ->
-                when (effect) {
-                    is BiometricEffect.ProposeEnablement -> showBiometricDialog = true
-                }
-            }
-        }
+        // Use the Activity-scoped instance from the NavHost so that showBiometricProposal
+        // and sign-in logic are observed on the same ViewModel instance.
+        val showBiometricDialog by authViewModel.showBiometricProposal.collectAsState()
 
         if (showBiometricDialog) {
             AlertDialog(
-                onDismissRequest = { showBiometricDialog = false },
+                onDismissRequest = { authViewModel.onBiometricProposalDismissed() },
                 title = { Text("Abilita accesso biometrico") },
                 text = { Text("Vuoi accedere più velocemente con impronta digitale o Face ID?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        viewModel.enableBiometricLogin()
-                        showBiometricDialog = false
+                        authViewModel.enableBiometricLogin()
+                        authViewModel.onBiometricProposalDismissed()
                     }) {
                         Text("Abilita")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showBiometricDialog = false }) {
+                    TextButton(onClick = {
+                        authViewModel.onBiometricProposalDismissed()
+                    }) {
                         Text("Non ora")
                     }
                 }
             )
         }
 
-        AuthScreen(onNavigateToPantry = onNavigateToPantry)
+        AuthScreen(viewModel = authViewModel, onNavigateToPantry = onNavigateToPantry)
     }
 }
 
@@ -97,16 +86,16 @@ fun NavGraphBuilder.authScreen(
  * @param onNavigateToHome chiamata dopo autenticazione biometrica riuscita.
  */
 fun NavGraphBuilder.biometricScreen(
+    authViewModel: AuthViewModel,
     onNavigateToHome: () -> Unit
 ) {
     composable<BiometricRoute> {
-        val viewModel: AuthViewModel = koinViewModel()
         val context = LocalContext.current
-        val biometricUiState by viewModel.biometricUiState.collectAsState()
+        val biometricUiState by authViewModel.biometricUiState.collectAsState()
 
         // Auto-avvia il prompt biometrico appena la schermata appare
         LaunchedEffect(Unit) {
-            launchBiometricPrompt(context, viewModel)
+            launchBiometricPrompt(context, authViewModel)
         }
 
         // Naviga a Home dopo autenticazione biometrica riuscita
@@ -118,8 +107,8 @@ fun NavGraphBuilder.biometricScreen(
 
         BiometricUnlockScreen(
             subtitle = "Bentornato su SaveEat",
-            onTapFingerprint = { launchBiometricPrompt(context, viewModel) },
-            onUsePassword = { viewModel.onBiometricFallbackToPassword() },
+            onTapFingerprint = { launchBiometricPrompt(context, authViewModel) },
+            onUsePassword = { authViewModel.onBiometricFallbackToPassword() },
             errorMessage = (biometricUiState as? BiometricUiState.Error)?.message
         )
     }
