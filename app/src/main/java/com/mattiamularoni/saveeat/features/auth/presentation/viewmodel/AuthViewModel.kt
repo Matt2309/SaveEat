@@ -1,16 +1,7 @@
 package com.mattiamularoni.saveeat.features.auth.presentation.viewmodel
 
-import android.content.Context
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
-import androidx.credentials.exceptions.GetCredentialCancellationException
-import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.mattiamularoni.saveeat.BuildConfig
 import com.mattiamularoni.saveeat.features.auth.domain.model.BiometricAvailabilityStatus
 import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepository
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.CheckBiometricAvailabilityUseCase
@@ -185,54 +176,28 @@ class AuthViewModel(
     }
 
     /**
-     * Avvia il flusso Google Sign-In tramite Credential Manager API.
+     * Chiamata dalla UI dopo aver ottenuto l'ID Token da CredentialManager.
      *
-     * Mostra il picker account Google, estrae l'ID Token e lo usa per autenticarsi
-     * su Supabase. Al successo, esegue l'upsert del profilo nella tabella `users`
-     * e, se la biometria è disponibile ma non abilitata, propone di attivarla.
+     * Autentica l'utente su Supabase e, se la biometria è disponibile ma non abilitata,
+     * propone di attivarla. Non riceve né usa Context: tutta la logica di sistema
+     * (CredentialManager, picker Google) rimane nel layer Composable.
      *
-     * @param context Activity context richiesto da [CredentialManager] per il picker.
+     * @param idToken ID Token Google ottenuto dalla UI tramite CredentialManager.
      */
-    fun signInWithGoogle(context: Context) {
+    fun onGoogleIdTokenReceived(idToken: String) {
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             try {
-                val credentialManager = CredentialManager.create(context)
-                val googleIdOption = GetGoogleIdOption.Builder()
-                    .setFilterByAuthorizedAccounts(false)
-                    .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                    .setAutoSelectEnabled(true)
-                    .build()
-                val request = GetCredentialRequest.Builder()
-                    .addCredentialOption(googleIdOption)
-                    .build()
-                val result = credentialManager.getCredential(context, request)
-                val credential = result.credential
-                if (credential is CustomCredential &&
-                    credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
-                ) {
-                    val idToken = GoogleIdTokenCredential.createFrom(credential.data).idToken
-                    signInWithGoogleUseCase(idToken)
-                    biometricRepository.confirmSession()
-                    _authUiState.value = AuthUiState.Success()
+                signInWithGoogleUseCase(idToken)
+                biometricRepository.confirmSession()
+                _authUiState.value = AuthUiState.Success()
 
-                    val availability = checkBiometricAvailabilityUseCase()
-                    if (availability == BiometricAvailabilityStatus.Available &&
-                        !biometricRepository.isBiometricLoginEnabled()
-                    ) {
-                        _biometricEffect.emit(BiometricEffect.ProposeEnablement)
-                    }
-                } else {
-                    val msg = "Credenziale non supportata"
-                    _authUiState.value = AuthUiState.Error(msg)
-                    _authEffect.emit(AuthEffect.ShowSnackbar(msg))
+                val availability = checkBiometricAvailabilityUseCase()
+                if (availability == BiometricAvailabilityStatus.Available &&
+                    !biometricRepository.isBiometricLoginEnabled()
+                ) {
+                    _biometricEffect.emit(BiometricEffect.ProposeEnablement)
                 }
-            } catch (e: GetCredentialCancellationException) {
-                _authUiState.value = AuthUiState.Idle
-            } catch (e: GetCredentialException) {
-                val msg = "Accesso con Google non riuscito. Riprova."
-                _authUiState.value = AuthUiState.Error(msg)
-                _authEffect.emit(AuthEffect.ShowSnackbar(msg))
             } catch (e: Exception) {
                 val msg = e.message ?: "Errore imprevisto. Riprova."
                 _authUiState.value = AuthUiState.Error(msg)
