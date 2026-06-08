@@ -25,3 +25,6 @@ object LeaderboardRoute
 
 @Serializable
 object BiometricRoute
+
+@Serializable
+object ProfileRoute

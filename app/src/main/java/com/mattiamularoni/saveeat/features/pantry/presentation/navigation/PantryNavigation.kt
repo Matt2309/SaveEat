@@ -6,9 +6,13 @@ import com.mattiamularoni.saveeat.core.navigation.PantryRoute
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryScreen
 
 fun NavGraphBuilder.pantryScreen(
-    onNavigateToScan: () -> Unit = {}
+    onNavigateToScan: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     composable<PantryRoute> {
-        PantryScreen(onNavigateToScan = onNavigateToScan)
+        PantryScreen(
+            onNavigateToScan = onNavigateToScan,
+            onNavigateToProfile = onNavigateToProfile
+        )
     }
 }

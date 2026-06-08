@@ -10,6 +10,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState // [FIX] 1
 import androidx.navigation.compose.rememberNavController
 import com.mattiamularoni.saveeat.core.ui.MainScaffold
 import com.mattiamularoni.saveeat.features.auth.presentation.navigation.authScreen
@@ -18,6 +19,7 @@ import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewM
 import com.mattiamularoni.saveeat.features.home.presentation.navigation.homeScreen
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.navigation.leaderboardScreen
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.pantryScreen
+import com.mattiamularoni.saveeat.features.profile.presentation.navigation.profileScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeDetailScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.navigation.scanReceiptScreen
@@ -36,6 +38,10 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
     // Blocca la transizione immediata a HomeRoute se l'utente ha il dialog aperto
     val showBiometricProposal by authViewModel.showBiometricProposal.collectAsState()
 
+    // [FIX] 2 - osserviamo la destinazione corrente: diventa non-null solo dopo che
+    // il NavHost ha chiamato setGraph(). Serve sia come guardia sia per rivalutare l'effetto.
+    val currentBackStackEntry by navController.currentBackStackEntryAsState()
+
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -47,13 +53,16 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(sessionStatus, biometricRequired, showBiometricProposal) {
-        val currentDestination = navController.currentDestination?.route
+    // [FIX] 3 - aggiunta currentBackStackEntry tra le chiavi
+    LaunchedEffect(sessionStatus, biometricRequired, showBiometricProposal, currentBackStackEntry) {
+        // [FIX] 3 - se il grafo non è ancora pronto, la route è null: NON navigare (evita il crash).
+        val currentDestination = currentBackStackEntry?.destination?.route
+            ?: return@LaunchedEffect
         val isOnLoginRoute = currentDestination == LoginRoute::class.qualifiedName ||
                 currentDestination == "LoginRoute"
-        val isOnBiometricRoute = currentDestination?.contains(
+        val isOnBiometricRoute = currentDestination.contains(
             BiometricRoute::class.qualifiedName.orEmpty()
-        ) == true
+        )
 
         val bioRequired = biometricRequired ?: return@LaunchedEffect
 
@@ -126,14 +135,22 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
+                onNavigateToProfile = { navController.navigate(ProfileRoute) }
             )
             pantryScreen(
                 onNavigateToScan = {
                     navController.navigate(ScanReceiptRoute)
-                }
+                },
+                onNavigateToProfile = { navController.navigate(ProfileRoute) }
             )
             recipeScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToProfile = { navController.navigate(ProfileRoute) }
+            )
+            profileScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

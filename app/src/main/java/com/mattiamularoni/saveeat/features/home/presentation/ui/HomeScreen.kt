@@ -48,6 +48,7 @@ fun HomeScreen(
     onNavigateToScan: () -> Unit = {},
     onNavigateToPantry: () -> Unit = {},
     onNavigateToRecipes: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
     pantryViewModel: PantryViewModel = koinViewModel(),
     homeViewModel: HomeViewModel = koinViewModel()
 ) {
@@ -73,7 +74,10 @@ fun HomeScreen(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
         topBar = {
-            HomeTopBar(avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl)
+            HomeTopBar(
+                avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
+                onAvatarClick = onNavigateToProfile
+            )
         },
         floatingActionButton = {
             ExpandableFab(
@@ -121,7 +125,7 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeTopBar(avatarUrl: String?) {
+private fun HomeTopBar(avatarUrl: String?, onAvatarClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,7 +140,8 @@ private fun HomeTopBar(avatarUrl: String?) {
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .clickable { onAvatarClick() },
             contentAlignment = Alignment.Center
         ) {
             if (avatarUrl.isNullOrBlank()) {

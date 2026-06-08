@@ -47,6 +47,7 @@ import org.koin.androidx.compose.koinViewModel
 fun PantryScreen(
     viewModel: PantryViewModel = koinViewModel(),
     onNavigateToScan: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -73,7 +74,7 @@ fun PantryScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = { PantryTopBar() },
+        topBar = { PantryTopBar(onAvatarClick = onNavigateToProfile) },
         floatingActionButton = {
             ExpandableFab(
                 onScannerClick = onNavigateToScan,
