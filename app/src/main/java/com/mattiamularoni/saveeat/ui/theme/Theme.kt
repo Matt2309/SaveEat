@@ -83,7 +83,9 @@ enum class ThemeMode {
 @Composable
 fun SaveEatTheme(
     themeMode: ThemeMode = ThemeMode.System,
-    dynamicColor: Boolean = true,
+    // Disattivato per usare sempre la palette verde brand dei mockup (vedi DESIGN.md),
+    // invece dei colori dinamici del wallpaper su Android 12+.
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {

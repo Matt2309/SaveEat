@@ -93,7 +93,9 @@ fun HomeScreen(
         ) {
             when (val state = uiState) {
                 is HomeUiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+                    com.mattiamularoni.saveeat.core.ui.SaveEatLoadingSkeleton(
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
                 }
                 is HomeUiState.Error -> {
                     Text(
@@ -292,7 +294,7 @@ private fun EcoPointsCard(ecoPoints: Int) {
                 modifier = Modifier
                     .size(44.dp)
                     .clip(CircleShape)
-                    .background(Color.White),
+                    .background(MaterialTheme.colorScheme.surface),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(

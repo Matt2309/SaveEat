@@ -140,7 +140,7 @@ fun ProfileScreen(
                     )
                     Surface(
                         shape = RoundedCornerShape(16.dp),
-                        color = Color.White
+                        color = MaterialTheme.colorScheme.surfaceContainerLowest
                     ) {
                         Column {
                             AccountRow(Icons.Outlined.Notifications, "Notifiche") { /* TODO */ }
@@ -152,7 +152,7 @@ fun ProfileScreen(
                     }
                 }
 
-                // ---- Logout ----
+                // ---- Logout (rosso) ----
                 OutlinedButton(
                     onClick = { viewModel.signOut() },
                     modifier = Modifier
@@ -160,7 +160,10 @@ fun ProfileScreen(
                         .height(52.dp),
                     shape = RoundedCornerShape(12.dp),
                     border = androidx.compose.foundation.BorderStroke(
-                        1.dp, MaterialTheme.colorScheme.outlineVariant
+                        1.dp, MaterialTheme.colorScheme.error.copy(alpha = 0.5f)
+                    ),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error
                     )
                 ) {
                     Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = null)

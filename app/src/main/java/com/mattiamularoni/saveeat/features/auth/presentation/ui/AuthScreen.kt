@@ -108,7 +108,7 @@ fun AuthScreen(
                     .fillMaxWidth()
                     .widthIn(max = 448.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = Color.White),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
                 elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
@@ -435,9 +435,9 @@ private fun SaveEatTextField(
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         shape = RoundedCornerShape(8.dp),
         colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = Color(0xFFF7F2F8),
-            unfocusedContainerColor = Color(0xFFF7F2F8),
-            disabledContainerColor = Color(0xFFF7F2F8),
+            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
             focusedBorderColor = MaterialTheme.colorScheme.primary,
             unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
             focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
