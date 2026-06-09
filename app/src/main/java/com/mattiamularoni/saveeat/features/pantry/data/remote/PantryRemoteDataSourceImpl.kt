@@ -57,7 +57,9 @@ class PantryRemoteDataSourceImpl(
             try {
                 supabaseClient
                     .from("pantry_items")
-                    .insert(item)
+                    .insert(item) {
+                        select()
+                    }
                     .decodeSingle<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to add pantry item: ${e.message}", e)

@@ -19,6 +19,7 @@ lifecycleRuntimeCompose = "2.10.0"
 ktor = "3.2.1"
 navigationCommonKtx = "2.9.8"
 coil = "2.7.0"
+generativeaiKmp = "0.9.0-1.1.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -52,6 +53,7 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 supabase-bom = { module = "io.github.jan-tennert.supabase:bom", version.ref = "supabase" }
 supabase-postgrest = { module = "io.github.jan-tennert.supabase:postgrest-kt", version.ref = "supabase" }
+generativeai = { module = "dev.shreyaspatil.generativeai:generativeai-google", version.ref = "generativeaiKmp" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
