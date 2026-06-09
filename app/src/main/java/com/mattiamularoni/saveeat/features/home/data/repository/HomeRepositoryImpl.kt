@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.home.data.repository
 
+import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.data.local.HomeDao
 import com.mattiamularoni.saveeat.features.home.data.mapper.HomeMapper
 import com.mattiamularoni.saveeat.features.home.data.remote.HomeRemoteDataSource
@@ -23,11 +24,9 @@ import kotlinx.coroutines.withContext
  */
 class HomeRepositoryImpl(
     private val homeDao: HomeDao,
-    private val remoteDataSource: HomeRemoteDataSource
+    private val remoteDataSource: HomeRemoteDataSource,
+    private val sessionProvider: SessionProvider
 ) : HomeRepository {
-
-    // Placeholder per userId (da integrare con Auth quando disponibile)
-    private val currentUserId = "test-user-uuid"
 
     /**
      * Osserva i dati completi della dashboard Home.
@@ -41,7 +40,7 @@ class HomeRepositoryImpl(
      */
     override fun observeHomeDashboard(): Flow<HomeDashboard> {
         return homeDao
-            .observeHomeDashboard(currentUserId)
+            .observeHomeDashboard(sessionProvider.getCurrentUserId())
             .filterNotNull()
             .map { entity -> HomeMapper.entityToDomain(entity) }
     }
@@ -62,8 +61,8 @@ class HomeRepositoryImpl(
     override suspend fun refreshHomeDashboard(): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                val remoteDto = remoteDataSource.getHomeDashboard(currentUserId)
-                val entity = HomeMapper.dtoToEntity(remoteDto, currentUserId)
+                val remoteDto = remoteDataSource.getHomeDashboard(sessionProvider.getCurrentUserId())
+                val entity = HomeMapper.dtoToEntity(remoteDto, sessionProvider.getCurrentUserId())
                 homeDao.insertOrUpdateDashboard(entity)
                 true
             } catch (e: Exception) {
@@ -83,7 +82,7 @@ class HomeRepositoryImpl(
     override suspend fun getHomeDashboard(): HomeDashboard? =
         withContext(Dispatchers.IO) {
             try {
-                homeDao.getHomeDashboard(currentUserId)?.let { entity ->
+                homeDao.getHomeDashboard(sessionProvider.getCurrentUserId())?.let { entity ->
                     HomeMapper.entityToDomain(entity)
                 }
             } catch (e: Exception) {
