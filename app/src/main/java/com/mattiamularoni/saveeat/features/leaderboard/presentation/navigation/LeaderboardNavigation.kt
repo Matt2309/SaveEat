@@ -6,9 +6,13 @@ import com.mattiamularoni.saveeat.core.navigation.LeaderboardRoute
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.ui.LeaderboardScreen
 
 fun NavGraphBuilder.leaderboardScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     composable<LeaderboardRoute> {
-        LeaderboardScreen(onNavigateBack = onNavigateBack)
+        LeaderboardScreen(
+            onNavigateBack = onNavigateBack,
+            onNavigateToProfile = onNavigateToProfile
+        )
     }
 }

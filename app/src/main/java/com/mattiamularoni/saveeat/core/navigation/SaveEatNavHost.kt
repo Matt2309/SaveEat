@@ -148,7 +148,8 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToProfile = { navController.navigate(ProfileRoute) }
+                onNavigateToProfile = { navController.navigate(ProfileRoute) },
+                onOpenRecipe = { recipeId -> navController.navigate(RecipeDetailRoute(recipeId)) }
             )
             profileScreen(
                 onNavigateBack = {
@@ -168,7 +169,8 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
             leaderboardScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
+                onNavigateToProfile = { navController.navigate(ProfileRoute) }
             )
         }
     }

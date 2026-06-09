@@ -35,6 +35,7 @@ private val Filters = listOf("Suggeriti", "Veloci (< 30 min)", "Vegetariani")
 fun RecipeScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
+    onOpenRecipe: (String) -> Unit = {},
     viewModel: RecipeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.recipesUiState.collectAsState()
@@ -88,9 +89,9 @@ fun RecipeScreen(
             // Contenuto
             when (val state = uiState) {
                 is RecipeUiState.Loading -> {
-                    Box(Modifier.fillMaxWidth().padding(top = 48.dp), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
+                    com.mattiamularoni.saveeat.core.ui.SaveEatLoadingSkeleton(
+                        modifier = Modifier.fillMaxWidth()
+                    )
                 }
                 is RecipeUiState.Error -> {
                     Text(
@@ -109,7 +110,9 @@ fun RecipeScreen(
                 is RecipeUiState.Success -> {
                     val recipes = state.recipes
                     // Prima ricetta in evidenza
-                    recipes.firstOrNull()?.let { FeaturedRecipeCard(it) }
+                    recipes.firstOrNull()?.let { recipe ->
+                        FeaturedRecipeCard(recipe, onClick = { onOpenRecipe(recipe.id) })
+                    }
                     // Le altre, a coppie
                     recipes.drop(1).chunked(2).forEach { rowItems ->
                         Row(
@@ -117,7 +120,11 @@ fun RecipeScreen(
                             horizontalArrangement = Arrangement.spacedBy(16.dp)
                         ) {
                             rowItems.forEach { recipe ->
-                                SmallRecipeCard(recipe, Modifier.weight(1f))
+                                SmallRecipeCard(
+                                    recipe,
+                                    Modifier.weight(1f),
+                                    onClick = { onOpenRecipe(recipe.id) }
+                                )
                             }
                             if (rowItems.size == 1) Spacer(Modifier.weight(1f))
                         }
@@ -194,12 +201,13 @@ private fun FilterPill(label: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun FeaturedRecipeCard(recipe: Recipe) {
+private fun FeaturedRecipeCard(recipe: Recipe, onClick: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable { onClick() }
     ) {
         // Box grigio al posto della foto
         Box(
@@ -233,11 +241,12 @@ private fun FeaturedRecipeCard(recipe: Recipe) {
 }
 
 @Composable
-private fun SmallRecipeCard(recipe: Recipe, modifier: Modifier = Modifier) {
+private fun SmallRecipeCard(recipe: Recipe, modifier: Modifier = Modifier, onClick: () -> Unit = {}) {
     Column(
         modifier = modifier
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
+            .clickable { onClick() }
     ) {
         Box(
             modifier = Modifier

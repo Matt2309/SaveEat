@@ -1,5 +1,7 @@
 package com.mattiamularoni.saveeat.features.home.presentation.di
 
+import com.mattiamularoni.saveeat.core.data.remote.AuthSessionProviderImpl
+import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.data.remote.HomeRemoteDataSource
 import com.mattiamularoni.saveeat.features.home.data.remote.HomeRemoteDataSourceImpl
 import com.mattiamularoni.saveeat.features.home.data.repository.HomeRepositoryImpl
@@ -24,10 +26,10 @@ import org.koin.dsl.module
  * - supabaseClient: injected da networkModule (core)
  * - homeDao: injected da databaseModule (core)
  * - userId: Managed internally in repository (MVP: "test-user-uuid")
- *          TODO: Integrare userId dinamico da Auth module quando disponibile
  */
 val homeScreenModule = module {
-    // Remote DataSource
+    single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
+
     factory<HomeRemoteDataSource> {
         HomeRemoteDataSourceImpl(supabaseClient = get())
     }
@@ -36,7 +38,8 @@ val homeScreenModule = module {
     factory<HomeRepository> {
         HomeRepositoryImpl(
             homeDao = get(),
-            remoteDataSource = get()
+            remoteDataSource = get(),
+            sessionProvider = get()
         )
     }
 

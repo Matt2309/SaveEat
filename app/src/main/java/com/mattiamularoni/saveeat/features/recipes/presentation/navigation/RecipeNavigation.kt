@@ -7,12 +7,14 @@ import com.mattiamularoni.saveeat.features.recipes.presentation.ui.RecipeScreen
 
 fun NavGraphBuilder.recipeScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
+    onOpenRecipe: (String) -> Unit = {}
 ) {
     composable<RecipeRoute> {
         RecipeScreen(
             onNavigateBack = onNavigateBack,
-            onNavigateToProfile = onNavigateToProfile
+            onNavigateToProfile = onNavigateToProfile,
+            onOpenRecipe = onOpenRecipe
         )
     }
 }

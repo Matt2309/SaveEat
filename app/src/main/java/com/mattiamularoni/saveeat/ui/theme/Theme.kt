@@ -83,7 +83,7 @@ enum class ThemeMode {
 @Composable
 fun SaveEatTheme(
     themeMode: ThemeMode = ThemeMode.System,
-    dynamicColor: Boolean = true,
+    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {
