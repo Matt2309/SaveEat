@@ -40,6 +40,25 @@ android {
             "SUPABASE_ANON_KEY",
             localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\""
         )
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${localProperties.getProperty("GEMINI_API_KEY")}\""
+        )
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\""
+        )
+    }
+
+    signingConfigs {
+        create("sharedDebug") {
+            storeFile = file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -49,6 +68,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("sharedDebug")
         }
     }
     compileOptions {
@@ -81,12 +103,17 @@ dependencies {
     implementation(libs.koin.androidx.compose)
     implementation(libs.koin.androidx.compose.navigation)
     implementation(libs.coil.compose)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.identity.googleid)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.supabase.kt)
     implementation(libs.ktor.client.android)
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
+    implementation(libs.generativeai)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

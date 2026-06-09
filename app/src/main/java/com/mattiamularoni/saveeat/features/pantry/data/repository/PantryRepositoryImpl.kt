@@ -473,6 +473,7 @@ class PantryRepositoryImpl(
         receiptItems: List<PantryItem>
     ) = withContext(Dispatchers.IO) {
         try {
+            val validReceiptId = if (receiptId.isBlank()) null else receiptId
             for (receiptItem in receiptItems) {
                 val matchingPlaceholder = findMatchingPlaceholder(receiptItem.name)
 
@@ -481,7 +482,7 @@ class PantryRepositoryImpl(
                     convertPlaceholderToRealItem(
                         matchingPlaceholder.id,
                         receiptItem.copy(
-                            receiptId = receiptId,
+                            receiptId = validReceiptId,
                             isPlaceholder = false
                         )
                     )
@@ -489,7 +490,7 @@ class PantryRepositoryImpl(
                     // Create new item if no match
                     addPantryItem(
                         receiptItem.copy(
-                            receiptId = receiptId,
+                            receiptId = validReceiptId,
                             isPlaceholder = false
                         )
                     )

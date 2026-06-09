@@ -1,67 +1,76 @@
 package com.mattiamularoni.saveeat.features.auth.presentation.di
 
+import com.mattiamularoni.saveeat.features.auth.data.local.BiometricPreferenceDataSource
+import com.mattiamularoni.saveeat.features.auth.data.local.BiometricRepositoryImpl
 import com.mattiamularoni.saveeat.features.auth.data.remote.AuthRepositoryImpl
 import com.mattiamularoni.saveeat.features.auth.domain.repository.AuthRepository
+import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepository
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.AuthenticateWithBiometricsUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.CheckBiometricAvailabilityUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.DisableBiometricUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.EnableBiometricUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.ObserveSessionStatusUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.RestoreAuthenticatedSessionUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithEmailUseCase
+import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignInWithGoogleUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignOutUseCase
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignUpWithEmailUseCase
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import io.github.jan.supabase.SupabaseClient
 import org.koin.android.ext.koin.androidApplication
 import org.koin.androidx.viewmodel.dsl.viewModelOf
-import org.koin.core.module.dsl.factoryOf
 import org.koin.dsl.module
 
 /**
- * Koin module for the Auth feature.
+ * Koin module per il feature Auth.
  *
- * Configures the dependency injection for:
- * - Data layer: Repository implementation
- * - Domain layer: Use cases
+ * Configura la dependency injection per:
+ * - Data layer: repository email/password e repository biometrico
+ * - Domain layer: tutti i use case di autenticazione e biometria
  * - Presentation layer: ViewModel
  *
  * Scopes:
- * - Repository as single: Ensures single instance of auth repository
- * - Use cases as factory: Stateless services created on demand
- * - ViewModel as viewModel: Lifecycle-aware, created per screen
- *
- * Dependencies:
- * - SupabaseClient: Injected from networkModule (core)
+ * - Repository come `single`: istanza unica condivisa
+ * - Use case come `factory`: stateless, creati on demand
+ * - ViewModel come `viewModel`: lifecycle-aware, uno per schermata
  */
 val authModule = module {
-    // Data Layer
+
+    // ---- Data Layer ----
+
     single<AuthRepository> {
         AuthRepositoryImpl(
             supabaseClient = get<SupabaseClient>()
         )
     }
 
-    // Domain Layer - Use Cases
-    factory {
-        SignInWithEmailUseCase(
-            authRepository = get()
+    single { BiometricPreferenceDataSource(androidApplication()) }
+
+    single<BiometricRepository> {
+        BiometricRepositoryImpl(
+            context = androidApplication(),
+            supabaseClient = get(),
+            preferenceDataSource = get()
         )
     }
 
-    factory {
-        SignUpWithEmailUseCase(
-            authRepository = get()
-        )
-    }
+    // ---- Domain Layer — Use Cases Email/Password + Google ----
 
-    factory {
-        SignOutUseCase(
-            authRepository = get()
-        )
-    }
+    factory { SignInWithEmailUseCase(authRepository = get()) }
+    factory { SignUpWithEmailUseCase(authRepository = get()) }
+    factory { SignOutUseCase(authRepository = get()) }
+    factory { SignInWithGoogleUseCase(authRepository = get()) }
+    factory { ObserveSessionStatusUseCase(authRepository = get()) }
 
-    factory {
-        ObserveSessionStatusUseCase(
-            authRepository = get()
-        )
-    }
+    // ---- Domain Layer — Use Cases Biometria ----
 
-    // Presentation Layer - ViewModel
+    factory { CheckBiometricAvailabilityUseCase(biometricRepository = get()) }
+    factory { EnableBiometricUseCase(biometricRepository = get()) }
+    factory { DisableBiometricUseCase(biometricRepository = get()) }
+    factory { AuthenticateWithBiometricsUseCase(biometricRepository = get()) }
+    factory { RestoreAuthenticatedSessionUseCase(biometricRepository = get()) }
+
+    // ---- Presentation Layer ----
+
     viewModelOf(::AuthViewModel)
 }

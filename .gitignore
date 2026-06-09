@@ -87,3 +87,6 @@ lint/tmp/
 apikey.properties
 
 docs/
+
+!README.md
+*.md
