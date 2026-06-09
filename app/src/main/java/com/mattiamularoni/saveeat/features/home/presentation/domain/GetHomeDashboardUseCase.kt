@@ -27,7 +27,7 @@ class GetHomeDashboardUseCase(
      *
      * @return Flow<HomeDashboard> che emette dati aggregati dashboard
      */
-    operator fun invoke(): Flow<HomeDashboard> {
+    operator fun invoke(): Flow<HomeDashboard?> {
         return homeRepository.observeHomeDashboard()
     }
 

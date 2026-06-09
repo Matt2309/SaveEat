@@ -54,10 +54,10 @@ data class ExpiringItemDto(
  */
 @Serializable
 data class LeaderboardUserDto(
-    val id: String,
-    val email: String,
+    val id: String = "",
+    val email: String = "",
     @SerialName("display_name")
-    val displayName: String,
+    val displayName: String = "",
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     @SerialName("eco_points")

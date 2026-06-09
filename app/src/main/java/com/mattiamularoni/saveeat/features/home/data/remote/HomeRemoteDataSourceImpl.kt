@@ -48,7 +48,6 @@ class HomeRemoteDataSourceImpl(
                     .select {
                         filter {
                             eq("user_id", userId)
-                            eq("status", "active")
                             lte("expiration_date", sevenDaysFromNow)
                         }
                         order("expiration_date", Order.ASCENDING)
@@ -73,10 +72,11 @@ class HomeRemoteDataSourceImpl(
                     .decodeList<PantryItemDto>()
 
                 val expiryThreshold = Instant.now().plus(Duration.ofDays(7)).toString()
-                val userRow = supabaseClient
+                val ecoPoints = supabaseClient
                     .from("users")
                     .select { filter { eq("id", userId) } }
-                    .decodeSingle<LeaderboardUserDto>()
+                    .decodeList<LeaderboardUserDto>()
+                    .firstOrNull()?.ecoPoints ?: 0
 
                 UserStatsDto(
                     totalItems = activeItems.size,
@@ -84,7 +84,7 @@ class HomeRemoteDataSourceImpl(
                         it.expirationDate != null && it.expirationDate <= expiryThreshold
                     },
                     activePlaceholders = activeItems.count { it.isPlaceholder },
-                    ecoPoints = userRow.ecoPoints
+                    ecoPoints = ecoPoints
                 )
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user stats: ${e.message}", e)
@@ -109,14 +109,15 @@ class HomeRemoteDataSourceImpl(
     override suspend fun getUserRankPosition(userId: String): Int =
         withContext(Dispatchers.IO) {
             try {
-                val userRow = supabaseClient
+                val userEcoPoints = supabaseClient
                     .from("users")
                     .select { filter { eq("id", userId) } }
-                    .decodeSingle<LeaderboardUserDto>()
+                    .decodeList<LeaderboardUserDto>()
+                    .firstOrNull()?.ecoPoints ?: 0
 
                 val usersAbove = supabaseClient
                     .from("users")
-                    .select { filter { gt("eco_points", userRow.ecoPoints) } }
+                    .select { filter { gt("eco_points", userEcoPoints) } }
                     .decodeList<LeaderboardUserDto>()
 
                 usersAbove.size + 1
@@ -143,7 +144,8 @@ class HomeRemoteDataSourceImpl(
                 supabaseClient
                     .from("users")
                     .select { filter { eq("id", userId) } }
-                    .decodeSingle<UserProfileDto>()
+                    .decodeList<UserProfileDto>()
+                    .firstOrNull() ?: UserProfileDto(id = userId)
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user profile: ${e.message}", e)
             }

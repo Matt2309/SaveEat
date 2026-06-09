@@ -22,7 +22,7 @@ interface HomeDao {
      * @return Flow che emette i dati dashboard quando cambiano
      */
     @Query("SELECT * FROM home_dashboard WHERE user_id = :userId LIMIT 1")
-    fun observeHomeDashboard(userId: String): Flow<HomeDashboardEntity?>
+    fun observeHomeDashboard(userId: String): Flow<List<HomeDashboardEntity>>
 
     /**
      * Recupera i dati dashboard in modo sincrono (unica lettura).

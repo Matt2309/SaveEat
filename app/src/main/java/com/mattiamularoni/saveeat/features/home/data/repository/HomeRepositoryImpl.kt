@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.home.data.repository
 
+import android.util.Log
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.data.local.HomeDao
 import com.mattiamularoni.saveeat.features.home.data.mapper.HomeMapper
@@ -8,7 +9,7 @@ import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -38,11 +39,15 @@ class HomeRepositoryImpl(
      *
      * @return Flow<HomeDashboard> aggiornato quando cambiano dati
      */
-    override fun observeHomeDashboard(): Flow<HomeDashboard> {
-        return homeDao
-            .observeHomeDashboard(sessionProvider.getCurrentUserId())
-            .filterNotNull()
-            .map { entity -> HomeMapper.entityToDomain(entity) }
+
+    override fun observeHomeDashboard(): Flow<HomeDashboard?> {
+
+        val currentUserId = sessionProvider.getCurrentUserId()
+
+        return homeDao.observeHomeDashboard(currentUserId)
+            .map { list ->
+                list.firstOrNull()?.let { HomeMapper.entityToDomain(it) }
+            }
     }
 
     /**
@@ -66,8 +71,10 @@ class HomeRepositoryImpl(
                 homeDao.insertOrUpdateDashboard(entity)
                 true
             } catch (e: Exception) {
-                // Log errore (future logging integration)
-                // Per MVP: ritorna false senza rethrow per permettere fallback alla cache
+                // AGGIUNGI QUESTE DUE RIGHE PER SCOPRIRE IL COLPEVOLE:
+                android.util.Log.e("DASHBOARD_DEBUG", "Errore fatale durante il refresh da Supabase!", e)
+                e.printStackTrace()
+
                 false
             }
         }
