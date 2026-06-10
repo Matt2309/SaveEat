@@ -10,7 +10,7 @@ import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import java.time.Instant
@@ -519,10 +519,7 @@ class PantryRepositoryImpl(
             var removed = 0
 
             // Fetch all pantry items from local cache
-            var allItems: List<PantryEntity> = emptyList()
-            pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).collect { entities ->
-                allItems = entities
-            }
+            val allItems: List<PantryEntity> = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
 
             // Group by (name, category)
             val grouped = allItems.groupBy { Pair(it.name, it.category) }
