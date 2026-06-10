@@ -225,8 +225,11 @@ class RecipeRepositoryImpl(
                 val now = Instant.now().toString()
                 val favoriteDto = FavoriteRecipeDto(userId, recipeId, now)
                 val favoriteEntity = FavoriteRecipeMapper.dtoToEntity(favoriteDto)
-                recipeDao.addFavoriteRecipe(favoriteEntity)
-                remoteDataSource.addFavoriteRecipe(favoriteDto)
+                val success = remoteDataSource.addFavoriteRecipe(favoriteDto)
+                if (success) {
+                    recipeDao.addFavoriteRecipe(favoriteEntity)
+                }
+                success
             } catch (e: Exception) {
                 throw Exception("Failed to add favorite recipe: ${e.message}", e)
             }
@@ -242,8 +245,8 @@ class RecipeRepositoryImpl(
     override suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Boolean =
         withContext(Dispatchers.IO) {
             try {
-                val deletedCount = recipeDao.removeFavoriteRecipe(userId, recipeId)
                 remoteDataSource.removeFavoriteRecipe(userId, recipeId)
+                val deletedCount = recipeDao.removeFavoriteRecipe(userId, recipeId)
                 deletedCount > 0
             } catch (e: Exception) {
                 throw Exception("Failed to remove favorite recipe: ${e.message}", e)
