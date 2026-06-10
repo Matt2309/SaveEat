@@ -1,6 +1,8 @@
 package com.mattiamularoni.saveeat.features.leaderboard.data.remote
 
 import io.github.jan.supabase.SupabaseClient
+import io.github.jan.supabase.postgrest.from
+import io.github.jan.supabase.postgrest.query.Order
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -31,9 +33,12 @@ class LeaderboardRemoteDataSourceImpl(
     override suspend fun getLeaderboard(): List<LeaderboardUserDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Integrate Postgrest query builder when available
-                // For MVP: return empty list, implement real queries when Postgrest SDK ready
-                emptyList()
+                supabaseClient
+                    .from("users")
+                    .select {
+                        order("eco_points", Order.DESCENDING)
+                    }
+                    .decodeList<LeaderboardUserDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch leaderboard: ${e.message}", e)
             }
@@ -51,8 +56,13 @@ class LeaderboardRemoteDataSourceImpl(
     override suspend fun getTopUsers(limit: Int): List<LeaderboardUserDto> =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest select with limit
-                emptyList()
+                supabaseClient
+                    .from("users")
+                    .select {
+                        order("eco_points", Order.DESCENDING)
+                        limit(limit.toLong())
+                    }
+                    .decodeList<LeaderboardUserDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch top users: ${e.message}", e)
             }
@@ -70,8 +80,15 @@ class LeaderboardRemoteDataSourceImpl(
     override suspend fun getUserById(userId: String): LeaderboardUserDto? =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest select with filter
-                null
+                supabaseClient
+                    .from("users")
+                    .select {
+                        filter {
+                            eq("id", userId)
+                        }
+                    }
+                    .decodeList<LeaderboardUserDto>()
+                    .firstOrNull()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user: ${e.message}", e)
             }
@@ -90,8 +107,20 @@ class LeaderboardRemoteDataSourceImpl(
     override suspend fun updateEcoPoints(userId: String, points: Int): Int =
         withContext(Dispatchers.IO) {
             try {
-                // TODO: Implement Postgrest update
-                0
+                val current = supabaseClient
+                    .from("users")
+                    .select { filter { eq("id", userId) } }
+                    .decodeList<LeaderboardUserDto>()
+                    .firstOrNull()?.ecoPoints ?: 0
+                val newTotal = current + points
+                supabaseClient
+                    .from("users")
+                    .update(mapOf("eco_points" to newTotal)) {
+                        filter { eq("id", userId) }
+                        select()
+                    }
+                    .decodeSingle<LeaderboardUserDto>()
+                    .ecoPoints
             } catch (e: Exception) {
                 throw Exception("Failed to update eco_points: ${e.message}", e)
             }

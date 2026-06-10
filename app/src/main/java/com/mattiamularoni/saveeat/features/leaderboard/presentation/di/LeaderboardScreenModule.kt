@@ -1,6 +1,5 @@
 package com.mattiamularoni.saveeat.features.leaderboard.presentation.di
 
-import com.mattiamularoni.saveeat.features.leaderboard.data.mapper.LeaderboardMapper
 import com.mattiamularoni.saveeat.features.leaderboard.data.remote.LeaderboardRemoteDataSource
 import com.mattiamularoni.saveeat.features.leaderboard.data.remote.LeaderboardRemoteDataSourceImpl
 import com.mattiamularoni.saveeat.features.leaderboard.data.repository.LeaderboardRepositoryImpl

@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.home.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
@@ -44,35 +45,11 @@ class HomeViewModel(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     init {
-        // On init: Carica dati dalla cache o mostra Empty
-        loadInitialData()
-
         // Subscribe al Flow della dashboard per aggiornamenti real-time
         subscribeToHomeDashboard()
-    }
 
-    /**
-     * Carica i dati iniziali dalla cache.
-     *
-     * Logica:
-     * - Tentaré di ottenere snapshot dalla cache
-     * - Se trovato: emettere Success
-     * - Se non trovato: emettere Empty
-     * - Permette UI di mostrare dati offline mentre refresh avviene in background (opzionale)
-     */
-    private fun loadInitialData() {
-        viewModelScope.launch {
-            try {
-                val cachedDashboard = getHomeDashboardUseCase.getCachedDashboard()
-                if (cachedDashboard != null) {
-                    _uiState.value = HomeUiState.Success(cachedDashboard)
-                } else {
-                    _uiState.value = HomeUiState.Empty
-                }
-            } catch (e: Exception) {
-                _uiState.value = HomeUiState.Error("Failed to load cached data: ${e.message}")
-            }
-        }
+        // Fetch fresh data from Supabase on every open; Room Flow will emit and update UI
+        refreshDashboard()
     }
 
     /**
@@ -90,7 +67,8 @@ class HomeViewModel(
         viewModelScope.launch {
             getHomeDashboardUseCase()
                 .map { dashboard ->
-                    HomeUiState.Success(dashboard) as HomeUiState
+                    if (dashboard != null) HomeUiState.Success(dashboard) as HomeUiState
+                    else HomeUiState.Empty
                 }
                 .catch { exception ->
                     // Fallback: mantieni stato precedente oppure mostra errore

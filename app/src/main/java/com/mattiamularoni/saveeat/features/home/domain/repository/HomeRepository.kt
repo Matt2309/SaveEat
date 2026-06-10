@@ -23,7 +23,7 @@ interface HomeRepository {
      *
      * @return Flow della dashboard aggiornato
      */
-    fun observeHomeDashboard(): Flow<HomeDashboard>
+    fun observeHomeDashboard(): Flow<HomeDashboard?>
 
     /**
      * Sincronizza la dashboard con Supabase.
