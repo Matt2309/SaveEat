@@ -55,7 +55,7 @@ class AuthRepositoryImpl(
             this.provider = Google
         }
 
-        val user = supabaseClient.auth.currentUserOrNull() ?: return
+        val user = supabaseClient.auth.currentSessionOrNull()?.user ?: return
         val metadata = user.userMetadata
         val displayName = metadata?.get("full_name")?.jsonPrimitive?.contentOrNull
             ?: metadata?.get("name")?.jsonPrimitive?.contentOrNull
