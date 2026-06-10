@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.home.data.mapper
 
+import com.mattiamularoni.saveeat.core.util.DateTimeUtils
 import com.mattiamularoni.saveeat.features.home.data.local.HomeDashboardEntity
 import com.mattiamularoni.saveeat.features.home.data.remote.HomeDashboardDto
 import kotlinx.serialization.json.Json
@@ -84,7 +85,7 @@ object HomeMapper {
                     id = item.id,
                     name = item.name,
                     category = item.category,
-                    expirationDate = parseIso8601(item.expirationDate),
+                    expirationDate = DateTimeUtils.parseIso8601OrDefault(item.expirationDate),
                     quantity = item.quantity,
                     unit = item.unit
                 )
@@ -119,8 +120,7 @@ object HomeMapper {
                 avatarUrl = dto.userProfile.avatarUrl,
                 rankPosition = dto.userProfile.rankPosition
             ),
-            lastSyncedAt = dto.lastSyncedAt?.let { parseIso8601(it) }
-                ?: System.currentTimeMillis()
+            lastSyncedAt = DateTimeUtils.parseIso8601OrDefault(dto.lastSyncedAt)
         )
     }
 
@@ -149,7 +149,7 @@ object HomeMapper {
                     id = item.id,
                     name = item.name,
                     category = item.category,
-                    expirationDate = formatLongToIso8601(item.expirationDate),
+                    expirationDate = DateTimeUtils.formatToIso8601(item.expirationDate),
                     quantity = item.quantity,
                     unit = item.unit
                 )
@@ -184,34 +184,8 @@ object HomeMapper {
                 avatarUrl = domain.userProfile.avatarUrl,
                 rankPosition = domain.userProfile.rankPosition
             ),
-            lastSyncedAt = formatLongToIso8601(domain.lastSyncedAt)
+            lastSyncedAt = DateTimeUtils.formatToIso8601(domain.lastSyncedAt)
         )
         return dtoToEntity(dto, domain.userId)
-    }
-
-    /**
-     * Converte timestamp ISO8601 string a Long milliseconds.
-     *
-     * @param isoString timestamp ISO8601 (es. "2025-06-01T10:16:59Z")
-     * @return Long timestamp in milliseconds from epoch
-     */
-    private fun parseIso8601(isoString: String?): Long {
-        return try {
-            isoString?.let {
-                java.time.Instant.parse(it).toEpochMilli()
-            } ?: System.currentTimeMillis()
-        } catch (e: Exception) {
-            System.currentTimeMillis()
-        }
-    }
-
-    /**
-     * Converte timestamp Long milliseconds a ISO8601 string.
-     *
-     * @param timestamp Long in milliseconds from epoch
-     * @return stringa ISO8601
-     */
-    private fun formatLongToIso8601(timestamp: Long): String {
-        return java.time.Instant.ofEpochMilli(timestamp).toString()
     }
 }

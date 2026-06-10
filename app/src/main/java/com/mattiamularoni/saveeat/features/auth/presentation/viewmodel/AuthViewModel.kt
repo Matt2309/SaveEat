@@ -133,6 +133,20 @@ class AuthViewModel(
     }
 
     /**
+     * Pre-confirm and pre-check before the network call to avoid the race where
+     * SessionStatus.Authenticated fires before _showBiometricProposal is set.
+     */
+    private suspend fun prepareLoginSession() {
+        val availability = checkBiometricAvailabilityUseCase()
+        if (availability == BiometricAvailabilityStatus.Available &&
+            !biometricRepository.isBiometricLoginEnabled()
+        ) {
+            _showBiometricProposal.value = true
+        }
+        biometricRepository.confirmSession()
+    }
+
+    /**
      * Effettua il login con email e password tramite Supabase Auth.
      *
      * Al completamento con successo marca la sessione come confermata (via [BiometricRepository]
@@ -145,15 +159,7 @@ class AuthViewModel(
         viewModelScope.launch {
             try {
                 _authUiState.value = AuthUiState.Loading
-                // Pre-confirm and pre-check before the network call to avoid the race where
-                // SessionStatus.Authenticated fires before _showBiometricProposal is set.
-                val availability = checkBiometricAvailabilityUseCase()
-                if (availability == BiometricAvailabilityStatus.Available &&
-                    !biometricRepository.isBiometricLoginEnabled()
-                ) {
-                    _showBiometricProposal.value = true
-                }
-                biometricRepository.confirmSession()
+                prepareLoginSession()
                 signInWithEmailUseCase(email, password)
                 _authUiState.value = AuthUiState.Success("Signed in successfully")
             } catch (e: Exception) {
@@ -179,15 +185,7 @@ class AuthViewModel(
         viewModelScope.launch {
             _authUiState.value = AuthUiState.Loading
             try {
-                // Pre-confirm and pre-check before the network call to avoid the race where
-                // SessionStatus.Authenticated fires before _showBiometricProposal is set.
-                val availability = checkBiometricAvailabilityUseCase()
-                if (availability == BiometricAvailabilityStatus.Available &&
-                    !biometricRepository.isBiometricLoginEnabled()
-                ) {
-                    _showBiometricProposal.value = true
-                }
-                biometricRepository.confirmSession()
+                prepareLoginSession()
                 signInWithGoogleUseCase(idToken)
                 _authUiState.value = AuthUiState.Success()
             } catch (e: Exception) {

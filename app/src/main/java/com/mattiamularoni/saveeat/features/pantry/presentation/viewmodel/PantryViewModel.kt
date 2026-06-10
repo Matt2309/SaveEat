@@ -37,8 +37,6 @@ class PantryViewModel(
     val uiState: StateFlow<PantryUiState> = _uiState.asStateFlow()
     val effects: SharedFlow<PantryEffect> = _effects.asSharedFlow()
 
-    private var hasLoaded = false
-    private var errorMessage: String? = null
     private var selectedCategory = PantryCategory.ALL
 
     init {
@@ -54,7 +52,12 @@ class PantryViewModel(
 
     fun onCategorySelected(category: PantryCategory) {
         selectedCategory = category
-        publishState()
+        if (_uiState.value is PantryUiState.Success) {
+            _uiState.value = PantryUiState.Success(
+                items = filterItems(allItems.value, selectedCategory),
+                selectedCategory = selectedCategory
+            )
+        }
     }
 
     fun onAddToShoppingList(itemId: String) {
@@ -111,28 +114,16 @@ class PantryViewModel(
         viewModelScope.launch {
             getPantryItemsUseCase()
                 .onEach { items ->
-                    hasLoaded = true
-                    errorMessage = null
                     allItems.value = items
-                    publishState()
+                    _uiState.value = PantryUiState.Success(
+                        items = filterItems(items, selectedCategory),
+                        selectedCategory = selectedCategory
+                    )
                 }
                 .catch { throwable ->
-                    hasLoaded = true
-                    errorMessage = throwable.message ?: "Unable to load pantry items"
-                    publishState()
+                    _uiState.value = PantryUiState.Error(throwable.message ?: "Unable to load pantry items")
                 }
                 .collect()
-        }
-    }
-
-    private fun publishState() {
-        _uiState.value = when {
-            errorMessage != null -> PantryUiState.Error(errorMessage.orEmpty())
-            !hasLoaded -> PantryUiState.Loading
-            else -> PantryUiState.Success(
-                items = filterItems(allItems.value, selectedCategory),
-                selectedCategory = selectedCategory
-            )
         }
     }
 

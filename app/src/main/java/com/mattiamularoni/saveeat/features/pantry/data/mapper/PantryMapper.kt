@@ -1,8 +1,8 @@
 package com.mattiamularoni.saveeat.features.pantry.data.mapper
 
+import com.mattiamularoni.saveeat.core.util.DateTimeUtils
 import com.mattiamularoni.saveeat.features.pantry.data.local.PantryEntity
 import com.mattiamularoni.saveeat.features.pantry.data.remote.PantryItemDto
-import java.time.Instant
 
 /**
  * Mapperà tra i layer:
@@ -32,23 +32,9 @@ object PantryMapper {
             status = dto.status,
             quantity = dto.quantity ?: 1.0,
             unit = dto.unit,
-            expirationDate = dto.expirationDate?.let { dateString ->
-                try {
-                    Instant.parse(dateString).toEpochMilli()
-                } catch (e: Exception) {
-                    null
-                }
-            },
-            createdAt = try {
-                Instant.parse(dto.createdAt).toEpochMilli()
-            } catch (e: Exception) {
-                System.currentTimeMillis()
-            },
-            updatedAt = try {
-                Instant.parse(dto.updatedAt).toEpochMilli()
-            } catch (e: Exception) {
-                System.currentTimeMillis()
-            }
+            expirationDate = DateTimeUtils.parseIso8601OrNull(dto.expirationDate),
+            createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt),
+            updatedAt = DateTimeUtils.parseIso8601OrDefault(dto.updatedAt)
         )
     }
 
@@ -73,10 +59,10 @@ object PantryMapper {
             quantity = entity.quantity,
             unit = entity.unit,
             expirationDate = entity.expirationDate?.let {
-                Instant.ofEpochMilli(it).toString()
+                DateTimeUtils.formatToIso8601(it)
             },
-            createdAt = Instant.ofEpochMilli(entity.createdAt).toString(),
-            updatedAt = Instant.ofEpochMilli(entity.updatedAt).toString()
+            createdAt = DateTimeUtils.formatToIso8601(entity.createdAt),
+            updatedAt = DateTimeUtils.formatToIso8601(entity.updatedAt)
         )
     }
 
