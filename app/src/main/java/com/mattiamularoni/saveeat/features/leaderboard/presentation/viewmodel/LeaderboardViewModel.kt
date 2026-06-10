@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.domain.GetLeaderboardUseCase
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.state.LeaderboardUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -43,6 +44,7 @@ class LeaderboardViewModel(
 
     private var hasLoaded = false
     private var errorMessage: String? = null
+    private var observeLeaderboardJob: Job? = null
 
     init {
         observeLeaderboard()
@@ -59,7 +61,8 @@ class LeaderboardViewModel(
     }
 
     private fun observeLeaderboard() {
-        viewModelScope.launch {
+        observeLeaderboardJob?.cancel()
+        observeLeaderboardJob = viewModelScope.launch {
             getLeaderboardUseCase()
                 .onEach { users ->
                     hasLoaded = true

@@ -7,6 +7,7 @@ import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepos
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.FavoriteRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -46,6 +47,11 @@ class RecipeViewModel(
     val generateRecipeUiState: StateFlow<GenerateRecipeUiState> =
         _generateRecipeUiState.asStateFlow()
 
+    // ===== OBSERVATION JOBS =====
+
+    private var observeRecipesJob: Job? = null
+    private var observeFavoriteRecipesJob: Job? = null
+
     // ===== INITIALIZATION =====
 
     init {
@@ -63,7 +69,8 @@ class RecipeViewModel(
      * - Gestisce errori e lista vuota
      */
     private fun observeRecipes() {
-        viewModelScope.launch {
+        observeRecipesJob?.cancel()
+        observeRecipesJob = viewModelScope.launch {
             recipeRepository
                 .observeRecipes()
                 .onStart {
@@ -180,7 +187,8 @@ class RecipeViewModel(
      * @param userId UUID dell'utente
      */
     fun observeFavoriteRecipes(userId: String) {
-        viewModelScope.launch {
+        observeFavoriteRecipesJob?.cancel()
+        observeFavoriteRecipesJob = viewModelScope.launch {
             recipeRepository
                 .observeFavoriteRecipes(userId)
                 .onStart {

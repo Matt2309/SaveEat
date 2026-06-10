@@ -1,11 +1,11 @@
 package com.mattiamularoni.saveeat.features.recipes.data.mapper
 
+import com.mattiamularoni.saveeat.core.util.DateTimeUtils
 import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeEntity
 import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeDto
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import java.time.Instant
 
 /**
  * Mapper tra i layer:
@@ -17,6 +17,8 @@ import java.time.Instant
  * - Parsing tags da stringa a lista
  */
 object RecipeMapper {
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     /**
      * Data class interno per il parsing JSON degli ingredienti.
@@ -47,11 +49,7 @@ object RecipeMapper {
             ingredients = dto.ingredients,
             prepTimeMinutes = dto.prepTimeMinutes,
             tags = dto.tags,
-            createdAt = try {
-                Instant.parse(dto.createdAt).toEpochMilli()
-            } catch (e: Exception) {
-                System.currentTimeMillis()
-            }
+            createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt)
         )
     }
 
@@ -72,7 +70,7 @@ object RecipeMapper {
             ingredients = entity.ingredients,
             prepTimeMinutes = entity.prepTimeMinutes,
             tags = entity.tags,
-            createdAt = Instant.ofEpochMilli(entity.createdAt).toString()
+            createdAt = DateTimeUtils.formatToIso8601(entity.createdAt)
         )
     }
 
@@ -177,9 +175,8 @@ object RecipeMapper {
             if (ingredientsJson.isBlank() || ingredientsJson == "[]") {
                 return emptyList()
             }
-             
+
             // Parse JSON array using kotlinx.serialization
-            val json = Json { ignoreUnknownKeys = true }
             val parsedIngredients = json.decodeFromString<List<IngredientJson>>(ingredientsJson)
              
             parsedIngredients.map { ingredient ->

@@ -67,8 +67,12 @@ class HomeViewModel(
         viewModelScope.launch {
             getHomeDashboardUseCase()
                 .map { dashboard ->
-                    if (dashboard != null) HomeUiState.Success(dashboard) as HomeUiState
-                    else HomeUiState.Empty
+                    try {
+                        if (dashboard != null) HomeUiState.Success(dashboard) as HomeUiState
+                        else HomeUiState.Empty
+                    } catch (exception: Exception) {
+                        HomeUiState.Error("Dashboard update failed: ${exception.message}")
+                    }
                 }
                 .catch { exception ->
                     // Fallback: mantieni stato precedente oppure mostra errore
