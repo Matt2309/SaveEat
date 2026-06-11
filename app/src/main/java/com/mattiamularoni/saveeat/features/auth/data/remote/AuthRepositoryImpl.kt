@@ -38,6 +38,7 @@ class AuthRepositoryImpl(
             this.data = buildJsonObject {
                 put("first_name", firstName)
                 put("last_name", lastName)
+                put("display_name", "$firstName $lastName".trim())
             }
         }
     }
