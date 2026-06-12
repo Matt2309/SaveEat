@@ -51,6 +51,7 @@ fun RecipeScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile) }
     ) { padding ->
         Column(

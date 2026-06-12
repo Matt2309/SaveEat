@@ -6,9 +6,13 @@ import com.mattiamularoni.saveeat.core.navigation.ProfileRoute
 import com.mattiamularoni.saveeat.features.profile.presentation.ui.ProfileScreen
 
 fun NavGraphBuilder.profileScreen(
-    onNavigateBack: () -> Unit = {}
+    onNavigateBack: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {}
 ) {
     composable<ProfileRoute> {
-        ProfileScreen(onNavigateBack = onNavigateBack)
+        ProfileScreen(
+            onNavigateBack = onNavigateBack,
+            onNavigateToSettings = onNavigateToSettings
+        )
     }
 }

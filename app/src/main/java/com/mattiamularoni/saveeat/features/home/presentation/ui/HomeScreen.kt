@@ -73,6 +73,9 @@ fun HomeScreen(
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        // Gli insets sono già gestiti da MainScaffold: evitiamo il doppio inset
+        // (striscia bianca in basso + FAB troppo in alto).
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = {
             HomeTopBar(
                 avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
