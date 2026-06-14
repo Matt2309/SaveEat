@@ -19,9 +19,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
-import coil.compose.AsyncImage
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -387,21 +385,13 @@ private fun FeaturedRecipeCard(recipe: Recipe, onClick: () -> Unit = {}) {
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable { onClick() }
     ) {
+        // Box grigio al posto della foto
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        ) {
-            if (!recipe.imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = recipe.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
+        )
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -439,16 +429,7 @@ private fun SmallRecipeCard(recipe: Recipe, modifier: Modifier = Modifier, onCli
                 .fillMaxWidth()
                 .height(110.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        ) {
-            if (!recipe.imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = recipe.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
-        }
+        )
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)

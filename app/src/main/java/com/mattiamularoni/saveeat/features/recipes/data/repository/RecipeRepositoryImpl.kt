@@ -49,21 +49,13 @@ class RecipeRepositoryImpl(
     override suspend fun syncRecipes(): Int = withContext(Dispatchers.IO) {
         try {
             val remoteRecipes = remoteDataSource.getRecipes()
-            val existingImageUrls = recipeDao.getAllImageUrls().associate { it.id to it.imageUrl }
-            val entities = RecipeMapper.dtosToEntities(remoteRecipes).map { entity ->
-                entity.copy(imageUrl = existingImageUrls[entity.id])
-            }
+            val entities = RecipeMapper.dtosToEntities(remoteRecipes)
             recipeDao.insertRecipes(entities)
             remoteRecipes.size
         } catch (e: Exception) {
             throw Exception("Failed to sync recipes: ${e.message}", e)
         }
     }
-
-    override suspend fun updateImageUrl(recipeId: String, imageUrl: String) =
-        withContext(Dispatchers.IO) {
-            recipeDao.updateImageUrl(recipeId, imageUrl)
-        }
 
     // ===== BASIC CRUD =====
 

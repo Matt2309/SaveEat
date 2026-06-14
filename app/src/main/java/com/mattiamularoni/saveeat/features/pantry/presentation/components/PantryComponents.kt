@@ -34,7 +34,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.mattiamularoni.saveeat.core.ui.components.Thumbnail
+import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
@@ -281,6 +281,25 @@ private fun PlaceholderItemCard(
     }
 }
 
+@Composable
+private fun Thumbnail(imageUrl: String?) {
+    Box(
+        modifier = Modifier
+            .size(56.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+        contentAlignment = Alignment.Center
+    ) {
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize()
+            )
+        }
+        // se imageUrl è null resta il box grigio neutro
+    }
+}
 
 @Composable
 private fun QuantityPill(quantity: String) {

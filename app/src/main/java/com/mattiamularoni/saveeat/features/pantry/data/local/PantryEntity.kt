@@ -30,7 +30,5 @@ data class PantryEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long,
-    @ColumnInfo(name = "image_url")
-    val imageUrl: String? = null
+    val updatedAt: Long
 )

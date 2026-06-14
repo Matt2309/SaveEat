@@ -197,8 +197,6 @@ interface PantryRepository {
      */
     suspend fun deduplicatePantryItems(): Int
 
-    suspend fun updateImageUrl(itemId: String, imageUrl: String)
-
     // ===== STATUS & EXPIRATION =====
 
     /**
@@ -250,6 +248,5 @@ data class PantryItem(
     val status: String,
     val quantity: Double,
     val unit: String?,
-    val expirationDate: Long?,
-    val imageUrl: String? = null
+    val expirationDate: Long?
 )

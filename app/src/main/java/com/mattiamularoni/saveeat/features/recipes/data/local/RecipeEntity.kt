@@ -19,6 +19,5 @@ data class RecipeEntity(
     val ingredients: String,
     val prepTimeMinutes: Int,
     val tags: String,
-    val createdAt: Long,
-    val imageUrl: String? = null
+    val createdAt: Long
 )

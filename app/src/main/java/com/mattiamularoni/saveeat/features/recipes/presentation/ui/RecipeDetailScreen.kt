@@ -24,8 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -123,21 +121,13 @@ private fun DetailContent(
             .verticalScroll(rememberScrollState())
             .padding(bottom = contentPadding.calculateBottomPadding())
     ) {
-        // ---- Header immagine con back + cuore ----
+        // ---- Header immagine (box grigio) con back + cuore ----
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(280.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
-            if (!recipe.imageUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = recipe.imageUrl,
-                    contentDescription = null,
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
-                )
-            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

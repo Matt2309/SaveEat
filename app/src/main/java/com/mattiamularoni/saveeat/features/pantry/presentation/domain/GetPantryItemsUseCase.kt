@@ -29,7 +29,7 @@ class GetPantryItemsUseCase(
             quantity = formatQuantity(quantity, unit),
             expirationLabel = formatExpirationLabel(expirationDate),
             freshnessLevel = freshnessLevel,
-            imageUrl = imageUrl,
+            imageUrl = null,
             category = mapDomainCategory(category),
             isPlaceholder = isPlaceholder
         )

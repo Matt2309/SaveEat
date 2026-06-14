@@ -2,7 +2,6 @@ package com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.mattiamularoni.saveeat.core.domain.usecase.ResolveItemImageUseCase
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
@@ -29,8 +28,7 @@ import kotlinx.coroutines.launch
  */
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository,
-    private val generateRecipesUseCase: GenerateRecipesUseCase,
-    private val resolveItemImageUseCase: ResolveItemImageUseCase
+    private val generateRecipesUseCase: GenerateRecipesUseCase
 ) : ViewModel() {
 
     // ===== RECIPES STATE =====
@@ -93,17 +91,7 @@ class RecipeViewModel(
                     } else {
                         RecipeUiState.Success(recipes = recipes)
                     }
-                    resolveImagesFor(recipes)
                 }
-        }
-    }
-
-    private fun resolveImagesFor(recipes: List<Recipe>) {
-        recipes.filter { it.imageUrl.isNullOrBlank() }.forEach { recipe ->
-            viewModelScope.launch {
-                val url = resolveItemImageUseCase(recipe.title) ?: return@launch
-                recipeRepository.updateImageUrl(recipe.id, url)
-            }
         }
     }
 

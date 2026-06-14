@@ -1,6 +1,5 @@
 package com.mattiamularoni.saveeat.features.pantry.data.local
 
-import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
@@ -52,15 +51,4 @@ interface PantryDao {
 
     @Query("SELECT COUNT(*) FROM pantry_items WHERE user_id = :userId AND name = :name AND category = :category AND is_placeholder = 0")
     suspend fun countDuplicates(userId: String, name: String, category: String): Int
-
-    @Query("UPDATE pantry_items SET image_url = :imageUrl WHERE id = :itemId")
-    suspend fun updateImageUrl(itemId: String, imageUrl: String)
-
-    @Query("SELECT id, image_url FROM pantry_items WHERE user_id = :userId")
-    suspend fun getImageUrlsForUser(userId: String): List<PantryImageUrlEntry>
-
-    data class PantryImageUrlEntry(
-        @ColumnInfo(name = "id") val id: String,
-        @ColumnInfo(name = "image_url") val imageUrl: String?
-    )
 }
