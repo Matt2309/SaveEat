@@ -50,11 +50,6 @@ android {
             "GOOGLE_WEB_CLIENT_ID",
             localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\""
         )
-        buildConfigField(
-            "String",
-            "UNSPLASH_ACCESS_KEY",
-            localProperties.getProperty("UNSPLASH_ACCESS_KEY") ?: "\"\""
-        )
     }
 
     signingConfigs {

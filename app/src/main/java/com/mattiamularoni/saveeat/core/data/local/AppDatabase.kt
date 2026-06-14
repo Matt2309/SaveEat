@@ -17,7 +17,7 @@ import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeEntity
         FavoriteRecipeEntity::class,
         HomeDashboardEntity::class
     ],
-    version = 5,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
