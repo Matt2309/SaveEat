@@ -75,14 +75,23 @@ class PantryRepositoryImpl(
      */
     override suspend fun syncPantry(): Int = withContext(Dispatchers.IO) {
         try {
-            val remoteItems = remoteDataSource.getPantryItems(sessionProvider.getCurrentUserId())
-            val entities = PantryMapper.dtosToEntities(remoteItems)
+            val userId = sessionProvider.getCurrentUserId()
+            val remoteItems = remoteDataSource.getPantryItems(userId)
+            val existingImageUrls = pantryDao.getImageUrlsForUser(userId).associate { it.id to it.imageUrl }
+            val entities = PantryMapper.dtosToEntities(remoteItems).map { entity ->
+                entity.copy(imageUrl = existingImageUrls[entity.id])
+            }
             pantryDao.insertPantryItems(entities)
             entities.size
         } catch (e: Exception) {
             throw Exception("Sync failed: ${e.message}", e)
         }
     }
+
+    override suspend fun updateImageUrl(itemId: String, imageUrl: String) =
+        withContext(Dispatchers.IO) {
+            pantryDao.updateImageUrl(itemId, imageUrl)
+        }
 
     // ===== CRUD BASIC =====
 
@@ -657,7 +666,8 @@ class PantryRepositoryImpl(
             status = entity.status,
             quantity = entity.quantity,
             unit = entity.unit,
-            expirationDate = entity.expirationDate
+            expirationDate = entity.expirationDate,
+            imageUrl = entity.imageUrl
         )
     }
 }

@@ -196,4 +196,6 @@ interface RecipeRepository {
      * @throws Exception in caso di errore
      */
     suspend fun syncFavoriteRecipes(userId: String): Int
+
+    suspend fun updateImageUrl(recipeId: String, imageUrl: String)
 }

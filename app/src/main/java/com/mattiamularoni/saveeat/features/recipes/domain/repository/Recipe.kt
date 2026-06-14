@@ -13,7 +13,8 @@ data class Recipe(
     val ingredients: List<Ingredient>,
     val prepTimeMinutes: Int,
     val tags: List<String>,
-    val createdAt: Long
+    val createdAt: Long,
+    val imageUrl: String? = null
 ) {
     /**
      * Modello per un singolo ingrediente di una ricetta.

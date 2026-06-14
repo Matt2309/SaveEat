@@ -25,14 +25,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.features.home.domain.repository.ExpiringItem
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
 import com.mattiamularoni.saveeat.features.home.presentation.viewmodel.HomeViewModel
+import com.mattiamularoni.saveeat.features.pantry.presentation.state.PantryUiState
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ExpandableFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormDialog
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
+import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
+import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
 import kotlin.math.ceil
 
@@ -50,10 +54,24 @@ fun HomeScreen(
     onNavigateToRecipes: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     pantryViewModel: PantryViewModel = koinViewModel(),
-    homeViewModel: HomeViewModel = koinViewModel()
+    homeViewModel: HomeViewModel = koinViewModel(),
+    recipeViewModel: RecipeViewModel = koinViewModel()
 ) {
     var showManualForm by remember { mutableStateOf(false) }
     val uiState by homeViewModel.uiState.collectAsState()
+    val pantryState by pantryViewModel.uiState.collectAsState()
+    val recipesState by recipeViewModel.recipesUiState.collectAsState()
+
+    val pantryImageUrls: Map<String, String?> = remember(pantryState) {
+        (pantryState as? PantryUiState.Success)?.items
+            ?.associate { it.id to it.imageUrl }
+            ?: emptyMap()
+    }
+    val recipeImageUrls: Map<String, String?> = remember(recipesState) {
+        (recipesState as? RecipeUiState.Success)?.recipes
+            ?.associate { it.id to it.imageUrl }
+            ?: emptyMap()
+    }
 
     if (showManualForm) {
         ManualItemFormDialog(
@@ -117,6 +135,8 @@ fun HomeScreen(
                     DashboardContent(
                         firstName = firstName,
                         dashboard = state.dashboard,
+                        pantryImageUrls = pantryImageUrls,
+                        recipeImageUrls = recipeImageUrls,
                         onSeeAllExpiring = onNavigateToPantry,
                         onOpenRecipe = onNavigateToRecipes
                     )
@@ -185,6 +205,8 @@ private fun HomeTopBar(avatarUrl: String?, onAvatarClick: () -> Unit = {}) {
 private fun DashboardContent(
     firstName: String,
     dashboard: HomeDashboard,
+    pantryImageUrls: Map<String, String?>,
+    recipeImageUrls: Map<String, String?>,
     onSeeAllExpiring: () -> Unit,
     onOpenRecipe: () -> Unit
 ) {
@@ -240,7 +262,7 @@ private fun DashboardContent(
                     contentPadding = PaddingValues(end = 4.dp)
                 ) {
                     items(dashboard.expiringItems, key = { it.id }) { item ->
-                        ExpiringItemCard(item)
+                        ExpiringItemCard(item, imageUrl = pantryImageUrls[item.id])
                     }
                 }
             }
@@ -254,6 +276,7 @@ private fun DashboardContent(
             SavedFoodCard(modifier = Modifier.weight(1f))
             RecipeCard(
                 title = dashboard.suggestedRecipes.firstOrNull()?.title ?: "Nessun suggerimento",
+                imageUrl = recipeImageUrls[dashboard.suggestedRecipes.firstOrNull()?.id],
                 onClick = onOpenRecipe,
                 modifier = Modifier.weight(1f)
             )
@@ -309,7 +332,7 @@ private fun EcoPointsCard(ecoPoints: Int) {
 }
 
 @Composable
-private fun ExpiringItemCard(item: ExpiringItem) {
+private fun ExpiringItemCard(item: ExpiringItem, imageUrl: String? = null) {
     val days = daysUntil(item.expirationDate)
     val barColor = when {
         days <= 1 -> FreshnessCritical
@@ -341,13 +364,21 @@ private fun ExpiringItemCard(item: ExpiringItem) {
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Box grigio neutro al posto della foto + badge categoria
+            // Foto prodotto + badge categoria
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(96.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             ) {
+                if (!imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(6.dp),
@@ -453,6 +484,7 @@ private fun SavedFoodCard(modifier: Modifier = Modifier) {
 @Composable
 private fun RecipeCard(
     title: String,
+    imageUrl: String? = null,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -461,11 +493,23 @@ private fun RecipeCard(
             .height(140.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .clickable { onClick() }
-            .padding(16.dp),
+            .clickable { onClick() },
         contentAlignment = Alignment.BottomStart
     ) {
-        Column {
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.40f))
+            )
+        }
+        Column(modifier = Modifier.padding(16.dp)) {
             Surface(
                 color = Color.White.copy(alpha = 0.25f),
                 shape = RoundedCornerShape(4.dp)

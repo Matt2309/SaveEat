@@ -3,6 +3,7 @@ package com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
+import com.mattiamularoni.saveeat.core.domain.usecase.ResolveItemImageUseCase
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
@@ -28,7 +29,8 @@ sealed interface PantryEffect {
 class PantryViewModel(
     private val getPantryItemsUseCase: GetPantryItemsUseCase,
     private val pantryRepository: PantryRepository,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
+    private val resolveItemImageUseCase: ResolveItemImageUseCase
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
     private val _uiState = MutableStateFlow<PantryUiState>(PantryUiState.Loading)
@@ -119,11 +121,21 @@ class PantryViewModel(
                         items = filterItems(items, selectedCategory),
                         selectedCategory = selectedCategory
                     )
+                    resolveImagesFor(items)
                 }
                 .catch { throwable ->
                     _uiState.value = PantryUiState.Error(throwable.message ?: "Unable to load pantry items")
                 }
                 .collect()
+        }
+    }
+
+    private fun resolveImagesFor(items: List<PantryItem>) {
+        items.filter { it.imageUrl.isNullOrBlank() }.forEach { item ->
+            viewModelScope.launch {
+                val url = resolveItemImageUseCase(item.name) ?: return@launch
+                pantryRepository.updateImageUrl(item.id, url)
+            }
         }
     }
 

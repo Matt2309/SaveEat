@@ -93,7 +93,8 @@ object RecipeMapper {
             ingredients = parseIngredients(entity.ingredients),
             prepTimeMinutes = entity.prepTimeMinutes,
             tags = parseTags(entity.tags),
-            createdAt = entity.createdAt
+            createdAt = entity.createdAt,
+            imageUrl = entity.imageUrl
         )
     }
 
@@ -122,7 +123,8 @@ object RecipeMapper {
             ingredients = serializeIngredients(domain.ingredients),
             prepTimeMinutes = domain.prepTimeMinutes,
             tags = serializeTags(domain.tags),
-            createdAt = domain.createdAt
+            createdAt = domain.createdAt,
+            imageUrl = domain.imageUrl
         )
     }
 

@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.recipes.data.local
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
@@ -155,4 +156,15 @@ interface RecipeDao {
      */
     @Query("DELETE FROM favorite_recipes WHERE userId = :userId")
     suspend fun deleteFavoritesByUser(userId: String): Int
+
+    @Query("UPDATE recipes SET imageUrl = :imageUrl WHERE id = :recipeId")
+    suspend fun updateImageUrl(recipeId: String, imageUrl: String)
+
+    @Query("SELECT id, imageUrl FROM recipes")
+    suspend fun getAllImageUrls(): List<RecipeImageUrlEntry>
+
+    data class RecipeImageUrlEntry(
+        @ColumnInfo(name = "id") val id: String,
+        @ColumnInfo(name = "imageUrl") val imageUrl: String?
+    )
 }
