@@ -47,14 +47,6 @@ class PantryRepositoryImpl(
      * @return Flow della lista pantry items aggiornato
      */
     override fun observePantryItems(): Flow<List<PantryItem>> {
-        // Trigger initial sync in background
-        try {
-            // Nota: idealmente useremo .launchIn(viewModelScope) nel ViewModel
-            // Per MVP, il sync avviene on-demand
-        } catch (e: Exception) {
-            // Silent fail per non bloccare il Flow
-        }
-
         return pantryDao
             .getPantryItems(sessionProvider.getCurrentUserId())
             .map { entities -> entities.map { entity -> entityToDomain(entity) } }
@@ -532,7 +524,7 @@ class PantryRepositoryImpl(
                         try {
                             remoteDataSource.deletePantryItem(sorted[i].id)
                         } catch (e: Exception) {
-                            // Continue even if remote delete fails
+                            android.util.Log.e("PantryRepositoryImpl", "Eliminazione remota duplicato fallita per id=${sorted[i].id}: ${e.message}", e)
                         }
                         pantryDao.deletePantryItemById(sorted[i].id)
                         removed++
