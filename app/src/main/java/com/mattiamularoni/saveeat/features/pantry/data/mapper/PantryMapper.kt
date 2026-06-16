@@ -28,7 +28,7 @@ object PantryMapper {
             receiptId = dto.receiptId,
             name = dto.name,
             category = dto.category,
-            categoryKey = dto.categoryKey,
+            categoryKey = dto.categoryKey ?: "",
             isPlaceholder = dto.isPlaceholder,
             status = dto.status,
             quantity = dto.quantity ?: 1.0,
