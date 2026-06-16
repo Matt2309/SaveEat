@@ -27,6 +27,8 @@ data class PantryEntity(
     val unit: String?,
     @ColumnInfo(name = "expiration_date")
     val expirationDate: Long?,
+    @ColumnInfo(name = "category_key")
+    val categoryKey: String = "",
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")

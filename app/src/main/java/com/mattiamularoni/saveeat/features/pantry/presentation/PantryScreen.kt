@@ -159,6 +159,7 @@ private fun PantryContent(
                 title = section.title,
                 icon = section.icon,
                 items = section.items,
+                assets = state.assets,
                 onAddToShoppingList = onAddToShoppingList
             )
         }

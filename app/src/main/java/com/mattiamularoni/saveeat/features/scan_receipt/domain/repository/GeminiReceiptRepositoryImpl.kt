@@ -36,6 +36,7 @@ class ScanReceiptRepositoryImpl(
                 receiptId = null,
                 name = dto.name,
                 category = dto.category,
+                categoryKey = dto.categoryKey,
                 isPlaceholder = false,
                 status = "active",
                 quantity = dto.quantity,

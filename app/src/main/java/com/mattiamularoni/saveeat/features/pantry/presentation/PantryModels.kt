@@ -22,5 +22,6 @@ data class PantryItem(
     val imageUrl: String?,
     val category: PantryCategory,
     val isPlaceholder: Boolean,
+    val categoryKey: String = "",
     val placeholderIcon: String = "inventory_2"
 )

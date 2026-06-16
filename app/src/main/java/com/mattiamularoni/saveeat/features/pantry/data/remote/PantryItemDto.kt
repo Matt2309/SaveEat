@@ -23,6 +23,8 @@ data class PantryItemDto(
     val unit: String? = null,
     @SerialName("expiration_date")
     val expirationDate: String?,
+    @SerialName("category_key")
+    val categoryKey: String = "",
     @SerialName("created_at")
     val createdAt: String,
     @SerialName("updated_at")
