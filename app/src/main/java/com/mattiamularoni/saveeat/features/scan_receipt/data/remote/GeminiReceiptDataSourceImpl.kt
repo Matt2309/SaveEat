@@ -45,7 +45,7 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
             ]
             Regole per category_key:
             - DEVI assegnare una category_key standard in snake_case minuscolo a ogni prodotto (es. "pomodoro", "latte_intero", "pollo", "uova", "pasta_spaghetti").
-            - La chiave deve essere in snake_case senza spazi o caratteri speciali.
+            - La chiave deve essere in snake_case senza spazi o caratteri speciali e al singolare (es. carote NO -> carota SI).
             - Se il prodotto è completamente sconosciuto o non classificabile, usa "generic_food".
             Regole generali:
             - Dedurre la categoria corretta: "FRIDGE" (frigo), "FREEZER" (surgelati), "PANTRY" (scaffale/dispensa).
