@@ -114,6 +114,8 @@ dependencies {
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)
     implementation(libs.generativeai)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.koin.workmanager)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

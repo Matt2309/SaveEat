@@ -30,5 +30,7 @@ data class PantryEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long
+    val updatedAt: Long,
+    @ColumnInfo(name = "notified_at")
+    val notifiedAt: Long? = null
 )

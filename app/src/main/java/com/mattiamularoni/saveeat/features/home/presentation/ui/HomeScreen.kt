@@ -1,5 +1,9 @@
 package com.mattiamularoni.saveeat.features.home.presentation.ui
 
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -21,10 +25,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.features.home.domain.repository.ExpiringItem
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
@@ -52,6 +58,20 @@ fun HomeScreen(
     pantryViewModel: PantryViewModel = koinViewModel(),
     homeViewModel: HomeViewModel = koinViewModel()
 ) {
+    val context = LocalContext.current
+    val notifLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { /* concesso o negato: nessuna azione forzata */ }
+
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        LaunchedEffect(Unit) {
+            val perm = android.Manifest.permission.POST_NOTIFICATIONS
+            if (ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED) {
+                notifLauncher.launch(perm)
+            }
+        }
+    }
+
     var showManualForm by remember { mutableStateOf(false) }
     val uiState by homeViewModel.uiState.collectAsState()
 
