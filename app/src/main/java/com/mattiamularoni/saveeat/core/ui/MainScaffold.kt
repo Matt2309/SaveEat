@@ -49,7 +49,8 @@ fun MainScaffold(
     )
 
     // Determine if bottom bar should be shown
-    val isProfileRoute = currentDestination?.route?.contains("ProfileRoute") == true
+    val isProfileRoute = currentDestination?.route?.contains("ProfileRoute") == true ||
+            currentDestination?.route?.contains("SettingsRoute") == true
     val shouldShowBottomBar = (currentDestination?.let { destination ->
         navigationItems.any { item ->
             destination.hierarchy.any { navDest ->

@@ -2,8 +2,10 @@ package com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
+import com.mattiamularoni.saveeat.features.recipes.domain.usecase.GenerateRecipesUseCase
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.FavoriteRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
@@ -25,7 +27,8 @@ import kotlinx.coroutines.launch
  * - Operare su viewModelScope (Dispatchers.Main.immediate di default)
  */
 class RecipeViewModel(
-    private val recipeRepository: RecipeRepository
+    private val recipeRepository: RecipeRepository,
+    private val generateRecipesUseCase: GenerateRecipesUseCase
 ) : ViewModel() {
 
     // ===== RECIPES STATE =====
@@ -342,5 +345,29 @@ class RecipeViewModel(
      */
     fun resetGenerateState() {
         _generateRecipeUiState.value = GenerateRecipeUiState.Idle
+    }
+
+    /**
+     * Genera ricette dagli ingredienti in scadenza della dispensa con filtri opzionali.
+     *
+     * @param filters filtri opzionali (stile cucina, tempo)
+     */
+    fun generateFromPantry(filters: RecipeFilters = RecipeFilters()) {
+        viewModelScope.launch {
+            _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
+            val result = generateRecipesUseCase(filters)
+            _generateRecipeUiState.value = result.fold(
+                onSuccess = { recipes ->
+                    if (recipes.isEmpty()) GenerateRecipeUiState.Error("Nessuna ricetta generata")
+                    else GenerateRecipeUiState.Success(recipes)
+                },
+                onFailure = { e ->
+                    GenerateRecipeUiState.Error(
+                        message = e.message ?: "Errore nella generazione ricette",
+                        exception = e as? Exception
+                    )
+                }
+            )
+        }
     }
 }

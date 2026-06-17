@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
@@ -23,12 +24,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
+import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
 
 private val Filters = listOf("Suggeriti", "Veloci (< 30 min)", "Vegetariani")
+private val CuisineStyles = listOf("Italiana", "Asiatica", "Messicana")
+private val TimingOptions = listOf("Veloce (15 min)" to "veloce", "Medio (30 min)" to "medio")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,11 +44,14 @@ fun RecipeScreen(
     viewModel: RecipeViewModel = koinViewModel()
 ) {
     val uiState by viewModel.recipesUiState.collectAsState()
+    val generateState by viewModel.generateRecipeUiState.collectAsState()
     var selectedFilter by remember { mutableStateOf(Filters.first()) }
+    var showModal by remember { mutableStateOf(false) }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile) }
     ) { padding ->
         Column(
@@ -67,6 +75,25 @@ fun RecipeScreen(
                     text = "Suggerimenti smart basati sulla tua dispensa per evitare sprechi.",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Bottone Inventa Ricetta
+            Button(
+                onClick = { showModal = true },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(
+                    Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "Inventa Ricetta",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold
                 )
             }
 
@@ -129,6 +156,156 @@ fun RecipeScreen(
                             if (rowItems.size == 1) Spacer(Modifier.weight(1f))
                         }
                     }
+                }
+            }
+        }
+    }
+
+    // Modal bottom sheet per generazione ricette
+    if (showModal) {
+        GenerateRecipeModal(
+            generateState = generateState,
+            onDismiss = {
+                showModal = false
+                viewModel.resetGenerateState()
+            },
+            onGenerate = { filters ->
+                viewModel.generateFromPantry(filters)
+            },
+            onSuccess = {
+                showModal = false
+                viewModel.resetGenerateState()
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun GenerateRecipeModal(
+    generateState: GenerateRecipeUiState,
+    onDismiss: () -> Unit,
+    onGenerate: (RecipeFilters) -> Unit,
+    onSuccess: () -> Unit
+) {
+    var selectedCuisine by remember { mutableStateOf<String?>(null) }
+    var selectedTiming by remember { mutableStateOf<String?>(null) }
+
+    LaunchedEffect(generateState) {
+        if (generateState is GenerateRecipeUiState.Success) {
+            onSuccess()
+        }
+    }
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp)
+                .padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
+        ) {
+            // Header
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = "Inventa una Ricetta",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Text(
+                    text = "Basata sugli ingredienti in scadenza nella tua dispensa",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+
+            // Stile culinario
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Stile culinario (opzionale)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    CuisineStyles.forEach { cuisine ->
+                        val isSelected = cuisine.lowercase() == selectedCuisine
+                        FilterPill(
+                            label = cuisine,
+                            selected = isSelected,
+                            onClick = {
+                                selectedCuisine = if (isSelected) null else cuisine.lowercase()
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Tempo di preparazione
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(
+                    text = "Tempo di preparazione (opzionale)",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    TimingOptions.forEach { (label, value) ->
+                        val isSelected = value == selectedTiming
+                        FilterPill(
+                            label = label,
+                            selected = isSelected,
+                            onClick = {
+                                selectedTiming = if (isSelected) null else value
+                            }
+                        )
+                    }
+                }
+            }
+
+            // Errore
+            if (generateState is GenerateRecipeUiState.Error) {
+                Text(
+                    text = generateState.message,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // Bottone genera
+            Button(
+                onClick = {
+                    onGenerate(RecipeFilters(cuisineStyle = selectedCuisine, timingPreference = selectedTiming))
+                },
+                enabled = generateState !is GenerateRecipeUiState.Generating,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                if (generateState is GenerateRecipeUiState.Generating) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(18.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.onPrimary
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text("Generazione in corso...")
+                } else {
+                    Icon(
+                        Icons.Outlined.AutoAwesome,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        text = "Genera Ricette",
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.SemiBold
+                    )
                 }
             }
         }

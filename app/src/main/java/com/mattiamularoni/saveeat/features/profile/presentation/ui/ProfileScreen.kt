@@ -39,6 +39,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -58,7 +59,8 @@ fun ProfileScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
-        topBar = { ProfileTopBar(onNavigateBack = onNavigateBack) }
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        topBar = { ProfileTopBar(onNavigateBack = onNavigateBack, onSettingsClick = onNavigateToSettings) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -143,8 +145,6 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.surfaceContainerLowest
                     ) {
                         Column {
-                            AccountRow(Icons.Outlined.Notifications, "Notifiche") { /* TODO */ }
-                            RowDivider()
                             AccountRow(Icons.Outlined.Shield, "Privacy & Sicurezza") { /* TODO */ }
                             RowDivider()
                             AccountRow(Icons.Outlined.HelpOutline, "Centro Assistenza") { /* TODO */ }
@@ -204,7 +204,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileTopBar(onNavigateBack: () -> Unit) {
+private fun ProfileTopBar(onNavigateBack: () -> Unit, onSettingsClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,7 +229,7 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = { /* TODO: impostazioni */ }) {
+        IconButton(onClick = onSettingsClick) {
             Icon(
                 Icons.Outlined.Settings,
                 contentDescription = "Impostazioni",

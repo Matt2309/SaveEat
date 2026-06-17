@@ -73,6 +73,9 @@ fun PantryScreen(
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        // Insets già gestiti da MainScaffold: evitiamo il doppio inset
+        // (striscia bianca in basso + FAB troppo in alto).
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
         topBar = { PantryTopBar(onAvatarClick = onNavigateToProfile) },
         floatingActionButton = {

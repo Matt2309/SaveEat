@@ -32,7 +32,8 @@ fun ExpandableFab(
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
-        modifier = modifier.padding(16.dp),
+        // bottom ridotto per abbassare il FAB verso la bottom bar
+        modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 2.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         AnimatedVisibility(

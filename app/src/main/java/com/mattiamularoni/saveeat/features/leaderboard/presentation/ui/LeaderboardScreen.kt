@@ -54,6 +54,7 @@ fun LeaderboardScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile) }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {

@@ -3,6 +3,10 @@ package com.mattiamularoni.saveeat.features.recipes.data.remote
 import io.github.jan.supabase.SupabaseClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.time.Instant
+import java.util.UUID
 
 /**
  * Implementazione di RecipeRemoteDataSource usando Supabase Postgrest.
@@ -17,8 +21,11 @@ import kotlinx.coroutines.withContext
  * NOTE: MVP implementation - Postgrest query builder da integrare quando plugin disponibile.
  */
 class RecipeRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
+    private val geminiRecipeDataSource: GeminiRecipeDataSource
 ) : RecipeRemoteDataSource {
+
+    private val json = Json { ignoreUnknownKeys = true }
 
     /**
      * Recupera tutte le ricette disponibili da Supabase.
@@ -139,30 +146,20 @@ class RecipeRemoteDataSourceImpl(
     ): List<RecipeDto> =
         withContext(Dispatchers.IO) {
             try {
-                // Integration strategy:
-                // 1. Check if Gemini API client exists in project's core/data or features
-                // 2. Build request payload with ingredients + preferences
-                // 3. Call AI endpoint: POST /api/recipes/generate or Gemini API
-                // 4. Parse response JSON list of recipes
-                // 5. Map to RecipeDto list
-                 
-                // Example request format:
-                // {
-                //   "ingredients": ["pollo", "riso", "aglio"],
-                //   "preferences": {
-                //     "diet": "mediterranean",
-                //     "max_time": "30",
-                //     "servings": "4"
-                //   }
-                // }
-                 
-                // When AI integration available:
-                // val request = GenerateRecipeRequest(ingredients, preferences)
-                // val response = geminiClient.generateRecipes(request)
-                // response.recipes.map { RecipeDto(...) }
-                 
-                // For MVP: return empty list until Gemini/AI service integration
-                emptyList()
+                val jsonString = geminiRecipeDataSource.generateRecipes(ingredients, preferences)
+                val geminiDtos = json.decodeFromString<List<GeminiRecipeDto>>(jsonString)
+                val now = Instant.now()
+                geminiDtos.map { geminiDto ->
+                    RecipeDto(
+                        id = UUID.randomUUID().toString(),
+                        title = geminiDto.title,
+                        instructions = geminiDto.instructions,
+                        ingredients = json.encodeToString(geminiDto.ingredients),
+                        prepTimeMinutes = geminiDto.prepTimeMinutes,
+                        tags = geminiDto.tags.joinToString(","),
+                        createdAt = now.toString()
+                    )
+                }
             } catch (e: Exception) {
                 throw Exception("Failed to generate recipes: ${e.message}", e)
             }
