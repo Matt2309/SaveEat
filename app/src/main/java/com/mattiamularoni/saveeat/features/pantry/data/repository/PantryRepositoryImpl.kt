@@ -247,7 +247,7 @@ class PantryRepositoryImpl(
                     name = name,
                     category = category,
                     isPlaceholder = true,
-                    status = "active",
+                    status = "ACTIVE",
                     quantity = 1.0,
                     unit = null,
                     expirationDate = null,
@@ -299,7 +299,7 @@ class PantryRepositoryImpl(
                 "expiration_date" to (realItem.expirationDate?.let {
                     Instant.ofEpochMilli(it).toString()
                 } ?: ""),
-                "status" to "active",
+                "status" to "ACTIVE",
                 "updated_at" to Instant.now().toString()
             )
 
@@ -313,7 +313,7 @@ class PantryRepositoryImpl(
                 quantity = realItem.quantity,
                 unit = realItem.unit,
                 expirationDate = realItem.expirationDate,
-                status = "active",
+                status = "ACTIVE",
                 updatedAt = System.currentTimeMillis()
             )
 
@@ -625,10 +625,23 @@ class PantryRepositoryImpl(
             .getExpiringItems(sessionProvider.getCurrentUserId(), threshold)
             .map { entities ->
                 entities
-                    .filter { !it.isPlaceholder && it.status == "active" }
+                    .filter { !it.isPlaceholder && it.status == "ACTIVE" }
                     .map { entity -> entityToDomain(entity) }
             }
     }
+
+    // ===== NOTIFICATIONS =====
+
+    override suspend fun getItemsDueForNotification(windowEnd: Long): List<PantryItem> =
+        withContext(Dispatchers.IO) {
+            pantryDao.getItemsDueForNotification(sessionProvider.getCurrentUserId(), windowEnd)
+                .map { entityToDomain(it) }
+        }
+
+    override suspend fun markItemsNotified(ids: List<String>) =
+        withContext(Dispatchers.IO) {
+            pantryDao.markAllAsNotified(ids, System.currentTimeMillis())
+        }
 
     // ===== HELPERS =====
 

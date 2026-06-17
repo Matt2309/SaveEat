@@ -18,7 +18,7 @@ data class PantryItemDto(
     val category: String,
     @SerialName("is_placeholder")
     val isPlaceholder: Boolean = false,
-    val status: String = "active",
+    val status: String = "ACTIVE",
     val quantity: Double? = null,
     val unit: String? = null,
     @SerialName("expiration_date")

@@ -37,7 +37,7 @@ class ScanReceiptRepositoryImpl(
                 name = dto.name,
                 category = dto.category,
                 isPlaceholder = false,
-                status = "active",
+                status = "ACTIVE",
                 quantity = dto.quantity,
                 unit = dto.unit,
                 expirationDate = null

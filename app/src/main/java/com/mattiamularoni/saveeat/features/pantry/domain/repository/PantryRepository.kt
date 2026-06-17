@@ -231,6 +231,12 @@ interface PantryRepository {
      * @return Flow della lista di items in scadenza
      */
     fun getExpiringItems(thresholdDays: Int): Flow<List<PantryItem>>
+
+    // ===== NOTIFICATIONS =====
+
+    suspend fun getItemsDueForNotification(windowEnd: Long): List<PantryItem>
+
+    suspend fun markItemsNotified(ids: List<String>)
 }
 
 /**

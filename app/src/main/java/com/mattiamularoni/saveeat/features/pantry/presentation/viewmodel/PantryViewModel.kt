@@ -95,7 +95,7 @@ class PantryViewModel(
                     name = formState.itemName,
                     category = categoryString,
                     isPlaceholder = false,
-                    status = "active",
+                    status = "ACTIVE",
                     quantity = if (formState.quantity.isNotEmpty()) formState.quantity.toDoubleOrNull() ?: 0.0 else 0.0,
                     unit = if (formState.unit.isNotEmpty()) formState.unit else null,
                     expirationDate = expirationDate

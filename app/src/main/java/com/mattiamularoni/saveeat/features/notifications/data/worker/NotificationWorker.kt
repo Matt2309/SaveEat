@@ -1,5 +1,6 @@
-package com.mattiamularoni.saveeat.common.worker
+package com.mattiamularoni.saveeat.features.notifications.data.worker
 
+import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
@@ -9,14 +10,15 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.mattiamularoni.saveeat.R
-import com.mattiamularoni.saveeat.features.pantry.data.local.PantryDao
+import com.mattiamularoni.saveeat.features.notifications.domain.usecase.GetItemsDueForNotificationUseCase
+import com.mattiamularoni.saveeat.features.notifications.domain.usecase.MarkItemsNotifiedUseCase
 import java.util.Calendar
-import java.util.concurrent.TimeUnit
 
 class NotificationWorker(
     context: Context,
     workerParams: WorkerParameters,
-    private val pantryDao: PantryDao
+    private val getItemsDueForNotification: GetItemsDueForNotificationUseCase,
+    private val markItemsNotified: MarkItemsNotifiedUseCase
 ) : CoroutineWorker(context, workerParams) {
 
     companion object {
@@ -25,6 +27,9 @@ class NotificationWorker(
         private const val NOTIFICATION_DAYS_AHEAD = 3
     }
 
+    // areNotificationsEnabled() verifica il permesso POST_NOTIFICATIONS su API 33+;
+    // @SuppressLint è necessario perché lint non riconosce questo check statico.
+    @SuppressLint("MissingPermission")
     override suspend fun doWork(): Result {
         val notifManager = NotificationManagerCompat.from(applicationContext)
 
@@ -36,9 +41,8 @@ class NotificationWorker(
 
         createChannel()
 
-        val (windowStart, windowEnd) = computeWindow()
-        val items = pantryDao.getItemsDueForNotification(windowStart, windowEnd)
-        val now = System.currentTimeMillis()
+        val windowEnd = computeWindowEnd()
+        val items = getItemsDueForNotification(windowEnd)
 
         items.forEach { item ->
             val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
@@ -49,8 +53,11 @@ class NotificationWorker(
                 .setAutoCancel(true)
                 .build()
 
-            notifManager.notify(item.id.hashCode(), notification)
-            pantryDao.markAsNotified(item.id, now)
+            notifManager.notify(Math.abs(item.id.hashCode()), notification)
+        }
+
+        if (items.isNotEmpty()) {
+            markItemsNotified(items.map { it.id })
         }
 
         return Result.success()
@@ -68,18 +75,17 @@ class NotificationWorker(
         }
     }
 
-    // Restituisce [mezzanotte del giorno D+3, mezzanotte del giorno D+4),
-    // usando Calendar per rispettare il fuso orario locale.
-    private fun computeWindow(): Pair<Long, Long> {
-        val cal = Calendar.getInstance().apply {
-            add(Calendar.DAY_OF_YEAR, NOTIFICATION_DAYS_AHEAD)
+    // Restituisce mezzanotte di D+4, cioè la fine del giorno D+3.
+    // Qualsiasi giorno il worker gira, recupera tutti i prodotti non ancora
+    // notificati che scadono entro 3 giorni (inclusi i giorni già trascorsi
+    // se WorkManager ha saltato un'esecuzione).
+    private fun computeWindowEnd(): Long {
+        return Calendar.getInstance().apply {
+            add(Calendar.DAY_OF_YEAR, NOTIFICATION_DAYS_AHEAD + 1)
             set(Calendar.HOUR_OF_DAY, 0)
             set(Calendar.MINUTE, 0)
             set(Calendar.SECOND, 0)
             set(Calendar.MILLISECOND, 0)
-        }
-        val start = cal.timeInMillis
-        val end = start + TimeUnit.DAYS.toMillis(1)
-        return start to end
+        }.timeInMillis
     }
 }
