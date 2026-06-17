@@ -86,7 +86,7 @@ fun ProfileScreen(
                 contentAlignment = Alignment.TopCenter
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    AvatarWithCamera(avatarUrl = state.avatarUrl)
+                    AvatarWithCamera()
                     Spacer(Modifier.height(12.dp))
                     Text(
                         text = state.name.ifBlank { "Utente" },
@@ -240,38 +240,29 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit, onSettingsClick: () -> Uni
 }
 
 @Composable
-private fun AvatarWithCamera(avatarUrl: String?) {
+private fun AvatarWithCamera() {
+    val photoController: com.mattiamularoni.saveeat.core.data.local.ProfilePhotoController =
+        org.koin.compose.koinInject()
+
+    // Selettore immagine locale (nessun permesso necessario con GetContent)
+    val pickImage = androidx.activity.compose.rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.GetContent()
+    ) { uri ->
+        if (uri != null) photoController.setLocalPhoto(uri)
+    }
+
     Box(contentAlignment = Alignment.BottomEnd) {
-        Box(
-            modifier = Modifier
-                .size(110.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant),
-            contentAlignment = Alignment.Center
-        ) {
-            if (!avatarUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = "Foto profilo",
-                    modifier = Modifier.fillMaxSize()
-                )
-            } else {
-                Icon(
-                    Icons.Filled.Person,
-                    contentDescription = "Foto profilo",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(56.dp)
-                )
-            }
-        }
-        // Pulsante camera (visivo)
+        // Avatar effettivo: foto locale > foto Google > icona
+        com.mattiamularoni.saveeat.core.ui.UserAvatar(size = 110.dp)
+
+        // Pulsante camera: sceglie la foto in locale
         Surface(
             shape = CircleShape,
             color = MaterialTheme.colorScheme.primary,
             border = androidx.compose.foundation.BorderStroke(2.dp, MaterialTheme.colorScheme.surface),
             modifier = Modifier.size(34.dp)
         ) {
-            IconButton(onClick = { /* TODO: cambia foto */ }) {
+            IconButton(onClick = { pickImage.launch("image/*") }) {
                 Icon(
                     Icons.Filled.PhotoCamera,
                     contentDescription = "Cambia foto",
