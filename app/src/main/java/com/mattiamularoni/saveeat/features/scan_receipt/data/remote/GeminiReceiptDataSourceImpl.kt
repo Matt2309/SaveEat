@@ -39,11 +39,19 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
                 "name": "Nome pulito del prodotto (es. Latte Parzialmente Scremato)",
                 "category": "FRIDGE" | "PANTRY" | "FREEZER",
                 "quantity": 1.0,
-                "unit": "pz" | "kg" | "l" | "g" | "ml"
+                "unit": "pz" | "kg" | "l" | "g" | "ml",
+                "is_perishable": true,
+                "estimated_expiry_days": 3
               }
             ]
             Regole:
             - Dedurre la categoria corretta: "FRIDGE" (frigo), "FREEZER" (surgelati), "PANTRY" (scaffale/dispensa).
+            - "is_perishable": metti true SOLO per prodotti freschi/deperibili che vanno tenuti in frigo
+              o consumati in pochi giorni (carne, pesce, latticini freschi, verdura e frutta fresca).
+              Metti false per i prodotti a lunga conservazione (pasta, scatolame, surgelati, bibite,
+              snack confezionati, prodotti da dispensa).
+            - "estimated_expiry_days": giorni di conservazione stimati come numero INTERO
+              (es. 3 per pollo fresco, 4 per insalata, 7 per yogurt, 365 per pasta secca o scatolame).
             - Se la quantità non è chiara, metti 1.0.
             - Se l'unità non è chiara, metti "pz" (pezzi).
             - Ignora le tasse, il totale, gli sconti o i prodotti non alimentari (es. detersivi, sacchetti).
