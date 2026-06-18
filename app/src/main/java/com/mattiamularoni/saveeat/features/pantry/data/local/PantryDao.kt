@@ -51,4 +51,19 @@ interface PantryDao {
 
     @Query("SELECT COUNT(*) FROM pantry_items WHERE user_id = :userId AND name = :name AND category = :category AND is_placeholder = 0")
     suspend fun countDuplicates(userId: String, name: String, category: String): Int
+
+    @Query("""
+        SELECT * FROM pantry_items
+        WHERE user_id = :userId
+        AND status = 'ACTIVE'
+        AND notified_at IS NULL
+        AND expiration_date < :windowEnd
+    """)
+    suspend fun getItemsDueForNotification(userId: String, windowEnd: Long): List<PantryEntity>
+
+    @Query("UPDATE pantry_items SET notified_at = :timestamp WHERE id = :itemId")
+    suspend fun markAsNotified(itemId: String, timestamp: Long)
+
+    @Query("UPDATE pantry_items SET notified_at = :timestamp WHERE id IN (:ids)")
+    suspend fun markAllAsNotified(ids: List<String>, timestamp: Long)
 }

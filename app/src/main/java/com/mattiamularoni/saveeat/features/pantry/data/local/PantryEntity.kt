@@ -20,7 +20,7 @@ data class PantryEntity(
     @ColumnInfo(name = "is_placeholder")
     val isPlaceholder: Boolean = false,
     @ColumnInfo(name = "status")
-    val status: String = "active",
+    val status: String = "ACTIVE",
     @ColumnInfo(name = "quantity")
     val quantity: Double,
     @ColumnInfo(name = "unit")
@@ -30,5 +30,7 @@ data class PantryEntity(
     @ColumnInfo(name = "created_at")
     val createdAt: Long,
     @ColumnInfo(name = "updated_at")
-    val updatedAt: Long
+    val updatedAt: Long,
+    @ColumnInfo(name = "notified_at")
+    val notifiedAt: Long? = null
 )

@@ -28,3 +28,6 @@ object BiometricRoute
 
 @Serializable
 object ProfileRoute
+
+@Serializable
+object SettingsRoute

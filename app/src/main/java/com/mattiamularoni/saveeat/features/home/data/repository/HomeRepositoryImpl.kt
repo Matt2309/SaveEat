@@ -1,6 +1,5 @@
 package com.mattiamularoni.saveeat.features.home.data.repository
 
-import android.util.Log
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.data.local.HomeDao
 import com.mattiamularoni.saveeat.features.home.data.mapper.HomeMapper
@@ -71,10 +70,6 @@ class HomeRepositoryImpl(
                 homeDao.insertOrUpdateDashboard(entity)
                 true
             } catch (e: Exception) {
-                // AGGIUNGI QUESTE DUE RIGHE PER SCOPRIRE IL COLPEVOLE:
-                android.util.Log.e("DASHBOARD_DEBUG", "Errore fatale durante il refresh da Supabase!", e)
-                e.printStackTrace()
-
                 false
             }
         }
