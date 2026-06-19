@@ -31,22 +31,28 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
         val imageByteArray = stream.toByteArray()
 
         val prompt = """
-            Analizza questa immagine di uno scontrino della spesa ed estrai i prodotti alimentari.
+            Analizza questa immagine di uno scontrino della spesa ed estrai il negozio, il totale pagato e i prodotti alimentari.
             Non inventarti nomi diversi da quelli che leggi nello scontrino.
-            Restituisci un array JSON valido seguendo ESATTAMENTE questo schema:
-            [
-              {
-                "name": "Nome pulito del prodotto (es. Latte Parzialmente Scremato)",
-                "category": "FRIDGE" | "PANTRY" | "FREEZER",
-                "quantity": 1.0,
-                "unit": "pz" | "kg" | "l" | "g" | "ml"
-              }
-            ]
+            Restituisci un JSON valido seguendo ESATTAMENTE questo schema:
+            {
+              "store_name": "Nome del negozio (es. Conad, Esselunga)",
+              "total_price": 45.20,
+              "items": [
+                {
+                  "name": "Nome pulito del prodotto (es. Latte Parzialmente Scremato)",
+                  "category": "FRIDGE" | "PANTRY" | "FREEZER",
+                  "quantity": 1.0,
+                  "unit": "pz" | "kg" | "l" | "g" | "ml"
+                }
+              ]
+            }
             Regole:
             - Dedurre la categoria corretta: "FRIDGE" (frigo), "FREEZER" (surgelati), "PANTRY" (scaffale/dispensa).
             - Se la quantità non è chiara, metti 1.0.
             - Se l'unità non è chiara, metti "pz" (pezzi).
-            - Ignora le tasse, il totale, gli sconti o i prodotti non alimentari (es. detersivi, sacchetti).
+            - Se il nome del negozio non è leggibile, usa "Scontrino".
+            - Il total_price è il totale finale pagato (TOTALE), non i singoli prezzi degli articoli.
+            - Negli "items" ignora le tasse, il totale, gli sconti o i prodotti non alimentari (es. detersivi, sacchetti).
         """.trimIndent()
 
         try {

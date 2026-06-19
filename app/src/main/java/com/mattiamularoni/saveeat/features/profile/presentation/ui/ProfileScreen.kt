@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.*
@@ -40,6 +41,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
+    onNavigateToReceiptHistory: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -145,6 +147,8 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.surfaceContainerLowest
                     ) {
                         Column {
+                            AccountRow(Icons.Outlined.Receipt, "Cronologia Scontrini", onNavigateToReceiptHistory)
+                            RowDivider()
                             AccountRow(Icons.Outlined.Shield, "Privacy & Sicurezza") { /* TODO */ }
                             RowDivider()
                             AccountRow(Icons.Outlined.HelpOutline, "Centro Assistenza") { /* TODO */ }

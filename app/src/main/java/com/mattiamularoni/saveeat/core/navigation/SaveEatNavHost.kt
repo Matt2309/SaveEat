@@ -20,6 +20,7 @@ import com.mattiamularoni.saveeat.features.home.presentation.navigation.homeScre
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.navigation.leaderboardScreen
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.pantryScreen
 import com.mattiamularoni.saveeat.features.profile.presentation.navigation.profileScreen
+import com.mattiamularoni.saveeat.features.receipt_history.presentation.navigation.receiptHistoryScreen
 import com.mattiamularoni.saveeat.features.settings.presentation.navigation.settingsScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeDetailScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
@@ -156,7 +157,13 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToSettings = { navController.navigate(SettingsRoute) }
+                onNavigateToSettings = { navController.navigate(SettingsRoute) },
+                onNavigateToReceiptHistory = { navController.navigate(ReceiptHistoryRoute) }
+            )
+            receiptHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
             )
             settingsScreen(
                 onNavigateBack = {
