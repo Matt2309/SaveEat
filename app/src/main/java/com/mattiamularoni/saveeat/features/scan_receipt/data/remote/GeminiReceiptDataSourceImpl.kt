@@ -40,14 +40,27 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
               "items": [
                 {
                   "name": "Nome pulito del prodotto (es. Latte Parzialmente Scremato)",
+                  "category_key": "chiave_categoria_standard_minuscolo",
                   "category": "FRIDGE" | "PANTRY" | "FREEZER",
                   "quantity": 1.0,
-                  "unit": "pz" | "kg" | "l" | "g" | "ml"
+                  "unit": "pz" | "kg" | "l" | "g" | "ml",
+                  "is_perishable": true,
+                  "estimated_expiry_days": 3
                 }
               ]
             }
-            Regole:
+            Regole per category_key:
+            - DEVI assegnare una category_key standard in snake_case minuscolo a ogni prodotto (es. "pomodoro", "latte_intero", "pollo", "uova", "pasta_spaghetti").
+            - La chiave deve essere in snake_case senza spazi o caratteri speciali e al singolare (es. carote NO -> carota SI).
+            - Se il prodotto è completamente sconosciuto o non classificabile, usa "generic_food".
+            Regole generali:
             - Dedurre la categoria corretta: "FRIDGE" (frigo), "FREEZER" (surgelati), "PANTRY" (scaffale/dispensa).
+            - "is_perishable": metti true SOLO per prodotti freschi/deperibili che vanno tenuti in frigo
+              o consumati in pochi giorni (carne, pesce, latticini freschi, verdura e frutta fresca).
+              Metti false per i prodotti a lunga conservazione (pasta, scatolame, surgelati, bibite,
+              snack confezionati, prodotti da dispensa).
+            - "estimated_expiry_days": giorni di conservazione stimati come numero INTERO
+              (es. 3 per pollo fresco, 4 per insalata, 7 per yogurt, 365 per pasta secca o scatolame).
             - Se la quantità non è chiara, metti 1.0.
             - Se l'unità non è chiara, metti "pz" (pezzi).
             - Se il nome del negozio non è leggibile, usa "Scontrino".

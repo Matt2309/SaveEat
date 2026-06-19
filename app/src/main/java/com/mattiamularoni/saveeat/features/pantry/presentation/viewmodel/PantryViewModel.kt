@@ -3,6 +3,8 @@ package com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
+import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
+import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryAssetRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
@@ -16,8 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -28,6 +29,7 @@ sealed interface PantryEffect {
 class PantryViewModel(
     private val getPantryItemsUseCase: GetPantryItemsUseCase,
     private val pantryRepository: PantryRepository,
+    private val pantryAssetRepository: PantryAssetRepository,
     private val sessionProvider: SessionProvider
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
@@ -40,7 +42,7 @@ class PantryViewModel(
     private var selectedCategory = PantryCategory.ALL
 
     init {
-        observePantryItems()
+        observeState()
         viewModelScope.launch {
             try {
                 pantryRepository.syncPantry()
@@ -49,12 +51,20 @@ class PantryViewModel(
                 _effects.emit(PantryEffect.ShowSnackbar("Sincronizzazione non riuscita. Dati locali mostrati."))
             }
         }
+        viewModelScope.launch {
+            try {
+                pantryAssetRepository.syncAssets()
+            } catch (e: Exception) {
+                android.util.Log.e("PantryViewModel", "Asset sync fallito: ${e.message}")
+            }
+        }
     }
 
     fun onCategorySelected(category: PantryCategory) {
         selectedCategory = category
-        if (_uiState.value is PantryUiState.Success) {
-            _uiState.value = PantryUiState.Success(
+        val current = _uiState.value
+        if (current is PantryUiState.Success) {
+            _uiState.value = current.copy(
                 items = filterItems(allItems.value, selectedCategory),
                 selectedCategory = selectedCategory
             )
@@ -94,6 +104,7 @@ class PantryViewModel(
                     receiptId = null,
                     name = formState.itemName,
                     category = categoryString,
+                    categoryKey = "",
                     isPlaceholder = false,
                     status = "ACTIVE",
                     quantity = if (formState.quantity.isNotEmpty()) formState.quantity.toDoubleOrNull() ?: 0.0 else 0.0,
@@ -101,7 +112,7 @@ class PantryViewModel(
                     expirationDate = expirationDate
                 )
 
-                val itemId = pantryRepository.addPantryItem(newItem)
+                pantryRepository.addPantryItem(newItem)
                 _effects.emit(PantryEffect.ShowSnackbar("${formState.itemName} aggiunto con successo"))
             } catch (e: Exception) {
                 _effects.emit(PantryEffect.ShowSnackbar("Errore nell'aggiunta dell'elemento: ${e.message}"))
@@ -109,20 +120,23 @@ class PantryViewModel(
         }
     }
 
-    private fun observePantryItems() {
+    private fun observeState() {
         viewModelScope.launch {
-            getPantryItemsUseCase()
-                .onEach { items ->
-                    allItems.value = items
-                    _uiState.value = PantryUiState.Success(
-                        items = filterItems(items, selectedCategory),
-                        selectedCategory = selectedCategory
-                    )
-                }
+            combine(
+                getPantryItemsUseCase(),
+                pantryAssetRepository.observeAssets()
+            ) { items: List<PantryItem>, assets: Map<String, PantryAsset> ->
+                allItems.value = items
+                PantryUiState.Success(
+                    items = filterItems(items, selectedCategory),
+                    assets = assets,
+                    selectedCategory = selectedCategory
+                )
+            }
                 .catch { throwable ->
                     _uiState.value = PantryUiState.Error(throwable.message ?: "Unable to load pantry items")
                 }
-                .collect()
+                .collect { _uiState.value = it }
         }
     }
 

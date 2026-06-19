@@ -250,6 +250,7 @@ data class PantryItem(
     val receiptId: String?,
     val name: String,
     val category: String,
+    val categoryKey: String = "",
     val isPlaceholder: Boolean,
     val status: String,
     val quantity: Double,

@@ -323,21 +323,7 @@ private fun RecipeTopBar(onAvatarClick: () -> Unit = {}) {
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onAvatarClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Filled.Person,
-                contentDescription = "Profilo",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        com.mattiamularoni.saveeat.core.ui.UserAvatar(size = 32.dp, onClick = onAvatarClick)
         Text(
             text = "SaveEat",
             color = MaterialTheme.colorScheme.primary,

@@ -7,6 +7,9 @@ import kotlinx.serialization.json.jsonPrimitive
 interface SessionProvider {
     fun getCurrentUserId(): String
     fun getUserDisplayName(): String
+
+    /** URL della foto profilo da Google (metadati auth), null se non presente. */
+    fun getAvatarUrl(): String?
 }
 
 /**
@@ -35,5 +38,12 @@ class AuthSessionProviderImpl(
         } else {
             user?.email ?: "Utente"
         }
+    }
+
+    override fun getAvatarUrl(): String? {
+        val metadata = supabaseClient.auth.currentUserOrNull()?.userMetadata
+        // Google fornisce di solito "avatar_url" oppure "picture"
+        return metadata?.get("avatar_url")?.jsonPrimitive?.content
+            ?: metadata?.get("picture")?.jsonPrimitive?.content
     }
 }

@@ -29,12 +29,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
 import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
@@ -56,21 +59,7 @@ fun PantryTopBar(onAvatarClick: () -> Unit = {}) {
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onAvatarClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                Icons.Filled.Person,
-                contentDescription = "Profilo",
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(20.dp)
-            )
-        }
+        com.mattiamularoni.saveeat.core.ui.UserAvatar(size = 32.dp, onClick = onAvatarClick)
         Text(
             text = "SaveEat",
             color = MaterialTheme.colorScheme.primary,
@@ -128,6 +117,7 @@ fun PantrySection(
     title: String,
     icon: ImageVector,
     items: List<PantryItem>,
+    assets: Map<String, PantryAsset>,
     onAddToShoppingList: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -149,14 +139,20 @@ fun PantrySection(
             if (item.isPlaceholder) {
                 PlaceholderItemCard(item = item, onAddToShoppingList = onAddToShoppingList)
             } else {
-                PantryItemCard(item = item)
+                PantryItemCard(item = item, assets = assets)
             }
         }
     }
 }
 
 @Composable
-private fun PantryItemCard(item: PantryItem) {
+private fun PantryItemCard(item: PantryItem, assets: Map<String, PantryAsset>) {
+    val locale = LocalConfiguration.current.locales[0]
+    val asset = assets[item.categoryKey]
+    val displayName = asset?.names?.get(locale.language)
+        ?: asset?.names?.get("en")
+        ?: item.name.ifBlank { item.categoryKey }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -181,10 +177,10 @@ private fun PantryItemCard(item: PantryItem) {
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Thumbnail(imageUrl = item.imageUrl)
+                AssetThumbnail(asset = asset)
                 Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(
-                        text = item.name,
+                        text = displayName,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
                         color = MaterialTheme.colorScheme.onSurface,
@@ -282,7 +278,7 @@ private fun PlaceholderItemCard(
 }
 
 @Composable
-private fun Thumbnail(imageUrl: String?) {
+private fun AssetThumbnail(asset: PantryAsset?) {
     Box(
         modifier = Modifier
             .size(56.dp)
@@ -290,14 +286,21 @@ private fun Thumbnail(imageUrl: String?) {
             .background(MaterialTheme.colorScheme.surfaceContainerHighest),
         contentAlignment = Alignment.Center
     ) {
-        if (!imageUrl.isNullOrBlank()) {
+        if (!asset?.imageUrl.isNullOrBlank()) {
             AsyncImage(
-                model = imageUrl,
+                model = asset!!.imageUrl,
                 contentDescription = null,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Icon(
+                Icons.Outlined.Inventory2,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.outline,
+                modifier = Modifier.size(22.dp)
             )
         }
-        // se imageUrl è null resta il box grigio neutro
     }
 }
 

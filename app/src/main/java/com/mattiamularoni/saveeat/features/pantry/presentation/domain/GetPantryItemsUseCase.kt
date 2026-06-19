@@ -31,7 +31,8 @@ class GetPantryItemsUseCase(
             freshnessLevel = freshnessLevel,
             imageUrl = null,
             category = mapDomainCategory(category),
-            isPlaceholder = isPlaceholder
+            isPlaceholder = isPlaceholder,
+            categoryKey = categoryKey
         )
     }
 
