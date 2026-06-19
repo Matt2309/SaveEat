@@ -82,6 +82,33 @@ class PantryViewModel(
         }
     }
 
+    /** Swipe → destra: elimina il prodotto dalla dispensa. */
+    fun onDeleteItem(itemId: String) {
+        viewModelScope.launch {
+            try {
+                pantryRepository.deletePantryItem(itemId)
+                _effects.emit(PantryEffect.ShowSnackbar("Prodotto eliminato"))
+            } catch (e: Exception) {
+                _effects.emit(PantryEffect.ShowSnackbar("Errore nell'eliminazione: ${e.message}"))
+            }
+        }
+    }
+
+    /** Swipe ← sinistra: segna come consumato (rimuove dalla dispensa). */
+    fun onConsumeItem(itemId: String) {
+        val item = allItems.value.firstOrNull { it.id == itemId }
+        viewModelScope.launch {
+            try {
+                // "Consumato" = rimosso dalla dispensa.
+                // TODO (backend): assegnare eco-punti per il consumo quando disponibile.
+                pantryRepository.deletePantryItem(itemId)
+                _effects.emit(PantryEffect.ShowSnackbar("${item?.name ?: "Prodotto"} segnato come consumato"))
+            } catch (e: Exception) {
+                _effects.emit(PantryEffect.ShowSnackbar("Errore: ${e.message}"))
+            }
+        }
+    }
+
     fun onManualItemInsert(formState: ManualItemFormState) {
         viewModelScope.launch {
             try {
