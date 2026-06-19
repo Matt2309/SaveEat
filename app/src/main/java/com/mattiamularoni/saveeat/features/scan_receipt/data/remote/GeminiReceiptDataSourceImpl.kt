@@ -37,12 +37,17 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
             [
               {
                 "name": "Nome pulito del prodotto (es. Latte Parzialmente Scremato)",
+                "category_key": "chiave_categoria_standard_minuscolo",
                 "category": "FRIDGE" | "PANTRY" | "FREEZER",
                 "quantity": 1.0,
                 "unit": "pz" | "kg" | "l" | "g" | "ml"
               }
             ]
-            Regole:
+            Regole per category_key:
+            - DEVI assegnare una category_key standard in snake_case minuscolo a ogni prodotto (es. "pomodoro", "latte_intero", "pollo", "uova", "pasta_spaghetti").
+            - La chiave deve essere in snake_case senza spazi o caratteri speciali e al singolare (es. carote NO -> carota SI).
+            - Se il prodotto è completamente sconosciuto o non classificabile, usa "generic_food".
+            Regole generali:
             - Dedurre la categoria corretta: "FRIDGE" (frigo), "FREEZER" (surgelati), "PANTRY" (scaffale/dispensa).
             - Se la quantità non è chiara, metti 1.0.
             - Se l'unità non è chiara, metti "pz" (pezzi).
