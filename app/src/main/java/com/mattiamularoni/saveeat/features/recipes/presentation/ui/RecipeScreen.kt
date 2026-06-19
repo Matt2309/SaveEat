@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -30,6 +31,7 @@ import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRe
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
 private val Filters = listOf("Suggeriti", "Veloci (< 30 min)", "Vegetariani")
 private val CuisineStyles = listOf("Italiana", "Asiatica", "Messicana")
@@ -48,11 +50,15 @@ fun RecipeScreen(
     var selectedFilter by remember { mutableStateOf(Filters.first()) }
     var showModal by remember { mutableStateOf(false) }
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile) }
+        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -313,7 +319,7 @@ private fun GenerateRecipeModal(
 }
 
 @Composable
-private fun RecipeTopBar(onAvatarClick: () -> Unit = {}) {
+private fun RecipeTopBar(onAvatarClick: () -> Unit = {}, expiryAlertsEnabled: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,7 +340,7 @@ private fun RecipeTopBar(onAvatarClick: () -> Unit = {}) {
         )
         IconButton(onClick = { /* TODO: notifiche */ }) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )
