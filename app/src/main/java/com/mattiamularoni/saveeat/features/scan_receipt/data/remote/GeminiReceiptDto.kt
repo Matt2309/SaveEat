@@ -11,3 +11,12 @@ data class GeminiReceiptItemDto(
     val quantity: Double = 1.0,
     val unit: String = "pz"
 )
+
+@Serializable
+data class GeminiReceiptResponseDto(
+    @SerialName("store_name")
+    val storeName: String,
+    @SerialName("total_price")
+    val totalPrice: Double,
+    val items: List<GeminiReceiptItemDto>
+)

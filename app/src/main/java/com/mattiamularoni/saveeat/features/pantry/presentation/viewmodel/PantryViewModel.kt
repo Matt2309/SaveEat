@@ -47,7 +47,8 @@ class PantryViewModel(
             try {
                 pantryRepository.syncPantry()
             } catch (e: Exception) {
-                android.util.Log.e("PantryViewModel", "Sync fallito: ${e.message}")
+                android.util.Log.e("PantryViewModel", "Sync fallito: ${e.message}", e)
+                _effects.emit(PantryEffect.ShowSnackbar("Sincronizzazione non riuscita. Dati locali mostrati."))
             }
         }
         viewModelScope.launch {
@@ -84,8 +85,6 @@ class PantryViewModel(
     fun onManualItemInsert(formState: ManualItemFormState) {
         viewModelScope.launch {
             try {
-                android.util.Log.d("SUPABASE_DEBUG", "URL in VM: ->${com.mattiamularoni.saveeat.BuildConfig.SUPABASE_URL}<-")
-                android.util.Log.d("SUPABASE_DEBUG", "KEY in VM: ->${com.mattiamularoni.saveeat.BuildConfig.SUPABASE_ANON_KEY}<-")
                 val categoryString = when (formState.category) {
                     PantryCategory.FRIDGE -> "FRIDGE"
                     PantryCategory.PANTRY -> "PANTRY"
@@ -107,7 +106,7 @@ class PantryViewModel(
                     category = categoryString,
                     categoryKey = "",
                     isPlaceholder = false,
-                    status = "active",
+                    status = "ACTIVE",
                     quantity = if (formState.quantity.isNotEmpty()) formState.quantity.toDoubleOrNull() ?: 0.0 else 0.0,
                     unit = if (formState.unit.isNotEmpty()) formState.unit else null,
                     expirationDate = expirationDate

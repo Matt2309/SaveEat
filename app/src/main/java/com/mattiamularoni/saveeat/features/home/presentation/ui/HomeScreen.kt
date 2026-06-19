@@ -16,6 +16,7 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.*
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -23,9 +24,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import coil.compose.AsyncImage
+import com.mattiamularoni.saveeat.BuildConfig
+import com.mattiamularoni.saveeat.features.notifications.data.worker.NotificationWorker
 import com.mattiamularoni.saveeat.features.home.domain.repository.ExpiringItem
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
@@ -69,14 +75,25 @@ fun HomeScreen(
         .trim()
         .substringBefore(' ')
         .ifBlank { "Utente" }
+    val isRefreshing by homeViewModel.isRefreshing.collectAsState()
+    val context = LocalContext.current
 
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
+        // Gli insets sono già gestiti da MainScaffold: evitiamo il doppio inset
+        // (striscia bianca in basso + FAB troppo in alto).
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         topBar = {
             HomeTopBar(
                 avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
-                onAvatarClick = onNavigateToProfile
+                onAvatarClick = onNavigateToProfile,
+                onNotificationsClick = {
+                    if (BuildConfig.DEBUG) {
+                        WorkManager.getInstance(context)
+                            .enqueue(OneTimeWorkRequestBuilder<NotificationWorker>().build())
+                    }
+                }
             )
         },
         floatingActionButton = {
@@ -86,7 +103,9 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-        Box(
+        PullToRefreshBox(
+            isRefreshing = isRefreshing,
+            onRefresh = { homeViewModel.refreshDashboard() },
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
@@ -127,7 +146,11 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HomeTopBar(avatarUrl: String?, onAvatarClick: () -> Unit = {}) {
+private fun HomeTopBar(
+    avatarUrl: String?,
+    onAvatarClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -171,7 +194,7 @@ private fun HomeTopBar(avatarUrl: String?, onAvatarClick: () -> Unit = {}) {
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
 
-        IconButton(onClick = { /* TODO: notifiche (nessuna schermata ancora) */ }) {
+        IconButton(onClick = onNotificationsClick) {
             Icon(
                 Icons.Outlined.Notifications,
                 contentDescription = "Notifiche",

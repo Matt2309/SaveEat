@@ -66,7 +66,7 @@ class HomeRemoteDataSourceImpl(
                     .select {
                         filter {
                             eq("user_id", userId)
-                            eq("status", "active")
+                            eq("status", "ACTIVE")
                         }
                     }
                     .decodeList<PantryItemDto>()

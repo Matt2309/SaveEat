@@ -2,11 +2,12 @@ package com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.useca
 
 import android.graphics.Bitmap
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
+import com.mattiamularoni.saveeat.features.receipt_history.domain.repository.ReceiptRepository
 import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.ScanReceiptRepository
-import java.util.UUID
 
 class ProcessReceiptUseCase(
     private val scanReceiptRepository: ScanReceiptRepository,
+    private val receiptRepository: ReceiptRepository,
     private val pantryRepository: PantryRepository
 ) {
     /**
@@ -15,17 +16,25 @@ class ProcessReceiptUseCase(
      */
     suspend operator fun invoke(bitmap: Bitmap): Result<Unit> {
         return try {
-            // 1. Analyze image with IA
-            val scannedItems = scanReceiptRepository.analyzeReceiptImage(bitmap)
+            // 1. Analyze image with IA (store name, total price, items)
+            val scanned = scanReceiptRepository.analyzeReceiptImage(bitmap)
 
-            if (scannedItems.isEmpty()) {
+            if (scanned.items.isEmpty()) {
                 throw Exception("Nessun prodotto alimentare trovato nello scontrino.")
             }
 
-            val receiptId = ""
+            // 2. Upload receipt photo to Supabase Storage
+            val imageUrl = receiptRepository.uploadReceiptImage(bitmap)
 
-            // save items to repository
-            pantryRepository.saveReceiptItems(receiptId, scannedItems)
+            // 3. Insert the receipt row (store name, total price, image url)
+            val receipt = receiptRepository.insertReceipt(
+                storeName = scanned.storeName,
+                totalPrice = scanned.totalPrice,
+                imageUrl = imageUrl
+            )
+
+            // 4. Save items to pantry, linked to the real receipt id
+            pantryRepository.saveReceiptItems(receipt.id, scanned.items)
 
             Result.success(Unit)
         } catch (e: Exception) {

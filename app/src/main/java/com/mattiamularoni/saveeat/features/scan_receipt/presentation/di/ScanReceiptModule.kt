@@ -22,6 +22,7 @@ val scanReceiptModule = module {
     factory {
         ProcessReceiptUseCase(
             scanReceiptRepository = get(),
+            receiptRepository = get(),
             pantryRepository = get()
         )
     }

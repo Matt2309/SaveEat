@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material3.*
@@ -39,6 +40,8 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
+    onNavigateToSettings: () -> Unit = {},
+    onNavigateToReceiptHistory: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -58,7 +61,8 @@ fun ProfileScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
-        topBar = { ProfileTopBar(onNavigateBack = onNavigateBack) }
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        topBar = { ProfileTopBar(onNavigateBack = onNavigateBack, onSettingsClick = onNavigateToSettings) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -143,7 +147,7 @@ fun ProfileScreen(
                         color = MaterialTheme.colorScheme.surfaceContainerLowest
                     ) {
                         Column {
-                            AccountRow(Icons.Outlined.Notifications, "Notifiche") { /* TODO */ }
+                            AccountRow(Icons.Outlined.Receipt, "Cronologia Scontrini", onNavigateToReceiptHistory)
                             RowDivider()
                             AccountRow(Icons.Outlined.Shield, "Privacy & Sicurezza") { /* TODO */ }
                             RowDivider()
@@ -204,7 +208,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileTopBar(onNavigateBack: () -> Unit) {
+private fun ProfileTopBar(onNavigateBack: () -> Unit, onSettingsClick: () -> Unit = {}) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -229,7 +233,7 @@ private fun ProfileTopBar(onNavigateBack: () -> Unit) {
             textAlign = TextAlign.Center,
             modifier = Modifier.weight(1f)
         )
-        IconButton(onClick = { /* TODO: impostazioni */ }) {
+        IconButton(onClick = onSettingsClick) {
             Icon(
                 Icons.Outlined.Settings,
                 contentDescription = "Impostazioni",
