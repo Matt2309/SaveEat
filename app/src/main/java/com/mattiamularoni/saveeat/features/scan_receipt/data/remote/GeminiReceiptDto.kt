@@ -9,7 +9,9 @@ data class GeminiReceiptItemDto(
     @SerialName("category_key") val categoryKey: String = "generic_food",
     val category: String,
     val quantity: Double = 1.0,
-    val unit: String = "pz"
+    val unit: String = "pz",
+    @SerialName("is_perishable") val isPerishable: Boolean = false,
+    @SerialName("estimated_expiry_days") val estimatedExpiryDays: Int = 365
 )
 
 @Serializable

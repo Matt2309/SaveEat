@@ -160,30 +160,8 @@ private fun HomeTopBar(
             .height(56.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Avatar
-        Box(
-            modifier = Modifier
-                .size(32.dp)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceVariant)
-                .clickable { onAvatarClick() },
-            contentAlignment = Alignment.Center
-        ) {
-            if (avatarUrl.isNullOrBlank()) {
-                Icon(
-                    Icons.Filled.Person,
-                    contentDescription = "Profilo",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(20.dp)
-                )
-            } else {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = "Profilo",
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+        // Avatar condiviso (foto locale > foto Google > icona)
+        com.mattiamularoni.saveeat.core.ui.UserAvatar(size = 32.dp, onClick = onAvatarClick)
 
         Text(
             text = "SaveEat",

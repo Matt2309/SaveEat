@@ -24,12 +24,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mattiamularoni.saveeat.features.scan_receipt.presentation.components.ReviewCarouselSheet
+import com.mattiamularoni.saveeat.features.scan_receipt.presentation.viewmodel.ScanReceiptEffect
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.viewmodel.ScanReceiptUiState
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.viewmodel.ScanReceiptViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -40,7 +42,7 @@ fun ScanReceiptScreen(
     onNavigateBack: () -> Unit,
     viewModel: ScanReceiptViewModel = koinViewModel()
 ) {
-    val uiState by viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Launcher per la fotocamera: Android scatta la foto e ci restituisce un Bitmap
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -52,11 +54,15 @@ fun ScanReceiptScreen(
         }
     }
 
-    // Effetto di navigazione: se la scansione ha successo, torniamo alla dispensa
-    LaunchedEffect(uiState) {
-        if (uiState is ScanReceiptUiState.Success) {
-            viewModel.resetState()
-            onNavigateBack() // Torna alla PantryScreen dove vedremo i nuovi prodotti!
+    // Effetto di navigazione one-shot: quando la revisione è completa torniamo alla dispensa
+    LaunchedEffect(Unit) {
+        viewModel.effects.collect { effect ->
+            when (effect) {
+                is ScanReceiptEffect.NavigateToPantry -> {
+                    viewModel.resetState()
+                    onNavigateBack() // Torna alla PantryScreen dove vedremo i nuovi prodotti!
+                }
+            }
         }
     }
 
@@ -129,7 +135,19 @@ fun ScanReceiptScreen(
                     }
                 }
 
-                is ScanReceiptUiState.Success -> {
+                is ScanReceiptUiState.Review -> {
+                    // Mentre il carosello (overlay) è aperto mostriamo un loader leggero dietro.
+                    CircularProgressIndicator(modifier = Modifier.size(64.dp))
+
+                    ReviewCarouselSheet(
+                        items = state.pendingItems,
+                        savedLongShelfCount = state.savedAutomaticallyCount,
+                        onIncrementDays = viewModel::onIncrementDays,
+                        onDecrementDays = viewModel::onDecrementDays,
+                        onConfirm = viewModel::onConfirmItem,
+                        onSkip = viewModel::onSkipItem,
+                        onDismiss = viewModel::onDismiss
+                    )
                 }
             }
         }

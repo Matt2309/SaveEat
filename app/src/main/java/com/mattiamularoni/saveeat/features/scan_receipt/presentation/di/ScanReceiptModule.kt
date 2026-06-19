@@ -4,7 +4,7 @@ import com.mattiamularoni.saveeat.features.scan_receipt.data.remote.GeminiReceip
 import com.mattiamularoni.saveeat.features.scan_receipt.data.remote.GeminiReceiptDataSourceImpl
 import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.ScanReceiptRepository
 import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.ScanReceiptRepositoryImpl
-import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.usecase.ProcessReceiptUseCase
+import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.usecase.AnalyzeReceiptUseCase
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.viewmodel.ScanReceiptViewModel
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
@@ -20,10 +20,9 @@ val scanReceiptModule = module {
 
     // Use Case
     factory {
-        ProcessReceiptUseCase(
+        AnalyzeReceiptUseCase(
             scanReceiptRepository = get(),
-            receiptRepository = get(),
-            pantryRepository = get()
+            receiptRepository = get()
         )
     }
 

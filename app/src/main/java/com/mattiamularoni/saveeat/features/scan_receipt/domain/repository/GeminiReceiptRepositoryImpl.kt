@@ -1,13 +1,12 @@
 package com.mattiamularoni.saveeat.features.scan_receipt.domain.repository
 
 import android.graphics.Bitmap
-import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem
 import com.mattiamularoni.saveeat.features.scan_receipt.data.remote.GeminiReceiptDataSource
 import com.mattiamularoni.saveeat.features.scan_receipt.data.remote.GeminiReceiptResponseDto
+import com.mattiamularoni.saveeat.features.scan_receipt.domain.model.ParsedReceiptItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import java.util.UUID
 
 class ScanReceiptRepositoryImpl(
     private val geminiDataSource: GeminiReceiptDataSource
@@ -28,23 +27,19 @@ class ScanReceiptRepositoryImpl(
             throw Exception("Impossibile decifrare lo scontrino. Riprova con una foto più nitida.", e)
         }
 
-        // 3. Dto mapping into pantry items
+        // 3. Dto mapping into parsed receipt items
         ScannedReceiptData(
             storeName = response.storeName,
             totalPrice = response.totalPrice,
             items = response.items.map { dto ->
-                PantryItem(
-                    id = UUID.randomUUID().toString(),
-                    userId = "",
-                    receiptId = null,
+                ParsedReceiptItem(
                     name = dto.name,
-                    category = dto.category,
                     categoryKey = dto.categoryKey,
-                    isPlaceholder = false,
-                    status = "ACTIVE",
+                    category = dto.category,
+                    isPerishable = dto.isPerishable,
+                    estimatedExpiryDays = dto.estimatedExpiryDays,
                     quantity = dto.quantity,
-                    unit = dto.unit,
-                    expirationDate = null
+                    unit = dto.unit
                 )
             }
         )
