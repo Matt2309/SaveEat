@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -78,6 +79,10 @@ fun HomeScreen(
     val isRefreshing by homeViewModel.isRefreshing.collectAsState()
     val context = LocalContext.current
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        org.koin.compose.koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -87,6 +92,7 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
+                expiryAlertsEnabled = expiryAlertsEnabled,
                 onAvatarClick = onNavigateToProfile,
                 onNotificationsClick = {
                     if (BuildConfig.DEBUG) {
@@ -148,6 +154,7 @@ fun HomeScreen(
 @Composable
 private fun HomeTopBar(
     avatarUrl: String?,
+    expiryAlertsEnabled: Boolean = true,
     onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {}
 ) {
@@ -174,7 +181,7 @@ private fun HomeTopBar(
 
         IconButton(onClick = onNotificationsClick) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )

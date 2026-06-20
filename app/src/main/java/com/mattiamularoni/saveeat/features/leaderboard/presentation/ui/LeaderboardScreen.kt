@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.rounded.Kitchen
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,11 +52,15 @@ fun LeaderboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentUserId = remember { sessionProvider.getCurrentUserId() }
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile) }
+        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val state = uiState) {
@@ -79,7 +84,7 @@ fun LeaderboardScreen(
 }
 
 @Composable
-private fun LeaderboardTopBar(onAvatarClick: () -> Unit) {
+private fun LeaderboardTopBar(onAvatarClick: () -> Unit, expiryAlertsEnabled: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -100,7 +105,7 @@ private fun LeaderboardTopBar(onAvatarClick: () -> Unit) {
         )
         IconButton(onClick = { /* TODO: notifiche */ }) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )
