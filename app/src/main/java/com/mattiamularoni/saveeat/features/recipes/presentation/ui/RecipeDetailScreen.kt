@@ -113,7 +113,6 @@ private fun DetailContent(
 ) {
     var isFavorite by remember { mutableStateOf(false) }
     val steps = remember(recipe.instructions) { splitSteps(recipe.instructions) }
-    val description = remember(recipe.instructions) { firstSentence(recipe.instructions) }
 
     Column(
         modifier = Modifier
@@ -156,13 +155,6 @@ private fun DetailContent(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                if (description.isNotBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
             // Chip meta
@@ -357,11 +349,29 @@ private fun firstSentence(instructions: String): String {
     return if (end > 0) clean.substring(0, end + 1) else clean.lineSequence().firstOrNull()?.trim().orEmpty()
 }
 
+private val stepNumberMarker = Regex("(?:^|\\n|\\s)\\d{1,2}[.)]\\s+")
+
+private fun stripLeadingNumbering(text: String): String =
+    text.trimStart('-', ' ').replaceFirst(Regex("^\\d{1,2}[.)]\\s*"), "").trimStart('-', ' ')
+
 private fun splitSteps(instructions: String): List<String> {
-    val byLine = instructions.split("\n").map { it.trim() }.filter { it.isNotBlank() }
-    if (byLine.size > 1) return byLine.map { it.trimStart('0','1','2','3','4','5','6','7','8','9','.',')',' ','-') }
-    // singola riga: spezzo per frasi
-    return instructions.split(Regex("(?<=\\.)\\s+")).map { it.trim() }.filter { it.isNotBlank() }
+    val normalized = instructions.trim()
+    if (normalized.isEmpty()) return emptyList()
+
+    val markers = stepNumberMarker.findAll(normalized).toList()
+    if (markers.size > 1) {
+        val steps = markers.indices.map { i ->
+            val start = markers[i].range.last + 1
+            val end = if (i + 1 < markers.size) markers[i + 1].range.first else normalized.length
+            normalized.substring(start, end).trim().trimEnd('-', ' ')
+        }.filter { it.isNotBlank() }
+        if (steps.isNotEmpty()) return steps
+    }
+
+    val byLine = normalized.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+    if (byLine.size > 1) return byLine.map { stripLeadingNumbering(it) }
+    // singola riga senza numerazione riconoscibile: spezzo per frasi
+    return normalized.split(Regex("(?<=\\.)\\s+")).map { stripLeadingNumbering(it.trim()) }.filter { it.isNotBlank() }
 }
 
 private fun difficultyLabel(prepTimeMinutes: Int): String = when {

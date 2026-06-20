@@ -59,7 +59,7 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             ]
             Regole:
             - Usa PRINCIPALMENTE gli ingredienti forniti, aggiungendo solo ingredienti base comuni (sale, olio, ecc.)
-            - Le istruzioni devono essere chiare e in italiano
+            - Le istruzioni devono essere chiare e in italiano, separate da newline, SENZA numerazione né elenchi (niente "1.", "2)", trattini): la UI numera già i passi
             - I tag devono descrivere la ricetta (es. "veloce", "vegetariano", "italiano", "pasta")
             - Il tempo di preparazione deve essere realistico e non superare $maxMinutes minuti
             - Genera esattamente 3 ricette diverse

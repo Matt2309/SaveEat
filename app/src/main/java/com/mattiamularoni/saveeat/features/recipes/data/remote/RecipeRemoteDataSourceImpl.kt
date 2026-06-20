@@ -103,6 +103,16 @@ class RecipeRemoteDataSourceImpl(
             }
         }
 
+    override suspend fun insertRecipes(dtos: List<RecipeDto>) =
+        withContext(Dispatchers.IO) {
+            try {
+                if (dtos.isEmpty()) return@withContext
+                supabaseClient.from("recipes").insert(dtos)
+            } catch (e: Exception) {
+                throw Exception("Failed to insert recipes: ${e.message}", e)
+            }
+        }
+
     override suspend fun addFavoriteRecipe(favoriteDto: FavoriteRecipeDto): Boolean =
         withContext(Dispatchers.IO) {
             try {

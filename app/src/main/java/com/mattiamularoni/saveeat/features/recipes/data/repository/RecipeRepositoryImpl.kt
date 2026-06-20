@@ -4,6 +4,7 @@ import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeDao
 import com.mattiamularoni.saveeat.features.recipes.data.mapper.FavoriteRecipeMapper
 import com.mattiamularoni.saveeat.features.recipes.data.mapper.RecipeMapper
 import com.mattiamularoni.saveeat.features.recipes.data.remote.FavoriteRecipeDto
+import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeDto
 import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeRemoteDataSource
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
@@ -124,6 +125,7 @@ class RecipeRepositoryImpl(
         withContext(Dispatchers.IO) {
             try {
                 val dtos = remoteDataSource.generateRecipe(ingredients, preferences)
+                persistGeneratedRecipes(dtos)
                 val entities = RecipeMapper.dtosToEntities(dtos)
                 recipeDao.insertRecipes(entities)
                 RecipeMapper.dtosToDomain(dtos)
@@ -148,6 +150,7 @@ class RecipeRepositoryImpl(
                 val prefs = preferences.toMutableMap()
                 prefs["focus"] = "use_expiring_items"
                 val dtos = remoteDataSource.generateRecipe(expiringItems, prefs)
+                persistGeneratedRecipes(dtos)
                 val entities = RecipeMapper.dtosToEntities(dtos)
                 recipeDao.insertRecipes(entities)
                 RecipeMapper.dtosToDomain(dtos)
@@ -172,6 +175,7 @@ class RecipeRepositoryImpl(
                 val prefs = preferences.toMutableMap()
                 prefs["season"] = season
                 val dtos = remoteDataSource.generateRecipe(emptyList(), prefs)
+                persistGeneratedRecipes(dtos)
                 val entities = RecipeMapper.dtosToEntities(dtos)
                 recipeDao.insertRecipes(entities)
                 RecipeMapper.dtosToDomain(dtos)
@@ -179,6 +183,20 @@ class RecipeRepositoryImpl(
                 throw Exception("Failed to get seasonal recipes: ${e.message}", e)
             }
         }
+
+    /**
+     * Persiste su Supabase le ricette generate via AI, in modo best-effort.
+     *
+     * La generazione richiede già la rete (Gemini), ma un fallimento nello scrivere
+     * su Supabase non deve impedire il caching locale (offline-first).
+     */
+    private suspend fun persistGeneratedRecipes(dtos: List<RecipeDto>) {
+        try {
+            remoteDataSource.insertRecipes(dtos)
+        } catch (e: Exception) {
+            // Non bloccare il caching locale se la scrittura remota fallisce.
+        }
+    }
 
     // ===== FAVORITE MANAGEMENT =====
 
