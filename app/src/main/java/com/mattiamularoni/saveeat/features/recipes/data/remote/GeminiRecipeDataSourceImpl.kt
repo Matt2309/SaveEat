@@ -59,10 +59,12 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             ]
             Regole:
             - Usa PRINCIPALMENTE gli ingredienti forniti, aggiungendo solo ingredienti base comuni (sale, olio, ecc.)
-            - Le istruzioni devono essere chiare e in italiano, separate da newline, SENZA numerazione né elenchi (niente "1.", "2)", trattini): la UI numera già i passi
-            - I tag devono descrivere la ricetta (es. "veloce", "vegetariano", "italiano", "pasta")
+            - Le istruzioni devono essere chiare e in italiano, separate dal carattere di newline escapato (\n), SENZA numerazione né elenchi (niente "1.", "2)", trattini): la UI numera già i passi
+            - I tag devono essere singole parole brevi che descrivono la ricetta (es. "veloce", "vegetariano", "italiano", "pasta"), senza virgolette, virgole o punteggiatura al loro interno
             - Il tempo di preparazione deve essere realistico e non superare $maxMinutes minuti
             - Genera esattamente 3 ricette diverse
+            - Rispondi SOLO con l'array JSON richiesto, senza testo aggiuntivo né blocchi di codice markdown (niente ```)
+            - Il JSON deve essere sintatticamente valido: usa solo virgolette doppie, nessuna virgola finale, ed effettua l'escape di eventuali virgolette o ritorni a capo letterali contenuti nei valori stringa
         """.trimIndent()
 
         try {
@@ -77,9 +79,23 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                 throw Exception("Gemini ha restituito una risposta vuota.")
             }
 
-            jsonText.trim()
+            stripMarkdownFences(jsonText)
         } catch (e: Exception) {
             throw Exception("Errore durante la generazione delle ricette: ${e.message}", e)
         }
+    }
+
+    /**
+     * Rimuove eventuali blocchi di codice markdown (```json ... ``` o ``` ... ```)
+     * che il modello potrebbe aggiungere attorno al JSON nonostante le istruzioni.
+     */
+    private fun stripMarkdownFences(text: String): String {
+        val trimmed = text.trim()
+        if (!trimmed.startsWith("```")) return trimmed
+        return trimmed
+            .removePrefix("```json")
+            .removePrefix("```")
+            .removeSuffix("```")
+            .trim()
     }
 }

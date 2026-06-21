@@ -1,6 +1,7 @@
 package com.mattiamularoni.saveeat.features.pantry.data.repository
 
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
+import com.mattiamularoni.saveeat.core.util.ingredientMatchesPantryName
 import com.mattiamularoni.saveeat.features.pantry.data.local.PantryDao
 import com.mattiamularoni.saveeat.features.pantry.data.local.PantryEntity
 import com.mattiamularoni.saveeat.features.pantry.data.mapper.PantryMapper
@@ -643,6 +644,35 @@ class PantryRepositoryImpl(
     override suspend fun markItemsNotified(ids: List<String>) =
         withContext(Dispatchers.IO) {
             pantryDao.markAllAsNotified(ids, System.currentTimeMillis())
+        }
+
+    // ===== RECIPE INTEGRATION =====
+
+    /**
+     * Deduce una quantità dalla dispensa per un ingrediente di ricetta, individuato per nome.
+     *
+     * Logica:
+     * - Cerca il primo elemento non-placeholder che corrisponde al nome (fuzzy match)
+     * - Se nessun match, non fa nulla (fail-safe)
+     * - Se newQuantity <= 0, elimina l'elemento; altrimenti aggiorna la quantità
+     */
+    override suspend fun deductIngredientQuantity(ingredientName: String, amountToDeduct: Double) =
+        withContext(Dispatchers.IO) {
+            try {
+                val items = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
+                val match = items.firstOrNull { entity ->
+                    !entity.isPlaceholder && ingredientMatchesPantryName(ingredientName, entity.name)
+                } ?: return@withContext
+
+                val newQuantity = match.quantity - amountToDeduct
+                if (newQuantity <= 0) {
+                    deletePantryItem(match.id)
+                } else {
+                    updatePantryItem(match.id, entityToDomain(match).copy(quantity = newQuantity))
+                }
+            } catch (e: Exception) {
+                throw Exception("Failed to deduct ingredient quantity: ${e.message}", e)
+            }
         }
 
     // ===== HELPERS =====
