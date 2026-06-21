@@ -14,6 +14,7 @@ import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.ShoppingBasket
 import androidx.compose.material3.*
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -78,6 +79,10 @@ fun HomeScreen(
     val isRefreshing by homeViewModel.isRefreshing.collectAsState()
     val context = LocalContext.current
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        org.koin.compose.koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
     Scaffold(
         modifier = modifier,
         containerColor = MaterialTheme.colorScheme.surface,
@@ -87,6 +92,7 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
+                expiryAlertsEnabled = expiryAlertsEnabled,
                 onAvatarClick = onNavigateToProfile,
                 onNotificationsClick = {
                     if (BuildConfig.DEBUG) {
@@ -133,9 +139,11 @@ fun HomeScreen(
                     )
                 }
                 is HomeUiState.Success -> {
+                    val userStats by homeViewModel.userStats.collectAsState()
                     DashboardContent(
                         firstName = firstName,
                         dashboard = state.dashboard,
+                        kgSaved = userStats.totalKgSaved,
                         onSeeAllExpiring = onNavigateToPantry,
                         onOpenRecipe = onNavigateToRecipes
                     )
@@ -148,6 +156,7 @@ fun HomeScreen(
 @Composable
 private fun HomeTopBar(
     avatarUrl: String?,
+    expiryAlertsEnabled: Boolean = true,
     onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {}
 ) {
@@ -174,7 +183,7 @@ private fun HomeTopBar(
 
         IconButton(onClick = onNotificationsClick) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -186,6 +195,7 @@ private fun HomeTopBar(
 private fun DashboardContent(
     firstName: String,
     dashboard: HomeDashboard,
+    kgSaved: Double,
     onSeeAllExpiring: () -> Unit,
     onOpenRecipe: () -> Unit
 ) {
@@ -252,7 +262,7 @@ private fun DashboardContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SavedFoodCard(modifier = Modifier.weight(1f))
+            SavedFoodCard(kgSaved = kgSaved, modifier = Modifier.weight(1f))
             RecipeCard(
                 title = dashboard.suggestedRecipes.firstOrNull()?.title ?: "Nessun suggerimento",
                 onClick = onOpenRecipe,
@@ -390,7 +400,7 @@ private fun ExpiringItemCard(item: ExpiringItem) {
 }
 
 @Composable
-private fun SavedFoodCard(modifier: Modifier = Modifier) {
+private fun SavedFoodCard(kgSaved: Double, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(140.dp)
@@ -426,9 +436,8 @@ private fun SavedFoodCard(modifier: Modifier = Modifier) {
             }
             Column {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    // TODO: valore PLACEHOLDER — il backend non espone ancora i kg salvati.
                     Text(
-                        text = "0",
+                        text = "%.1f".format(kgSaved),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -442,7 +451,7 @@ private fun SavedFoodCard(modifier: Modifier = Modifier) {
                     )
                 }
                 Text(
-                    text = "Cibo salvato questo mese",
+                    text = "Cibo salvato cucinando ricette",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

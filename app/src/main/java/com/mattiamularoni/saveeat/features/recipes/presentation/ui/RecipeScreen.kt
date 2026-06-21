@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -24,16 +25,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilter
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
+import org.koin.compose.koinInject
 
-private val Filters = listOf("Suggeriti", "Veloci (< 30 min)", "Vegetariani")
 private val CuisineStyles = listOf("Italiana", "Asiatica", "Messicana")
-private val TimingOptions = listOf("Veloce (15 min)" to "veloce", "Medio (30 min)" to "medio")
+private val TimingOptions = listOf(
+    "Veloce (15 min)" to "veloce",
+    "Medio (30 min)" to "medio",
+    "Lungo (60 min)" to "lungo"
+)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,14 +51,18 @@ fun RecipeScreen(
 ) {
     val uiState by viewModel.recipesUiState.collectAsState()
     val generateState by viewModel.generateRecipeUiState.collectAsState()
-    var selectedFilter by remember { mutableStateOf(Filters.first()) }
+    val activeFilters by viewModel.activeFilters.collectAsState()
     var showModal by remember { mutableStateOf(false) }
+
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile) }
+        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -97,18 +107,18 @@ fun RecipeScreen(
                 )
             }
 
-            // Chip filtro (solo visivi)
+            // Chip filtro (stile, tempo, dieta) - multi-selezionabili
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                Filters.forEach { filter ->
-                    FilterPill(
-                        label = filter,
-                        selected = filter == selectedFilter,
-                        onClick = { selectedFilter = filter }
+                RecipeFilter.all.forEach { filter ->
+                    FilterChip(
+                        selected = filter in activeFilters,
+                        onClick = { viewModel.toggleFilter(filter) },
+                        label = { Text(filter.label) }
                     )
                 }
             }
@@ -190,6 +200,7 @@ private fun GenerateRecipeModal(
 ) {
     var selectedCuisine by remember { mutableStateOf<String?>(null) }
     var selectedTiming by remember { mutableStateOf<String?>(null) }
+    var vegetarian by remember { mutableStateOf(false) }
 
     LaunchedEffect(generateState) {
         if (generateState is GenerateRecipeUiState.Success) {
@@ -229,7 +240,8 @@ private fun GenerateRecipeModal(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                 ) {
                     CuisineStyles.forEach { cuisine ->
                         val isSelected = cuisine.lowercase() == selectedCuisine
@@ -253,7 +265,8 @@ private fun GenerateRecipeModal(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                 ) {
                     TimingOptions.forEach { (label, value) ->
                         val isSelected = value == selectedTiming
@@ -268,6 +281,21 @@ private fun GenerateRecipeModal(
                 }
             }
 
+            // Preferenze alimentari
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Vegetariano",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                Switch(checked = vegetarian, onCheckedChange = { vegetarian = it })
+            }
+
             // Errore
             if (generateState is GenerateRecipeUiState.Error) {
                 Text(
@@ -280,7 +308,13 @@ private fun GenerateRecipeModal(
             // Bottone genera
             Button(
                 onClick = {
-                    onGenerate(RecipeFilters(cuisineStyle = selectedCuisine, timingPreference = selectedTiming))
+                    onGenerate(
+                        RecipeFilters(
+                            cuisineStyle = selectedCuisine,
+                            timingPreference = selectedTiming,
+                            vegetarian = vegetarian
+                        )
+                    )
                 },
                 enabled = generateState !is GenerateRecipeUiState.Generating,
                 modifier = Modifier.fillMaxWidth(),
@@ -313,7 +347,7 @@ private fun GenerateRecipeModal(
 }
 
 @Composable
-private fun RecipeTopBar(onAvatarClick: () -> Unit = {}) {
+private fun RecipeTopBar(onAvatarClick: () -> Unit = {}, expiryAlertsEnabled: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,7 +368,7 @@ private fun RecipeTopBar(onAvatarClick: () -> Unit = {}) {
         )
         IconButton(onClick = { /* TODO: notifiche */ }) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )

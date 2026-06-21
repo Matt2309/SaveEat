@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignOutUseCase
 import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashboardUseCase
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,7 +22,6 @@ data class ProfileUiState(
     val email: String = "",
     val avatarUrl: String? = null,
     val ecoPoints: Int = 0,
-    // TODO: placeholder — il backend non espone ancora gli euro risparmiati.
     val savedEuros: Double = 0.0
 )
 
@@ -32,12 +32,14 @@ data class ProfileUiState(
  * - nome  -> SessionProvider (metadati utente Supabase)
  * - email -> Supabase Auth (currentUser)
  * - eco-punti / avatar -> dashboard in cache (GetHomeDashboardUseCase)
+ * - euro risparmiati -> statistiche utente (GetUserStatsUseCase)
  * - logout -> SignOutUseCase
  */
 class ProfileViewModel(
     private val sessionProvider: SessionProvider,
     private val supabaseClient: SupabaseClient,
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
+    private val getUserStatsUseCase: GetUserStatsUseCase,
     private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
@@ -62,6 +64,12 @@ class ProfileViewModel(
                         avatarUrl = dashboard.userProfile.avatarUrl ?: it.avatarUrl
                     )
                 }
+            }
+        }
+
+        viewModelScope.launch {
+            getUserStatsUseCase().collect { stats ->
+                _state.update { it.copy(savedEuros = stats.totalEurosSaved) }
             }
         }
     }

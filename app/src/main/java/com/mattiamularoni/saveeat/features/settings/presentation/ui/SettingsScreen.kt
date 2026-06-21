@@ -39,8 +39,12 @@ fun SettingsScreen(
         org.koin.compose.koinInject()
     val darkMode by themeController.darkMode.collectAsState()
 
-    // Stati ancora solo grafici (placeholder)
-    var expiryAlerts by remember { mutableStateOf(true) }
+    // Avvisi scadenza: stato reale e persistente
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        org.koin.compose.koinInject()
+    val expiryAlerts by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
+    // Stato ancora solo grafico (placeholder)
     var weeklyReport by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -76,7 +80,7 @@ fun SettingsScreen(
                     title = "Avvisi scadenza alimenti",
                     subtitle = "Ricevi una notifica prima che il cibo scada",
                     checked = expiryAlerts,
-                    onCheckedChange = { expiryAlerts = it }
+                    onCheckedChange = { notificationPreferencesController.setExpiryAlertsEnabled(it) }
                 )
                 RowDivider()
                 ToggleRow(

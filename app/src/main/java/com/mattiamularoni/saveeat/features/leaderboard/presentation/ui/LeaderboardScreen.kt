@@ -9,19 +9,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Notifications
-import androidx.compose.material.icons.rounded.Kitchen
+import androidx.compose.material.icons.outlined.NotificationsOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,11 +48,15 @@ fun LeaderboardScreen(
     val uiState by viewModel.uiState.collectAsState()
     val currentUserId = remember { sessionProvider.getCurrentUserId() }
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile) }
+        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val state = uiState) {
@@ -79,7 +80,7 @@ fun LeaderboardScreen(
 }
 
 @Composable
-private fun LeaderboardTopBar(onAvatarClick: () -> Unit) {
+private fun LeaderboardTopBar(onAvatarClick: () -> Unit, expiryAlertsEnabled: Boolean = true) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -100,7 +101,7 @@ private fun LeaderboardTopBar(onAvatarClick: () -> Unit) {
         )
         IconButton(onClick = { /* TODO: notifiche */ }) {
             Icon(
-                Icons.Outlined.Notifications,
+                imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -188,31 +189,24 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
                     )
                 }
             }
-            // Badge livello (placeholder visivi)
-            Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    LevelBadge(Icons.Filled.Autorenew, "Lvl 3")
-                    LevelBadge(Icons.Rounded.Kitchen, "Lvl 2")
-                    LevelBadge(Icons.Filled.Restaurant, "Lvl 1")
-                }
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                AssistChip(
+                    onClick = {},
+                    enabled = false,
+                    label = {
+                        Text(
+                            text = user.ecoTitle.label,
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(horizontal = 4.dp)
+                        )
+                    },
+                    colors = AssistChipDefaults.assistChipColors(
+                        disabledContainerColor = MaterialTheme.colorScheme.surface,
+                        disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                )
             }
         }
-    }
-}
-
-@Composable
-private fun LevelBadge(icon: ImageVector, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Box(
-            modifier = Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surface),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
-        }
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSecondaryContainer)
     }
 }
 
@@ -327,15 +321,27 @@ private fun LeaderboardRow(
             modifier = Modifier.widthIn(min = 24.dp)
         )
         LbAvatar(user.avatarUrl, user.displayName, 36.dp)
-        Text(
-            text = nameOverride ?: user.displayName,
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis
-        )
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = nameOverride ?: user.displayName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.SemiBold,
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            AssistChip(
+                onClick = {},
+                enabled = false,
+                label = {
+                    Text(
+                        text = user.ecoTitle.label,
+                        style = MaterialTheme.typography.labelSmall
+                    )
+                },
+                modifier = Modifier.height(24.dp)
+            )
+        }
         Text(
             text = "%,d pt".format(user.ecoPoints),
             style = MaterialTheme.typography.titleMedium,

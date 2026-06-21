@@ -5,11 +5,15 @@ import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashboardUseCase
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
+import com.mattiamularoni.saveeat.features.stats.domain.model.UserStats
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -29,6 +33,7 @@ import kotlinx.coroutines.launch
  */
 class HomeViewModel(
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
+    private val getUserStatsUseCase: GetUserStatsUseCase,
     private val sessionProvider: SessionProvider
 ) : ViewModel() {
 
@@ -42,6 +47,10 @@ class HomeViewModel(
     // Indica se il refresh è in corso
     private val _isRefreshing = MutableStateFlow(false)
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
+
+    // Statistiche di risparmio (kg cibo salvato) per la SavedFoodCard
+    val userStats: StateFlow<UserStats> = getUserStatsUseCase()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserStats())
 
     init {
         // Subscribe al Flow della dashboard per aggiornamenti real-time

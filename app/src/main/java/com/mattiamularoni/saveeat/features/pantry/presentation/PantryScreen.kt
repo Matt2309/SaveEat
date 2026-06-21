@@ -53,6 +53,10 @@ fun PantryScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     var showManualForm by remember { mutableStateOf(false) }
 
+    val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
+        org.koin.compose.koinInject()
+    val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsStateWithLifecycle()
+
     LaunchedEffect(viewModel) {
         viewModel.effects.collect { effect ->
             when (effect) {
@@ -77,7 +81,7 @@ fun PantryScreen(
         // (striscia bianca in basso + FAB troppo in alto).
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        topBar = { PantryTopBar(onAvatarClick = onNavigateToProfile) },
+        topBar = { PantryTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) },
         floatingActionButton = {
             ExpandableFab(
                 onScannerClick = onNavigateToScan,

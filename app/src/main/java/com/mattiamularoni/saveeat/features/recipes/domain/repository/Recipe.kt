@@ -13,7 +13,10 @@ data class Recipe(
     val ingredients: List<Ingredient>,
     val prepTimeMinutes: Int,
     val tags: List<String>,
-    val createdAt: Long
+    val createdAt: Long,
+    val isVegetarian: Boolean = false,
+    val estimatedWeightKg: Double = 0.0,
+    val estimatedCostEuros: Double = 0.0
 ) {
     /**
      * Modello per un singolo ingrediente di una ricetta.
