@@ -93,9 +93,14 @@ fun NavGraphBuilder.biometricScreen(
         val context = LocalContext.current
         val biometricUiState by authViewModel.biometricUiState.collectAsState()
 
-        // Auto-avvia il prompt biometrico appena la schermata appare
-        LaunchedEffect(Unit) {
-            launchBiometricPrompt(context, authViewModel)
+        // Auto-avvia il prompt biometrico solo se non già autenticato in questa sessione:
+        // evita ri-prompt se la composable rientra in composizione mentre biometricUiState
+        // è già Authenticated (difesa in profondità, oltre al fix della causa radice in
+        // SaveEatNavHost che usa ProcessLifecycleOwner per evitare il re-trigger da rotazione).
+        LaunchedEffect(biometricUiState) {
+            if (biometricUiState !is BiometricUiState.Authenticated) {
+                launchBiometricPrompt(context, authViewModel)
+            }
         }
 
         // Naviga a Home dopo autenticazione biometrica riuscita

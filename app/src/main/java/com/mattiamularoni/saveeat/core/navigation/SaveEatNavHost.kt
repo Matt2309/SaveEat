@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.currentBackStackEntryAsState // [FIX] 1
 import androidx.navigation.compose.rememberNavController
@@ -44,15 +44,28 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
     // il NavHost ha chiamato setGraph(). Serve sia come guardia sia per rivalutare l'effetto.
     val currentBackStackEntry by navController.currentBackStackEntryAsState()
 
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(lifecycleOwner) {
+    // ProcessLifecycleOwner (non l'Activity/LocalLifecycleOwner) perché emette ON_START/ON_STOP
+    // solo sul vero passaggio background<->foreground del processo, non sulla ricreazione
+    // dell'Activity dovuta a un cambio di configurazione come la rotazione dello schermo.
+    DisposableEffect(Unit) {
+        // addObserver() ripropaga sincronamente all'observer appena registrato gli eventi di
+        // "catch-up" necessari a raggiungere lo stato corrente del Lifecycle: se il processo è
+        // già RESUMED (come durante una rotazione, che rimonta questo effect con un observer
+        // nuovo) riceviamo subito un ON_START sintetico, non un vero ritorno dal background.
+        // Senza questo filtro, ogni rotazione richiamerebbe onAppForeground() e causerebbe il
+        // rimbalzo di navigazione Home -> Biometric -> Home (flickering).
+        var isInitialSync = true
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_START) {
-                authViewModel.onAppForeground()
+                if (isInitialSync) {
+                    isInitialSync = false
+                } else {
+                    authViewModel.onAppForeground()
+                }
             }
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
+        ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
+        onDispose { ProcessLifecycleOwner.get().lifecycle.removeObserver(observer) }
     }
 
     // [FIX] 3 - aggiunta currentBackStackEntry tra le chiavi

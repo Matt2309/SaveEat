@@ -1,5 +1,7 @@
 package com.mattiamularoni.saveeat.features.leaderboard.presentation
 
+import com.mattiamularoni.saveeat.features.leaderboard.domain.model.EcoTitle
+
 /**
  * Enum per i badge di ranking (top 3 utenti).
  */
@@ -22,5 +24,6 @@ data class LeaderboardUserUi(
     val ecoPoints: Int,
     val rank: Int,
     val formattedPoints: String,
-    val badge: RankingBadge
+    val badge: RankingBadge,
+    val ecoTitle: EcoTitle
 )

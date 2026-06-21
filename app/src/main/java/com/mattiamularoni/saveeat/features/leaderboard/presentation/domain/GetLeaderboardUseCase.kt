@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.leaderboard.presentation.domain
 
+import com.mattiamularoni.saveeat.features.leaderboard.domain.model.EcoTitle
 import com.mattiamularoni.saveeat.features.leaderboard.domain.repository.LeaderboardRepository
 import com.mattiamularoni.saveeat.features.leaderboard.domain.repository.LeaderboardUser as DomainLeaderboardUser
 import com.mattiamularoni.saveeat.features.leaderboard.presentation.LeaderboardUserUi
@@ -14,6 +15,7 @@ import kotlinx.coroutines.flow.map
  * - Fetch dati dal repository (domain model)
  * - Trasformazione domain model → UI model
  * - Aggiunta logica di ranking badges (Gold/Silver/Bronze)
+ * - Calcolo del titolo eco-punti (EcoTitle) per ogni utente
  * - Formattazione punteggio e visualizzazione
  */
 class GetLeaderboardUseCase(
@@ -46,7 +48,8 @@ class GetLeaderboardUseCase(
             ecoPoints = ecoPoints,
             rank = rank,
             formattedPoints = "${ecoPoints} pts",
-            badge = badge
+            badge = badge,
+            ecoTitle = EcoTitle.fromPoints(ecoPoints)
         )
     }
 }
