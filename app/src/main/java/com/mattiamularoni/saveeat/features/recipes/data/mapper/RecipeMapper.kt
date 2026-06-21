@@ -49,7 +49,8 @@ object RecipeMapper {
             ingredients = dto.ingredients,
             prepTimeMinutes = dto.prepTimeMinutes,
             tags = dto.tags,
-            createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt)
+            createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt),
+            isVegetarian = dto.isVegetarian
         )
     }
 
@@ -70,7 +71,8 @@ object RecipeMapper {
             ingredients = entity.ingredients,
             prepTimeMinutes = entity.prepTimeMinutes,
             tags = entity.tags,
-            createdAt = DateTimeUtils.formatToIso8601(entity.createdAt)
+            createdAt = DateTimeUtils.formatToIso8601(entity.createdAt),
+            isVegetarian = entity.isVegetarian
         )
     }
 
@@ -93,7 +95,8 @@ object RecipeMapper {
             ingredients = parseIngredients(entity.ingredients),
             prepTimeMinutes = entity.prepTimeMinutes,
             tags = parseTags(entity.tags),
-            createdAt = entity.createdAt
+            createdAt = entity.createdAt,
+            isVegetarian = entity.isVegetarian
         )
     }
 
@@ -122,7 +125,8 @@ object RecipeMapper {
             ingredients = serializeIngredients(domain.ingredients),
             prepTimeMinutes = domain.prepTimeMinutes,
             tags = serializeTags(domain.tags),
-            createdAt = domain.createdAt
+            createdAt = domain.createdAt,
+            isVegetarian = domain.isVegetarian
         )
     }
 

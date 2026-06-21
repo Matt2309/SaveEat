@@ -10,7 +10,9 @@ data class GeminiRecipeDto(
     val ingredients: List<GeminiIngredientDto>,
     @SerialName("prep_time_minutes")
     val prepTimeMinutes: Int,
-    val tags: List<String>
+    val tags: List<String>,
+    @SerialName("is_vegetarian")
+    val isVegetarian: Boolean = false
 )
 
 @Serializable

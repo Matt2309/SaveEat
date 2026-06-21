@@ -2,6 +2,7 @@ package com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilter
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
@@ -19,6 +20,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 
@@ -41,6 +43,11 @@ class RecipeViewModel(
 
     private val _recipesUiState = MutableStateFlow<RecipeUiState>(RecipeUiState.Loading)
     val recipesUiState: StateFlow<RecipeUiState> = _recipesUiState.asStateFlow()
+
+    // ===== LIST FILTERS STATE =====
+
+    private val _activeFilters = MutableStateFlow<Set<RecipeFilter>>(emptySet())
+    val activeFilters: StateFlow<Set<RecipeFilter>> = _activeFilters.asStateFlow()
 
     // ===== FAVORITE RECIPES STATE =====
 
@@ -88,8 +95,9 @@ class RecipeViewModel(
     private fun observeRecipes() {
         observeRecipesJob?.cancel()
         observeRecipesJob = viewModelScope.launch {
-            recipeRepository
-                .observeRecipes()
+            combine(recipeRepository.observeRecipes(), _activeFilters) { recipes, filters ->
+                applyFilters(recipes, filters)
+            }
                 .onStart {
                     _recipesUiState.value = RecipeUiState.Loading
                 }
@@ -107,6 +115,35 @@ class RecipeViewModel(
                     }
                 }
         }
+    }
+
+    /**
+     * Aggiunge o rimuove [filter] dal set di filtri attivi della lista ricette.
+     * I filtri sono multi-selezionabili: più filtri della stessa categoria
+     * (es. due fasce di tempo) sono combinati in OR, mentre categorie diverse
+     * sono combinate in AND (vedi [applyFilters]).
+     */
+    fun toggleFilter(filter: RecipeFilter) {
+        _activeFilters.value = _activeFilters.value.let { current ->
+            if (filter in current) current - filter else current + filter
+        }
+    }
+
+    /**
+     * Filtra [recipes] secondo [filters]: OR fra filtri della stessa categoria
+     * (Style, Time, Vegetarian), AND fra categorie diverse. Un set vuoto non
+     * esclude nessuna ricetta.
+     */
+    private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilter>): List<Recipe> {
+        if (filters.isEmpty()) return recipes
+        val groups = filters.groupBy { filterCategory(it) }.values
+        return recipes.filter { recipe -> groups.all { group -> group.any { it.matches(recipe) } } }
+    }
+
+    private fun filterCategory(filter: RecipeFilter): String = when (filter) {
+        is RecipeFilter.Style -> "style"
+        is RecipeFilter.Time -> "time"
+        is RecipeFilter.Vegetarian -> "vegetarian"
     }
 
     /**

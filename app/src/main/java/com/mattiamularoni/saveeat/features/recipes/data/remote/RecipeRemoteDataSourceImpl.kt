@@ -95,7 +95,9 @@ class RecipeRemoteDataSourceImpl(
                         ingredients = json.encodeToString(geminiDto.ingredients),
                         prepTimeMinutes = geminiDto.prepTimeMinutes,
                         tags = geminiDto.tags.joinToString(","),
-                        createdAt = now.toString()
+                        createdAt = now.toString(),
+                        isVegetarian = geminiDto.isVegetarian ||
+                            geminiDto.tags.any { it.contains("veget", ignoreCase = true) }
                     )
                 }
             } catch (e: Exception) {

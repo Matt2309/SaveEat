@@ -3,6 +3,7 @@ package com.mattiamularoni.saveeat.core.di.modules
 import androidx.room.Room
 import com.mattiamularoni.saveeat.core.data.local.AppDatabase
 import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_4_5
+import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_6_7
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -13,7 +14,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "saveeat.db"
         )
-            .addMigrations(MIGRATION_4_5)
+            .addMigrations(MIGRATION_4_5, MIGRATION_6_7)
             .fallbackToDestructiveMigration(dropAllTables = false)
             .build()
     }

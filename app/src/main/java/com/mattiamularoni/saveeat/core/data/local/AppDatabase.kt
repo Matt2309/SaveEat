@@ -22,7 +22,7 @@ import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeEntity
         FavoriteRecipeEntity::class,
         HomeDashboardEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = true
 )
 @TypeConverters(PantryTypeConverters::class)

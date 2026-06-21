@@ -33,17 +33,23 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
         val timingHint = when (preferences["timing"]) {
             "veloce" -> "\nTempo massimo di preparazione: 15 minuti."
             "medio" -> "\nTempo massimo di preparazione: 30 minuti."
+            "lungo" -> "\nTempo massimo di preparazione: 60 minuti."
             else -> ""
         }
 
         val maxMinutes = when (preferences["timing"]) {
             "veloce" -> 15
             "medio" -> 30
+            "lungo" -> 60
             else -> 60
         }
 
+        val vegetarianHint = if (preferences["vegetarian"] == true) {
+            "\nLe ricette devono essere vegetariane: nessuna carne né pesce."
+        } else ""
+
         val prompt = """
-            Genera 3 ricette creative usando PRINCIPALMENTE questi ingredienti in scadenza: $ingredientsList.$cuisineHint$timingHint
+            Genera 3 ricette creative usando PRINCIPALMENTE questi ingredienti in scadenza: $ingredientsList.$cuisineHint$timingHint$vegetarianHint
             Le ricette devono avere un tempo di preparazione massimo di $maxMinutes minuti.
             Restituisci un array JSON valido con ESATTAMENTE questo schema:
             [
@@ -54,13 +60,15 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                   {"name": "nome ingrediente", "amount": 1.0, "unit": "g|ml|pz|cucchiai|qb"}
                 ],
                 "prep_time_minutes": 20,
-                "tags": ["tag1", "tag2"]
+                "tags": ["tag1", "tag2"],
+                "is_vegetarian": false
               }
             ]
             Regole:
             - Usa PRINCIPALMENTE gli ingredienti forniti, aggiungendo solo ingredienti base comuni (sale, olio, ecc.)
             - Le istruzioni devono essere chiare e in italiano, separate dal carattere di newline escapato (\n), SENZA numerazione né elenchi (niente "1.", "2)", trattini): la UI numera già i passi
             - I tag devono essere singole parole brevi che descrivono la ricetta (es. "veloce", "vegetariano", "italiano", "pasta"), senza virgolette, virgole o punteggiatura al loro interno
+            - "is_vegetarian" deve essere true SOLO se la ricetta non contiene carne né pesce, false altrimenti
             - Il tempo di preparazione deve essere realistico e non superare $maxMinutes minuti
             - Genera esattamente 3 ricette diverse
             - Rispondi SOLO con l'array JSON richiesto, senza testo aggiuntivo né blocchi di codice markdown (niente ```)
