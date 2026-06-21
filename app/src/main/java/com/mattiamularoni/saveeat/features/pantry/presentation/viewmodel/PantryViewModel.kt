@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
+import com.mattiamularoni.saveeat.features.leaderboard.domain.repository.LeaderboardRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryAssetRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
+import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormState
@@ -30,9 +32,13 @@ class PantryViewModel(
     private val getPantryItemsUseCase: GetPantryItemsUseCase,
     private val pantryRepository: PantryRepository,
     private val pantryAssetRepository: PantryAssetRepository,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
+    private val leaderboardRepository: LeaderboardRepository
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
+    // Id rimossi in modo "ottimistico" lato UI: spariscono subito, prima che la
+    // cancellazione async sul repository propaghi al flow.
+    private val _removedIds = MutableStateFlow<Set<String>>(emptySet())
     private val _uiState = MutableStateFlow<PantryUiState>(PantryUiState.Loading)
     private val _effects = MutableSharedFlow<PantryEffect>()
 
@@ -84,29 +90,59 @@ class PantryViewModel(
 
     /** Swipe → destra: elimina il prodotto dalla dispensa. */
     fun onDeleteItem(itemId: String) {
+        _removedIds.value = _removedIds.value + itemId // sparisce subito dalla UI
         viewModelScope.launch {
             try {
                 pantryRepository.deletePantryItem(itemId)
                 _effects.emit(PantryEffect.ShowSnackbar("Prodotto eliminato"))
             } catch (e: Exception) {
+                _removedIds.value = _removedIds.value - itemId // ripristina se fallisce
                 _effects.emit(PantryEffect.ShowSnackbar("Errore nell'eliminazione: ${e.message}"))
             }
         }
     }
 
-    /** Swipe ← sinistra: segna come consumato (rimuove dalla dispensa). */
+    /**
+     * Swipe ← sinistra: segna come consumato (rimuove dalla dispensa).
+     * Se il prodotto è in scadenza assegna +[CONSUME_POINTS] Eco-punti.
+     */
     fun onConsumeItem(itemId: String) {
         val item = allItems.value.firstOrNull { it.id == itemId }
+        val expiring = item?.freshnessLevel == FreshnessLevel.CRITICAL ||
+                item?.freshnessLevel == FreshnessLevel.MEDIUM
+        _removedIds.value = _removedIds.value + itemId // sparisce subito dalla UI
         viewModelScope.launch {
             try {
                 // "Consumato" = rimosso dalla dispensa.
-                // TODO (backend): assegnare eco-punti per il consumo quando disponibile.
                 pantryRepository.deletePantryItem(itemId)
-                _effects.emit(PantryEffect.ShowSnackbar("${item?.name ?: "Prodotto"} segnato come consumato"))
+
+                // Se in scadenza, assegna davvero gli eco-punti all'utente.
+                if (expiring) {
+                    runCatching {
+                        leaderboardRepository.updateEcoPoints(
+                            sessionProvider.getCurrentUserId(),
+                            CONSUME_POINTS
+                        )
+                    }.onFailure {
+                        android.util.Log.e("PantryViewModel", "Aggiornamento eco-punti fallito: ${it.message}")
+                    }
+                }
+
+                val msg = if (expiring) {
+                    "${item?.name ?: "Prodotto"} consumato! +$CONSUME_POINTS Eco-punti"
+                } else {
+                    "${item?.name ?: "Prodotto"} segnato come consumato"
+                }
+                _effects.emit(PantryEffect.ShowSnackbar(msg))
             } catch (e: Exception) {
+                _removedIds.value = _removedIds.value - itemId // ripristina se fallisce
                 _effects.emit(PantryEffect.ShowSnackbar("Errore: ${e.message}"))
             }
         }
+    }
+
+    private companion object {
+        const val CONSUME_POINTS = 5
     }
 
     fun onManualItemInsert(formState: ManualItemFormState) {
@@ -151,11 +187,13 @@ class PantryViewModel(
         viewModelScope.launch {
             combine(
                 getPantryItemsUseCase(),
-                pantryAssetRepository.observeAssets()
-            ) { items: List<PantryItem>, assets: Map<String, PantryAsset> ->
-                allItems.value = items
+                pantryAssetRepository.observeAssets(),
+                _removedIds
+            ) { items: List<PantryItem>, assets: Map<String, PantryAsset>, removed: Set<String> ->
+                val visible = items.filterNot { it.id in removed }
+                allItems.value = visible
                 PantryUiState.Success(
-                    items = filterItems(items, selectedCategory),
+                    items = filterItems(visible, selectedCategory),
                     assets = assets,
                     selectedCategory = selectedCategory
                 )
