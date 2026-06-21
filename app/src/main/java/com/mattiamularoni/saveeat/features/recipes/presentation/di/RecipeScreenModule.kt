@@ -35,6 +35,7 @@ val recipeScreenModule = module {
         CookRecipeUseCase(
             pantryRepository = get(),
             leaderboardRepository = get(),
+            statsRepository = get(),
             sessionProvider = get()
         )
     }

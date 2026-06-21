@@ -61,7 +61,9 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                 ],
                 "prep_time_minutes": 20,
                 "tags": ["tag1", "tag2"],
-                "is_vegetarian": false
+                "is_vegetarian": false,
+                "estimated_weight_kg": 0.6,
+                "estimated_cost_euros": 4.20
               }
             ]
             Regole:
@@ -69,6 +71,8 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             - Le istruzioni devono essere chiare e in italiano, separate dal carattere di newline escapato (\n), SENZA numerazione né elenchi (niente "1.", "2)", trattini): la UI numera già i passi
             - I tag devono essere singole parole brevi che descrivono la ricetta (es. "veloce", "vegetariano", "italiano", "pasta"), senza virgolette, virgole o punteggiatura al loro interno
             - "is_vegetarian" deve essere true SOLO se la ricetta non contiene carne né pesce, false altrimenti
+            - "estimated_weight_kg" è il peso TOTALE commestibile della ricetta finita in kg (numero decimale realistico, es. 0.6)
+            - "estimated_cost_euros" è il costo TOTALE stimato degli ingredienti in euro al mercato italiano (numero decimale realistico, es. 4.20)
             - Il tempo di preparazione deve essere realistico e non superare $maxMinutes minuti
             - Genera esattamente 3 ricette diverse
             - Rispondi SOLO con l'array JSON richiesto, senza testo aggiuntivo né blocchi di codice markdown (niente ```)

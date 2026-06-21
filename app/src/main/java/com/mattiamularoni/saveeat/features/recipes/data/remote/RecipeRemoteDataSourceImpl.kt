@@ -97,7 +97,9 @@ class RecipeRemoteDataSourceImpl(
                         tags = geminiDto.tags.joinToString(","),
                         createdAt = now.toString(),
                         isVegetarian = geminiDto.isVegetarian ||
-                            geminiDto.tags.any { it.contains("veget", ignoreCase = true) }
+                            geminiDto.tags.any { it.contains("veget", ignoreCase = true) },
+                        estimatedWeightKg = geminiDto.estimatedWeightKg,
+                        estimatedCostEuros = geminiDto.estimatedCostEuros
                     )
                 }
             } catch (e: Exception) {

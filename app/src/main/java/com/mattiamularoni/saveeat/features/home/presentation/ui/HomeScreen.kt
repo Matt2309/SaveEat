@@ -139,9 +139,11 @@ fun HomeScreen(
                     )
                 }
                 is HomeUiState.Success -> {
+                    val userStats by homeViewModel.userStats.collectAsState()
                     DashboardContent(
                         firstName = firstName,
                         dashboard = state.dashboard,
+                        kgSaved = userStats.totalKgSaved,
                         onSeeAllExpiring = onNavigateToPantry,
                         onOpenRecipe = onNavigateToRecipes
                     )
@@ -193,6 +195,7 @@ private fun HomeTopBar(
 private fun DashboardContent(
     firstName: String,
     dashboard: HomeDashboard,
+    kgSaved: Double,
     onSeeAllExpiring: () -> Unit,
     onOpenRecipe: () -> Unit
 ) {
@@ -259,7 +262,7 @@ private fun DashboardContent(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            SavedFoodCard(modifier = Modifier.weight(1f))
+            SavedFoodCard(kgSaved = kgSaved, modifier = Modifier.weight(1f))
             RecipeCard(
                 title = dashboard.suggestedRecipes.firstOrNull()?.title ?: "Nessun suggerimento",
                 onClick = onOpenRecipe,
@@ -397,7 +400,7 @@ private fun ExpiringItemCard(item: ExpiringItem) {
 }
 
 @Composable
-private fun SavedFoodCard(modifier: Modifier = Modifier) {
+private fun SavedFoodCard(kgSaved: Double, modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .height(140.dp)
@@ -433,9 +436,8 @@ private fun SavedFoodCard(modifier: Modifier = Modifier) {
             }
             Column {
                 Row(verticalAlignment = Alignment.Bottom) {
-                    // TODO: valore PLACEHOLDER — il backend non espone ancora i kg salvati.
                     Text(
-                        text = "0",
+                        text = "%.1f".format(kgSaved),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
@@ -449,7 +451,7 @@ private fun SavedFoodCard(modifier: Modifier = Modifier) {
                     )
                 }
                 Text(
-                    text = "Cibo salvato questo mese",
+                    text = "Cibo salvato cucinando ricette",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

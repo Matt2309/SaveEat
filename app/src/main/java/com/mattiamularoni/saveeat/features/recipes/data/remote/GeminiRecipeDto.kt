@@ -12,7 +12,11 @@ data class GeminiRecipeDto(
     val prepTimeMinutes: Int,
     val tags: List<String>,
     @SerialName("is_vegetarian")
-    val isVegetarian: Boolean = false
+    val isVegetarian: Boolean = false,
+    @SerialName("estimated_weight_kg")
+    val estimatedWeightKg: Double = 0.0,
+    @SerialName("estimated_cost_euros")
+    val estimatedCostEuros: Double = 0.0
 )
 
 @Serializable

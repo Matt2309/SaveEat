@@ -9,6 +9,7 @@ import com.mattiamularoni.saveeat.features.profile.presentation.di.profileModule
 import com.mattiamularoni.saveeat.features.receipt_history.presentation.di.receiptHistoryModule
 import com.mattiamularoni.saveeat.features.recipes.presentation.di.recipeScreenModule
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.di.scanReceiptModule
+import com.mattiamularoni.saveeat.features.stats.presentation.di.statsModule
 import org.koin.core.module.Module
 
 val featureModules: List<Module> = listOf(
@@ -20,5 +21,6 @@ val featureModules: List<Module> = listOf(
     profileModule,
     scanReceiptModule,
     receiptHistoryModule,
-    notificationsModule
+    notificationsModule,
+    statsModule
 )
