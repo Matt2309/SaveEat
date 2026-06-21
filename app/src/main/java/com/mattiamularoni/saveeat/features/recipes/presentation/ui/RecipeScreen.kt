@@ -240,7 +240,8 @@ private fun GenerateRecipeModal(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                 ) {
                     CuisineStyles.forEach { cuisine ->
                         val isSelected = cuisine.lowercase() == selectedCuisine
@@ -264,7 +265,8 @@ private fun GenerateRecipeModal(
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.horizontalScroll(rememberScrollState()),
                 ) {
                     TimingOptions.forEach { (label, value) ->
                         val isSelected = value == selectedTiming
