@@ -26,6 +26,7 @@ class GenerateRecipesUseCase(
         val prefs = mutableMapOf<String, Any>()
         filters.cuisineStyle?.let { prefs["cuisine_style"] = it }
         filters.timingPreference?.let { prefs["timing"] = it }
+        if (filters.vegetarian) prefs["vegetarian"] = true
         return prefs
     }
 }

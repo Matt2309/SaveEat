@@ -28,9 +28,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mattiamularoni.saveeat.core.util.ingredientMatchesPantryName
 import com.mattiamularoni.saveeat.features.pantry.presentation.state.PantryUiState
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
+import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiEvent
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
@@ -46,6 +49,7 @@ fun RecipeDetailScreen(
 ) {
     val recipesState by recipeViewModel.recipesUiState.collectAsState()
     val pantryState by pantryViewModel.uiState.collectAsState()
+    val isCooking by recipeViewModel.isCooking.collectAsStateWithLifecycle()
 
     val recipe = (recipesState as? RecipeUiState.Success)?.recipes?.firstOrNull { it.id == id }
 
@@ -56,18 +60,43 @@ fun RecipeDetailScreen(
             ?: emptyList()
     }
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(Unit) {
+        recipeViewModel.events.collect { event ->
+            when (event) {
+                is RecipeUiEvent.CookSuccess -> {
+                    snackbarHostState.showSnackbar(
+                        "Ricetta segnata come cucinata! +${event.pointsAwarded} eco-punti"
+                    )
+                    onNavigateBack()
+                }
+                is RecipeUiEvent.CookError -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
+            }
+        }
+    }
+
     Scaffold(
         modifier = modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         bottomBar = {
             if (recipe != null) {
-                Surface(color = MaterialTheme.colorScheme.surface, tonalElevation = 2.dp) {
+                // Applica l'inset al Surface (opzionale, utile solo se usi l'Edge-to-Edge)
+                // modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    tonalElevation = 2.dp
+                ) {
                     Button(
-                        onClick = { /* TODO: segna come cucinata (azione backend non disponibile) */ },
+                        onClick = { recipeViewModel.markAsCooked(recipe) },
+                        enabled = !isCooking,
                         modifier = Modifier
                             .fillMaxWidth()
-                            .navigationBarsPadding()
-                            .padding(16.dp)
+                            // RIMOSSO: .navigationBarsPadding()
+                            .padding(16.dp) // Lascia solo questo, che darà 16dp uniformi
                             .height(52.dp),
                         shape = RoundedCornerShape(24.dp),
                         colors = ButtonDefaults.buttonColors(
@@ -75,7 +104,15 @@ fun RecipeDetailScreen(
                             contentColor = MaterialTheme.colorScheme.onPrimary
                         )
                     ) {
-                        Icon(Icons.Filled.RestaurantMenu, contentDescription = null, modifier = Modifier.size(20.dp))
+                        if (isCooking) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                        } else {
+                            Icon(Icons.Filled.RestaurantMenu, contentDescription = null, modifier = Modifier.size(20.dp))
+                        }
                         Spacer(Modifier.width(8.dp))
                         Text("Segna come cucinata", style = MaterialTheme.typography.titleMedium)
                     }
@@ -113,7 +150,6 @@ private fun DetailContent(
 ) {
     var isFavorite by remember { mutableStateOf(false) }
     val steps = remember(recipe.instructions) { splitSteps(recipe.instructions) }
-    val description = remember(recipe.instructions) { firstSentence(recipe.instructions) }
 
     Column(
         modifier = Modifier
@@ -156,13 +192,6 @@ private fun DetailContent(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface
                 )
-                if (description.isNotBlank()) {
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
             }
 
             // Chip meta
@@ -357,11 +386,29 @@ private fun firstSentence(instructions: String): String {
     return if (end > 0) clean.substring(0, end + 1) else clean.lineSequence().firstOrNull()?.trim().orEmpty()
 }
 
+private val stepNumberMarker = Regex("(?:^|\\n|\\s)\\d{1,2}[.)]\\s+")
+
+private fun stripLeadingNumbering(text: String): String =
+    text.trimStart('-', ' ').replaceFirst(Regex("^\\d{1,2}[.)]\\s*"), "").trimStart('-', ' ')
+
 private fun splitSteps(instructions: String): List<String> {
-    val byLine = instructions.split("\n").map { it.trim() }.filter { it.isNotBlank() }
-    if (byLine.size > 1) return byLine.map { it.trimStart('0','1','2','3','4','5','6','7','8','9','.',')',' ','-') }
-    // singola riga: spezzo per frasi
-    return instructions.split(Regex("(?<=\\.)\\s+")).map { it.trim() }.filter { it.isNotBlank() }
+    val normalized = instructions.trim()
+    if (normalized.isEmpty()) return emptyList()
+
+    val markers = stepNumberMarker.findAll(normalized).toList()
+    if (markers.size > 1) {
+        val steps = markers.indices.map { i ->
+            val start = markers[i].range.last + 1
+            val end = if (i + 1 < markers.size) markers[i + 1].range.first else normalized.length
+            normalized.substring(start, end).trim().trimEnd('-', ' ')
+        }.filter { it.isNotBlank() }
+        if (steps.isNotEmpty()) return steps
+    }
+
+    val byLine = normalized.split("\n").map { it.trim() }.filter { it.isNotBlank() }
+    if (byLine.size > 1) return byLine.map { stripLeadingNumbering(it) }
+    // singola riga senza numerazione riconoscibile: spezzo per frasi
+    return normalized.split(Regex("(?<=\\.)\\s+")).map { stripLeadingNumbering(it.trim()) }.filter { it.isNotBlank() }
 }
 
 private fun difficultyLabel(prepTimeMinutes: Int): String = when {
@@ -384,11 +431,5 @@ private fun ingredientLabel(ing: Recipe.Ingredient): String {
     return "${ing.name} ($inside)"
 }
 
-private fun ingredientInPantry(name: String, pantry: List<String>): Boolean {
-    val key = name.lowercase().substringBefore("(").trim()
-    if (key.isBlank()) return false
-    val first = key.split(" ").firstOrNull().orEmpty()
-    return pantry.any { p ->
-        p.isNotBlank() && (p.contains(key) || key.contains(p) || (first.length >= 3 && p.contains(first)))
-    }
-}
+private fun ingredientInPantry(name: String, pantry: List<String>): Boolean =
+    pantry.any { it.isNotBlank() && ingredientMatchesPantryName(name, it) }

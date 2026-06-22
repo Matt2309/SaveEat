@@ -112,7 +112,7 @@ fun ProfileScreen(
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                // ---- Card statistiche (Eco-punti reali + € risparmiati placeholder) ----
+                // ---- Card statistiche (Eco-punti + euro risparmiati cucinando ricette) ----
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
@@ -125,7 +125,6 @@ fun ProfileScreen(
                         modifier = Modifier.weight(1f)
                     )
                     StatCard(
-                        // TODO: placeholder — gli euro risparmiati non sono ancora nel backend.
                         icon = null,
                         value = "€%.2f".format(state.savedEuros),
                         label = "RISPARMIATI",

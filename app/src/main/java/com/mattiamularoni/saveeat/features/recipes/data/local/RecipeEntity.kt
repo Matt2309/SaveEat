@@ -19,5 +19,8 @@ data class RecipeEntity(
     val ingredients: String,
     val prepTimeMinutes: Int,
     val tags: String,
-    val createdAt: Long
+    val createdAt: Long,
+    val isVegetarian: Boolean = false,
+    val estimatedWeightKg: Double = 0.0,
+    val estimatedCostEuros: Double = 0.0
 )

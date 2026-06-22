@@ -9,7 +9,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.SoupKitchen
 import androidx.compose.material.icons.outlined.Inventory2
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -19,7 +21,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.SwipeToDismissBox
+import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -122,7 +127,9 @@ fun PantrySection(
     icon: ImageVector,
     items: List<PantryItem>,
     assets: Map<String, PantryAsset>,
-    onAddToShoppingList: (String) -> Unit
+    onAddToShoppingList: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    onConsume: (String) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // Header sezione
@@ -143,8 +150,97 @@ fun PantrySection(
             if (item.isPlaceholder) {
                 PlaceholderItemCard(item = item, onAddToShoppingList = onAddToShoppingList)
             } else {
-                PantryItemCard(item = item, assets = assets)
+                SwipeablePantryItemCard(
+                    item = item,
+                    assets = assets,
+                    onDelete = onDelete,
+                    onConsume = onConsume
+                )
             }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeablePantryItemCard(
+    item: PantryItem,
+    assets: Map<String, PantryAsset>,
+    onDelete: (String) -> Unit,
+    onConsume: (String) -> Unit
+) {
+    val dismissState = rememberSwipeToDismissBoxState(
+        confirmValueChange = { value ->
+            when (value) {
+                SwipeToDismissBoxValue.StartToEnd -> { onDelete(item.id); true }   // destra → elimina
+                SwipeToDismissBoxValue.EndToStart -> { onConsume(item.id); true }  // sinistra → consumato
+                SwipeToDismissBoxValue.Settled -> false
+            }
+        }
+    )
+    // +5 punti se il prodotto è in scadenza (CRITICAL/MEDIUM), 0 se a lunga conservazione
+    val consumePoints = if (
+        item.freshnessLevel == FreshnessLevel.CRITICAL ||
+        item.freshnessLevel == FreshnessLevel.MEDIUM
+    ) 5 else 0
+
+    SwipeToDismissBox(
+        state = dismissState,
+        backgroundContent = { SwipeBackground(dismissState.dismissDirection, consumePoints) },
+        content = { PantryItemCard(item = item, assets = assets) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SwipeBackground(direction: SwipeToDismissBoxValue, consumePoints: Int) {
+    val color = when (direction) {
+        SwipeToDismissBoxValue.StartToEnd -> MaterialTheme.colorScheme.error // elimina (rosso)
+        SwipeToDismissBoxValue.EndToStart -> FreshnessMedium                 // consumato (giallo)
+        else -> Color.Transparent
+    }
+    val alignment = when (direction) {
+        SwipeToDismissBoxValue.StartToEnd -> Alignment.CenterStart
+        SwipeToDismissBoxValue.EndToStart -> Alignment.CenterEnd
+        else -> Alignment.Center
+    }
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .clip(RoundedCornerShape(16.dp))
+            .background(color)
+            .padding(horizontal = 24.dp),
+        contentAlignment = alignment
+    ) {
+        when (direction) {
+            SwipeToDismissBoxValue.StartToEnd ->
+                Icon(
+                    Icons.Filled.Delete,
+                    contentDescription = "Elimina",
+                    tint = Color.White,
+                    modifier = Modifier.size(28.dp)
+                )
+            SwipeToDismissBoxValue.EndToStart ->
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    if (consumePoints > 0) {
+                        Text(
+                            text = "+$consumePoints punti",
+                            color = Color.White,
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Icon(
+                        Icons.Filled.SoupKitchen,
+                        contentDescription = "Consuma",
+                        tint = Color.White,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+            else -> {}
         }
     }
 }

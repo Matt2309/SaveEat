@@ -61,6 +61,14 @@ interface RecipeRemoteDataSource {
     ): List<RecipeDto>
 
     /**
+     * Persiste ricette generate sulla tabella recipes di Supabase.
+     *
+     * @param dtos lista di DTO delle ricette da inserire
+     * @throws Exception in caso di errore rete o constraint violation
+     */
+    suspend fun insertRecipes(dtos: List<RecipeDto>)
+
+    /**
      * Aggiunge una ricetta ai preferiti dell'utente.
      *
      * @param favoriteDto DTO con user_id e recipe_id

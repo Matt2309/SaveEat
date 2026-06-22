@@ -4,6 +4,7 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.SerializationException
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import java.time.Instant
@@ -84,8 +85,7 @@ class RecipeRemoteDataSourceImpl(
     ): List<RecipeDto> =
         withContext(Dispatchers.IO) {
             try {
-                val jsonString = geminiRecipeDataSource.generateRecipes(ingredients, preferences)
-                val geminiDtos = json.decodeFromString<List<GeminiRecipeDto>>(jsonString)
+                val geminiDtos = generateGeminiDtosWithRetry(ingredients, preferences)
                 val now = Instant.now()
                 geminiDtos.map { geminiDto ->
                     RecipeDto(
@@ -95,11 +95,47 @@ class RecipeRemoteDataSourceImpl(
                         ingredients = json.encodeToString(geminiDto.ingredients),
                         prepTimeMinutes = geminiDto.prepTimeMinutes,
                         tags = geminiDto.tags.joinToString(","),
-                        createdAt = now.toString()
+                        createdAt = now.toString(),
+                        isVegetarian = geminiDto.isVegetarian ||
+                            geminiDto.tags.any { it.contains("veget", ignoreCase = true) },
+                        estimatedWeightKg = geminiDto.estimatedWeightKg,
+                        estimatedCostEuros = geminiDto.estimatedCostEuros
                     )
                 }
             } catch (e: Exception) {
                 throw Exception("Failed to generate recipes: ${e.message}", e)
+            }
+        }
+
+    /**
+     * Genera le ricette via Gemini e decodifica il JSON risultante, ritentando una volta
+     * in caso di JSON malformato: i modelli generativi occasionalmente producono output
+     * con virgolette/virgole non valide, e spesso un secondo tentativo è corretto.
+     */
+    private suspend fun generateGeminiDtosWithRetry(
+        ingredients: List<String>,
+        preferences: Map<String, Any>,
+        attempts: Int = 2
+    ): List<GeminiRecipeDto> {
+        var lastError: SerializationException? = null
+        repeat(attempts) {
+            val jsonString = geminiRecipeDataSource.generateRecipes(ingredients, preferences)
+            try {
+                return json.decodeFromString<List<GeminiRecipeDto>>(jsonString)
+            } catch (e: SerializationException) {
+                lastError = e
+            }
+        }
+        throw lastError ?: IllegalStateException("Unreachable")
+    }
+
+    override suspend fun insertRecipes(dtos: List<RecipeDto>) =
+        withContext(Dispatchers.IO) {
+            try {
+                if (dtos.isEmpty()) return@withContext
+                supabaseClient.from("recipes").insert(dtos)
+            } catch (e: Exception) {
+                throw Exception("Failed to insert recipes: ${e.message}", e)
             }
         }
 

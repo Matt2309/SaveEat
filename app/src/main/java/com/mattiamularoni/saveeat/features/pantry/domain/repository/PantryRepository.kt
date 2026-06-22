@@ -237,6 +237,24 @@ interface PantryRepository {
     suspend fun getItemsDueForNotification(windowEnd: Long): List<PantryItem>
 
     suspend fun markItemsNotified(ids: List<String>)
+
+    // ===== RECIPE INTEGRATION =====
+
+    /**
+     * Deduce una quantità dalla dispensa per un ingrediente di ricetta, individuato
+     * per nome (fuzzy match, vedi [com.mattiamularoni.saveeat.core.util.ingredientMatchesPantryName]).
+     *
+     * Logica:
+     * - Se nessun elemento della dispensa corrisponde al nome, non fa nulla (fail-safe)
+     * - Altrimenti calcola newQuantity = quantity - amountToDeduct
+     * - Se newQuantity <= 0, elimina l'elemento (remoto + locale)
+     * - Altrimenti aggiorna la quantità (remoto + locale)
+     *
+     * @param ingredientName nome dell'ingrediente della ricetta
+     * @param amountToDeduct quantità da sottrarre (unità ignorata)
+     * @throws Exception in caso di errore
+     */
+    suspend fun deductIngredientQuantity(ingredientName: String, amountToDeduct: Double)
 }
 
 /**

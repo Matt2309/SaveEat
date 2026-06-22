@@ -100,7 +100,9 @@ fun PantryScreen(
                 state = state,
                 modifier = Modifier.padding(padding),
                 onCategorySelected = viewModel::onCategorySelected,
-                onAddToShoppingList = viewModel::onAddToShoppingList
+                onAddToShoppingList = viewModel::onAddToShoppingList,
+                onDelete = viewModel::onDeleteItem,
+                onConsume = viewModel::onConsumeItem
             )
 
             is PantryUiState.Error -> ErrorContent(
@@ -118,6 +120,8 @@ private fun PantryContent(
     state: PantryUiState.Success,
     onCategorySelected: (PantryCategory) -> Unit,
     onAddToShoppingList: (String) -> Unit,
+    onDelete: (String) -> Unit,
+    onConsume: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val sections = listOf(
@@ -167,7 +171,9 @@ private fun PantryContent(
                 icon = section.icon,
                 items = section.items,
                 assets = state.assets,
-                onAddToShoppingList = onAddToShoppingList
+                onAddToShoppingList = onAddToShoppingList,
+                onDelete = onDelete,
+                onConsume = onConsume
             )
         }
     }

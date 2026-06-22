@@ -6,6 +6,7 @@ import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeRemoteDataS
 import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeRemoteDataSourceImpl
 import com.mattiamularoni.saveeat.features.recipes.data.repository.RecipeRepositoryImpl
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
+import com.mattiamularoni.saveeat.features.recipes.domain.usecase.CookRecipeUseCase
 import com.mattiamularoni.saveeat.features.recipes.domain.usecase.GenerateRecipesUseCase
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.core.module.dsl.viewModelOf
@@ -29,6 +30,15 @@ val recipeScreenModule = module {
     }
 
     factory { GenerateRecipesUseCase(pantryRepository = get(), recipeRepository = get()) }
+
+    factory {
+        CookRecipeUseCase(
+            pantryRepository = get(),
+            leaderboardRepository = get(),
+            statsRepository = get(),
+            sessionProvider = get()
+        )
+    }
 
     viewModelOf(::RecipeViewModel)
 }
