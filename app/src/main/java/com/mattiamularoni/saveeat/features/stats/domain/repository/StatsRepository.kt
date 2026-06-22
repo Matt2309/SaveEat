@@ -39,4 +39,14 @@ interface StatsRepository {
      * @return [Result] di successo, oppure fallimento con l'eccezione incontrata
      */
     suspend fun addRecipeCookedStats(kg: Double, euros: Double, points: Int): Result<Unit>
+
+    /**
+     * Deduce [amount] eco-punti dal saldo dell'utente corrente, a fronte dello sblocco
+     * di una feature premium (es. filtri avanzati di generazione ricette).
+     *
+     * @param amount eco-punti da spendere
+     * @return [Result] di successo, oppure fallimento se l'utente non ha saldo sufficiente
+     * o non è autenticato
+     */
+    suspend fun spendEcoPoints(amount: Int): Result<Unit>
 }

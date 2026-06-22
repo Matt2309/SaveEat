@@ -72,6 +72,22 @@ class StatsRepositoryImpl(
             }
         }
 
+    override suspend fun spendEcoPoints(amount: Int): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            runCatching {
+                val userId = sessionProvider.getCurrentUserId()
+                require(userId.isNotBlank()) { "Utente non autenticato" }
+
+                val current = userStatsDao.getByUserId(userId)?.toDomain() ?: UserStats()
+                require(current.totalEcoPoints >= amount) { "Eco-Punti insufficienti" }
+
+                val updated = current.copy(totalEcoPoints = current.totalEcoPoints - amount)
+                val dto = updated.toDto(userId)
+                val remoteResponse = remoteDataSource.upsertUserStats(dto)
+                userStatsDao.upsert(remoteResponse.toEntity())
+            }
+        }
+
     // ===== HELPERS =====
 
     private fun UserStatsEntity.toDomain(): UserStats =

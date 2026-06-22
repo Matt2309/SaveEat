@@ -74,6 +74,7 @@ fun RecipeDetailScreen(
                 is RecipeUiEvent.CookError -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
+                is RecipeUiEvent.PremiumUnlockFailed -> Unit // gestito da RecipeScreen
             }
         }
     }

@@ -91,7 +91,7 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                 throw Exception("Gemini ha restituito una risposta vuota.")
             }
 
-            stripMarkdownFences(jsonText)
+            extractJsonArray(stripMarkdownFences(jsonText))
         } catch (e: Exception) {
             throw Exception("Errore durante la generazione delle ricette: ${e.message}", e)
         }
@@ -109,5 +109,37 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             .removePrefix("```")
             .removeSuffix("```")
             .trim()
+    }
+
+    /**
+     * Isola l'array JSON di primo livello, scartando qualunque testo che il modello
+     * abbia aggiunto dopo la `]` di chiusura (es. commenti, spiegazioni, ricette
+     * troncate): senza questo, kotlinx.serialization fallisce con "Expected EOF
+     * after parsing" non appena Gemini ignora l'istruzione "nessun testo aggiuntivo".
+     */
+    private fun extractJsonArray(text: String): String {
+        val start = text.indexOf('[')
+        if (start == -1) return text
+
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (i in start until text.length) {
+            val c = text[i]
+            when {
+                inString -> when {
+                    escaped -> escaped = false
+                    c == '\\' -> escaped = true
+                    c == '"' -> inString = false
+                }
+                c == '"' -> inString = true
+                c == '[' -> depth++
+                c == ']' -> {
+                    depth--
+                    if (depth == 0) return text.substring(start, i + 1)
+                }
+            }
+        }
+        return text.substring(start)
     }
 }
