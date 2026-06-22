@@ -5,8 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashboardUseCase
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
+import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
+import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryAssetRepository
 import com.mattiamularoni.saveeat.features.stats.domain.model.UserStats
 import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.RefreshUserStatsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +37,8 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
     private val getUserStatsUseCase: GetUserStatsUseCase,
+    private val refreshUserStatsUseCase: RefreshUserStatsUseCase,
+    private val pantryAssetRepository: PantryAssetRepository,
     private val sessionProvider: SessionProvider
 ) : ViewModel() {
 
@@ -52,12 +57,34 @@ class HomeViewModel(
     val userStats: StateFlow<UserStats> = getUserStatsUseCase()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserStats())
 
+    // Mappa categoryKey -> PantryAsset (nome localizzato + immagine), usata per mostrare la
+    // foto del prodotto nelle card "In scadenza", con lo stesso pattern della Pantry.
+    val pantryAssets: StateFlow<Map<String, PantryAsset>> = pantryAssetRepository.observeAssets()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+
     init {
         // Subscribe al Flow della dashboard per aggiornamenti real-time
         subscribeToHomeDashboard()
 
         // Fetch fresh data from Supabase on every open; Room Flow will emit and update UI
         refreshDashboard()
+
+        // Sincronizza kg/euro/eco-punti da Supabase verso Room: getUserStatsUseCase osserva
+        // solo la cache locale, quindi senza questo gli utenti senza una riga locale vedrebbero 0.
+        viewModelScope.launch {
+            refreshUserStatsUseCase()
+        }
+
+        // Sincronizza gli asset (immagini prodotto) da Supabase verso Room: observeAssets()
+        // legge solo la cache locale, quindi senza questo gli utenti che aprono la Home prima
+        // della Pantry non vedrebbero alcuna immagine.
+        viewModelScope.launch {
+            try {
+                pantryAssetRepository.syncAssets()
+            } catch (e: Exception) {
+                android.util.Log.e("HomeViewModel", "Asset sync fallito: ${e.message}")
+            }
+        }
     }
 
     /**

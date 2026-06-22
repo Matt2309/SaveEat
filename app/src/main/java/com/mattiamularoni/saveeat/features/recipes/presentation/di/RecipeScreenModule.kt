@@ -4,6 +4,8 @@ import com.mattiamularoni.saveeat.features.recipes.data.remote.GeminiRecipeDataS
 import com.mattiamularoni.saveeat.features.recipes.data.remote.GeminiRecipeDataSourceImpl
 import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeRemoteDataSource
 import com.mattiamularoni.saveeat.features.recipes.data.remote.RecipeRemoteDataSourceImpl
+import com.mattiamularoni.saveeat.features.recipes.data.remote.pixabay.PixabayRemoteDataSource
+import com.mattiamularoni.saveeat.features.recipes.data.remote.pixabay.PixabayRemoteDataSourceImpl
 import com.mattiamularoni.saveeat.features.recipes.data.repository.RecipeRepositoryImpl
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.RecipeRepository
 import com.mattiamularoni.saveeat.features.recipes.domain.usecase.CookRecipeUseCase
@@ -15,10 +17,13 @@ import org.koin.dsl.module
 val recipeScreenModule = module {
     single<GeminiRecipeDataSource> { GeminiRecipeDataSourceImpl() }
 
+    single<PixabayRemoteDataSource> { PixabayRemoteDataSourceImpl(httpClient = get()) }
+
     factory<RecipeRemoteDataSource> {
         RecipeRemoteDataSourceImpl(
             supabaseClient = get(),
-            geminiRecipeDataSource = get()
+            geminiRecipeDataSource = get(),
+            pixabayRemoteDataSource = get()
         )
     }
 
@@ -34,7 +39,6 @@ val recipeScreenModule = module {
     factory {
         CookRecipeUseCase(
             pantryRepository = get(),
-            leaderboardRepository = get(),
             statsRepository = get(),
             sessionProvider = get()
         )

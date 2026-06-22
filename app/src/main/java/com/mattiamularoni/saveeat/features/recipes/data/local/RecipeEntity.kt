@@ -22,5 +22,6 @@ data class RecipeEntity(
     val createdAt: Long,
     val isVegetarian: Boolean = false,
     val estimatedWeightKg: Double = 0.0,
-    val estimatedCostEuros: Double = 0.0
+    val estimatedCostEuros: Double = 0.0,
+    val imageUrl: String? = null
 )

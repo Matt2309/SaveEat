@@ -1,7 +1,9 @@
 package com.mattiamularoni.saveeat.features.recipes.presentation.ui
 
+import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -9,7 +11,12 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Eco
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.LockPerson
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Notifications
@@ -19,20 +26,28 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilter
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
+import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiEvent
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+
+private const val PREMIUM_FILTER_COST = 10
 
 private val CuisineStyles = listOf("Italiana", "Asiatica", "Messicana")
 private val TimingOptions = listOf(
@@ -52,17 +67,33 @@ fun RecipeScreen(
     val uiState by viewModel.recipesUiState.collectAsState()
     val generateState by viewModel.generateRecipeUiState.collectAsState()
     val activeFilters by viewModel.activeFilters.collectAsState()
+    val availableFilters by viewModel.availableFilters.collectAsState()
+    val isPremiumUnlocked by viewModel.isPremiumUnlocked.collectAsState()
+    val ecoPointsBalance by viewModel.ecoPointsBalance.collectAsState()
     var showModal by remember { mutableStateOf(false) }
 
     val notificationPreferencesController: com.mattiamularoni.saveeat.ui.settings.NotificationPreferencesController =
         koinInject()
     val expiryAlertsEnabled by notificationPreferencesController.expiryAlertsEnabled.collectAsState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    LaunchedEffect(Unit) {
+        viewModel.events.collect { event ->
+            when (event) {
+                is RecipeUiEvent.PremiumUnlockFailed -> {
+                    snackbarHostState.showSnackbar("Non hai abbastanza Eco-Punti")
+                }
+                else -> Unit // CookSuccess/CookError sono gestiti da RecipeDetailScreen
+            }
+        }
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
         contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
+        topBar = { RecipeTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -114,7 +145,7 @@ fun RecipeScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                RecipeFilter.all.forEach { filter ->
+                availableFilters.forEach { filter ->
                     FilterChip(
                         selected = filter in activeFilters,
                         onClick = { viewModel.toggleFilter(filter) },
@@ -175,6 +206,8 @@ fun RecipeScreen(
     if (showModal) {
         GenerateRecipeModal(
             generateState = generateState,
+            isPremiumUnlocked = isPremiumUnlocked,
+            ecoPointsBalance = ecoPointsBalance,
             onDismiss = {
                 showModal = false
                 viewModel.resetGenerateState()
@@ -182,6 +215,7 @@ fun RecipeScreen(
             onGenerate = { filters ->
                 viewModel.generateFromPantry(filters)
             },
+            onUnlockPremium = { viewModel.onUnlockPremiumClicked() },
             onSuccess = {
                 showModal = false
                 viewModel.resetGenerateState()
@@ -194,8 +228,11 @@ fun RecipeScreen(
 @Composable
 private fun GenerateRecipeModal(
     generateState: GenerateRecipeUiState,
+    isPremiumUnlocked: Boolean,
+    ecoPointsBalance: Int,
     onDismiss: () -> Unit,
     onGenerate: (RecipeFilters) -> Unit,
+    onUnlockPremium: () -> Unit,
     onSuccess: () -> Unit
 ) {
     var selectedCuisine by remember { mutableStateOf<String?>(null) }
@@ -231,69 +268,93 @@ private fun GenerateRecipeModal(
                 )
             }
 
-            // Stile culinario
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Stile culinario (opzionale)",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
+            // Filtri avanzati (premium): stile culinario, tempo, vegetariano
+            Box {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                    modifier = Modifier.then(
+                        if (!isPremiumUnlocked) Modifier.premiumLock() else Modifier
+                    )
                 ) {
-                    CuisineStyles.forEach { cuisine ->
-                        val isSelected = cuisine.lowercase() == selectedCuisine
-                        FilterPill(
-                            label = cuisine,
-                            selected = isSelected,
-                            onClick = {
-                                selectedCuisine = if (isSelected) null else cuisine.lowercase()
-                            }
+                    // Stile culinario
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Stile culinario (opzionale)",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
                         )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        ) {
+                            CuisineStyles.forEach { cuisine ->
+                                val isSelected = cuisine.lowercase() == selectedCuisine
+                                FilterPill(
+                                    label = cuisine,
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedCuisine = if (isSelected) null else cuisine.lowercase()
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Tempo di preparazione
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = "Tempo di preparazione (opzionale)",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        ) {
+                            TimingOptions.forEach { (label, value) ->
+                                val isSelected = value == selectedTiming
+                                FilterPill(
+                                    label = label,
+                                    selected = isSelected,
+                                    onClick = {
+                                        selectedTiming = if (isSelected) null else value
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    // Preferenze alimentari
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Vegetariano",
+                            style = MaterialTheme.typography.labelLarge,
+                            fontWeight = FontWeight.Medium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                        Switch(checked = vegetarian, onCheckedChange = { vegetarian = it })
                     }
                 }
-            }
 
-            // Tempo di preparazione
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = "Tempo di preparazione (opzionale)",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.horizontalScroll(rememberScrollState()),
-                ) {
-                    TimingOptions.forEach { (label, value) ->
-                        val isSelected = value == selectedTiming
-                        FilterPill(
-                            label = label,
-                            selected = isSelected,
-                            onClick = {
-                                selectedTiming = if (isSelected) null else value
-                            }
-                        )
-                    }
+                if (!isPremiumUnlocked) {
+                    // Scrim che blocca i tocchi sui filtri sottostanti
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .pointerInput(Unit) { detectTapGestures { } }
+                    )
+                    PremiumUnlockCard(
+                        ecoPointsBalance = ecoPointsBalance,
+                        onUnlockPremium = onUnlockPremium,
+                        modifier = Modifier.align(Alignment.Center)
+                    )
                 }
-            }
-
-            // Preferenze alimentari
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-                Text(
-                    text = "Vegetariano",
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Medium,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-                Switch(checked = vegetarian, onCheckedChange = { vegetarian = it })
             }
 
             // Errore
@@ -376,6 +437,132 @@ private fun RecipeTopBar(onAvatarClick: () -> Unit = {}, expiryAlertsEnabled: Bo
     }
 }
 
+/**
+ * Applica l'effetto di "blocco visivo" premium: blur su Android 12+ (dove
+ * [androidx.compose.ui.draw.blur] è renderizzato), alpha dimming come fallback
+ * sulle versioni precedenti dove il blur è un no-op.
+ */
+private fun Modifier.premiumLock(): Modifier =
+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) this.blur(8.dp) else this.alpha(0.4f)
+
+@Composable
+private fun PremiumUnlockCard(
+    ecoPointsBalance: Int,
+    onUnlockPremium: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val canAfford = ecoPointsBalance >= PREMIUM_FILTER_COST
+    val missingPoints = if (!canAfford) PREMIUM_FILTER_COST - ecoPointsBalance else 0
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp), // Margini leggermente più ampi per far respirare la UI
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            // Usa il secondaryContainer per dare un look "Premium" e distinguerlo dal resto
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // Icona Header con background circolare
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome, // Sostituito il lucchetto con le scintille per un feel più "magico/premium"
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // Testo descrittivo (Value Proposition)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Filtri Avanzati",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "Personalizza la tua ricetta scegliendo lo stile culinario, il tempo e la dieta.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Bottone di sblocco
+            Button(
+                onClick = onUnlockPremium,
+                enabled = canAfford,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
+            ) {
+                Icon(
+                    imageVector = if (canAfford) Icons.Filled.LockOpen else Icons.Filled.Lock,
+                    contentDescription = null,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(Modifier.width(8.dp))
+                Text(
+                    text = "Sblocca per $PREMIUM_FILTER_COST pt",
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            // Stato degli Eco-Punti (Feedback per l'utente)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Eco,
+                    contentDescription = null,
+                    tint = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text = if (canAfford) {
+                        "Hai $ecoPointsBalance Eco-Punti disponibili"
+                    } else {
+                        "Ti mancano $missingPoints Eco-Punti"
+                    },
+                    color = if (canAfford) MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun FilterPill(label: String, selected: Boolean, onClick: () -> Unit) {
     val bg = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface
@@ -406,13 +593,30 @@ private fun FeaturedRecipeCard(recipe: Recipe, onClick: () -> Unit = {}) {
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable { onClick() }
     ) {
-        // Box grigio al posto della foto
+        // Foto della ricetta (da Pixabay), con fallback su un'icona se non disponibile
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        )
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!recipe.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = recipe.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        }
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -449,8 +653,25 @@ private fun SmallRecipeCard(recipe: Recipe, modifier: Modifier = Modifier, onCli
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        )
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!recipe.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = recipe.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)

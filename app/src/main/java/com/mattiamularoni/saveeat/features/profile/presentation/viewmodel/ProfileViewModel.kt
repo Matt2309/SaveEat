@@ -6,6 +6,7 @@ import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.auth.domain.usecase.SignOutUseCase
 import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashboardUseCase
 import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.RefreshUserStatsUseCase
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.auth.auth
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,7 @@ class ProfileViewModel(
     private val supabaseClient: SupabaseClient,
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
     private val getUserStatsUseCase: GetUserStatsUseCase,
+    private val refreshUserStatsUseCase: RefreshUserStatsUseCase,
     private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
 
@@ -59,17 +61,26 @@ class ProfileViewModel(
             val dashboard = runCatching { getHomeDashboardUseCase.getCachedDashboard() }.getOrNull()
             if (dashboard != null) {
                 _state.update {
-                    it.copy(
-                        ecoPoints = dashboard.userStats.ecoPoints,
-                        avatarUrl = dashboard.userProfile.avatarUrl ?: it.avatarUrl
-                    )
+                    it.copy(avatarUrl = dashboard.userProfile.avatarUrl ?: it.avatarUrl)
                 }
             }
         }
 
         viewModelScope.launch {
+            // Sincronizza da Supabase verso Room: getUserStatsUseCase osserva solo la cache
+            // locale, quindi senza questo un utente senza riga locale vedrebbe sempre 0.
+            refreshUserStatsUseCase()
+        }
+
+        viewModelScope.launch {
+            // eco-punti / euro risparmiati: unica fonte di verità è user_stats (StatsRepository).
             getUserStatsUseCase().collect { stats ->
-                _state.update { it.copy(savedEuros = stats.totalEurosSaved) }
+                _state.update {
+                    it.copy(
+                        ecoPoints = stats.totalEcoPoints,
+                        savedEuros = stats.totalEurosSaved
+                    )
+                }
             }
         }
     }

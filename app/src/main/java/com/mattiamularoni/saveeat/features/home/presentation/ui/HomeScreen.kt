@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.platform.LocalContext
@@ -37,6 +38,7 @@ import com.mattiamularoni.saveeat.features.home.domain.repository.ExpiringItem
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
 import com.mattiamularoni.saveeat.features.home.presentation.viewmodel.HomeViewModel
+import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ExpandableFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormDialog
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
@@ -140,10 +142,13 @@ fun HomeScreen(
                 }
                 is HomeUiState.Success -> {
                     val userStats by homeViewModel.userStats.collectAsState()
+                    val pantryAssets by homeViewModel.pantryAssets.collectAsState()
                     DashboardContent(
                         firstName = firstName,
                         dashboard = state.dashboard,
                         kgSaved = userStats.totalKgSaved,
+                        ecoPoints = userStats.totalEcoPoints,
+                        assets = pantryAssets,
                         onSeeAllExpiring = onNavigateToPantry,
                         onOpenRecipe = onNavigateToRecipes
                     )
@@ -196,6 +201,8 @@ private fun DashboardContent(
     firstName: String,
     dashboard: HomeDashboard,
     kgSaved: Double,
+    ecoPoints: Int,
+    assets: Map<String, PantryAsset>,
     onSeeAllExpiring: () -> Unit,
     onOpenRecipe: () -> Unit
 ) {
@@ -214,7 +221,8 @@ private fun DashboardContent(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            EcoPointsCard(ecoPoints = dashboard.userStats.ecoPoints)
+            // eco-punti: unica fonte di verità è user_stats (StatsRepository), non più dashboard.userStats.
+            EcoPointsCard(ecoPoints = ecoPoints)
         }
 
         // ---- In scadenza ----
@@ -251,7 +259,7 @@ private fun DashboardContent(
                     contentPadding = PaddingValues(end = 4.dp)
                 ) {
                     items(dashboard.expiringItems, key = { it.id }) { item ->
-                        ExpiringItemCard(item)
+                        ExpiringItemCard(item = item, asset = item.categoryKey?.let { assets[it] })
                     }
                 }
             }
@@ -320,7 +328,7 @@ private fun EcoPointsCard(ecoPoints: Int) {
 }
 
 @Composable
-private fun ExpiringItemCard(item: ExpiringItem) {
+private fun ExpiringItemCard(item: ExpiringItem, asset: PantryAsset?) {
     val days = daysUntil(item.expirationDate)
     val barColor = when {
         days <= 1 -> FreshnessCritical
@@ -352,13 +360,22 @@ private fun ExpiringItemCard(item: ExpiringItem) {
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
-            // Box grigio neutro al posto della foto + badge categoria
+            // Foto del prodotto (se disponibile in pantry_item_assets) + badge categoria,
+            // fallback su box grigio neutro come in PantryComponents.AssetThumbnail.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(96.dp)
                     .background(MaterialTheme.colorScheme.surfaceContainerHighest)
             ) {
+                if (!asset?.imageUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = asset!!.imageUrl,
+                        contentDescription = null,
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(6.dp),

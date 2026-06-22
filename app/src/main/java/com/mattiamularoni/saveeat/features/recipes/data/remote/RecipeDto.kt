@@ -23,5 +23,7 @@ data class RecipeDto(
     @SerialName("estimated_weight_kg")
     val estimatedWeightKg: Double = 0.0,
     @SerialName("estimated_cost_euros")
-    val estimatedCostEuros: Double = 0.0
+    val estimatedCostEuros: Double = 0.0,
+    @SerialName("image_url")
+    val imageUrl: String? = null
 )

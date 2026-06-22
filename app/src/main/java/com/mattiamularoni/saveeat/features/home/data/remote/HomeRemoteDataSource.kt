@@ -44,7 +44,7 @@ interface HomeRemoteDataSource {
      * - total_items: COUNT(*) FROM pantry_items WHERE user_id = ? AND status = 'active'
      * - expiring_count: COUNT(*) WHERE expiration_date <= (now + 7 days)
      * - active_placeholders: COUNT(*) WHERE is_placeholder = true
-     * - eco_points: FROM users WHERE id = ?
+     * - eco_points: FROM leaderboard (vista users LEFT JOIN user_stats) WHERE id = ?
      *
      * @param userId UUID dell'utente
      * @return UserStatsDto con statistiche
@@ -55,7 +55,7 @@ interface HomeRemoteDataSource {
     /**
      * Recupera i top N utenti per eco_points (leaderboard ranking).
      *
-     * Query: SELECT * FROM users ORDER BY eco_points DESC LIMIT 3
+     * Query: SELECT * FROM leaderboard ORDER BY eco_points DESC LIMIT 3
      *
      * @param limit numero di utenti da recuperare (default 3)
      * @return lista di LeaderboardUserDto ordinati DESC by eco_points

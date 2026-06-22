@@ -27,8 +27,8 @@ object RecipeMapper {
     @Serializable
     private data class IngredientJson(
         val name: String,
-        val amount: Double,
-        val unit: String
+        val amount: Double = 1.0,
+        val unit: String = "qb"
     )
 
     /**
@@ -52,7 +52,8 @@ object RecipeMapper {
             createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt),
             isVegetarian = dto.isVegetarian,
             estimatedWeightKg = dto.estimatedWeightKg,
-            estimatedCostEuros = dto.estimatedCostEuros
+            estimatedCostEuros = dto.estimatedCostEuros,
+            imageUrl = dto.imageUrl
         )
     }
 
@@ -76,7 +77,8 @@ object RecipeMapper {
             createdAt = DateTimeUtils.formatToIso8601(entity.createdAt),
             isVegetarian = entity.isVegetarian,
             estimatedWeightKg = entity.estimatedWeightKg,
-            estimatedCostEuros = entity.estimatedCostEuros
+            estimatedCostEuros = entity.estimatedCostEuros,
+            imageUrl = entity.imageUrl
         )
     }
 
@@ -102,7 +104,8 @@ object RecipeMapper {
             createdAt = entity.createdAt,
             isVegetarian = entity.isVegetarian,
             estimatedWeightKg = entity.estimatedWeightKg,
-            estimatedCostEuros = entity.estimatedCostEuros
+            estimatedCostEuros = entity.estimatedCostEuros,
+            imageUrl = entity.imageUrl
         )
     }
 
@@ -134,7 +137,8 @@ object RecipeMapper {
             createdAt = domain.createdAt,
             isVegetarian = domain.isVegetarian,
             estimatedWeightKg = domain.estimatedWeightKg,
-            estimatedCostEuros = domain.estimatedCostEuros
+            estimatedCostEuros = domain.estimatedCostEuros,
+            imageUrl = domain.imageUrl
         )
     }
 
@@ -199,7 +203,8 @@ object RecipeMapper {
                 )
             }
         } catch (e: Exception) {
-            // Silently return empty list on JSON parse error
+            // Return empty list on JSON parse error, but log it so failures are visible
+            android.util.Log.e("RecipeMapper", "Failed to parse ingredients JSON: $ingredientsJson", e)
             emptyList()
         }
     }

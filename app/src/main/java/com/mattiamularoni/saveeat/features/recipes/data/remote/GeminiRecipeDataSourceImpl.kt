@@ -63,7 +63,8 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                 "tags": ["tag1", "tag2"],
                 "is_vegetarian": false,
                 "estimated_weight_kg": 0.6,
-                "estimated_cost_euros": 4.20
+                "estimated_cost_euros": 4.20,
+                "pixabay_query": "pasta tomato"
               }
             ]
             Regole:
@@ -73,6 +74,7 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             - "is_vegetarian" deve essere true SOLO se la ricetta non contiene carne né pesce, false altrimenti
             - "estimated_weight_kg" è il peso TOTALE commestibile della ricetta finita in kg (numero decimale realistico, es. 0.6)
             - "estimated_cost_euros" è il costo TOTALE stimato degli ingredienti in euro al mercato italiano (numero decimale realistico, es. 4.20)
+            - "pixabay_query" è una query di ricerca immagini in INGLESE di 1 o 2 parole che rappresenta il piatto principale, da usare su un'API di ricerca immagini (es. "pasta tomato", "chicken salad", "beef stew")
             - Il tempo di preparazione deve essere realistico e non superare $maxMinutes minuti
             - Genera esattamente 3 ricette diverse
             - Rispondi SOLO con l'array JSON richiesto, senza testo aggiuntivo né blocchi di codice markdown (niente ```)
@@ -91,7 +93,7 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
                 throw Exception("Gemini ha restituito una risposta vuota.")
             }
 
-            stripMarkdownFences(jsonText)
+            extractJsonArray(stripMarkdownFences(jsonText))
         } catch (e: Exception) {
             throw Exception("Errore durante la generazione delle ricette: ${e.message}", e)
         }
@@ -109,5 +111,37 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             .removePrefix("```")
             .removeSuffix("```")
             .trim()
+    }
+
+    /**
+     * Isola l'array JSON di primo livello, scartando qualunque testo che il modello
+     * abbia aggiunto dopo la `]` di chiusura (es. commenti, spiegazioni, ricette
+     * troncate): senza questo, kotlinx.serialization fallisce con "Expected EOF
+     * after parsing" non appena Gemini ignora l'istruzione "nessun testo aggiuntivo".
+     */
+    private fun extractJsonArray(text: String): String {
+        val start = text.indexOf('[')
+        if (start == -1) return text
+
+        var depth = 0
+        var inString = false
+        var escaped = false
+        for (i in start until text.length) {
+            val c = text[i]
+            when {
+                inString -> when {
+                    escaped -> escaped = false
+                    c == '\\' -> escaped = true
+                    c == '"' -> inString = false
+                }
+                c == '"' -> inString = true
+                c == '[' -> depth++
+                c == ']' -> {
+                    depth--
+                    if (depth == 0) return text.substring(start, i + 1)
+                }
+            }
+        }
+        return text.substring(start)
     }
 }

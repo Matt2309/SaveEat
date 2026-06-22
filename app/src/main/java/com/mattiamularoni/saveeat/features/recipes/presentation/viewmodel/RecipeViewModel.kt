@@ -12,16 +12,20 @@ import com.mattiamularoni.saveeat.features.recipes.presentation.state.FavoriteRe
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiEvent
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
+import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 /**
@@ -36,8 +40,13 @@ import kotlinx.coroutines.launch
 class RecipeViewModel(
     private val recipeRepository: RecipeRepository,
     private val generateRecipesUseCase: GenerateRecipesUseCase,
-    private val cookRecipeUseCase: CookRecipeUseCase
+    private val cookRecipeUseCase: CookRecipeUseCase,
+    private val statsRepository: StatsRepository
 ) : ViewModel() {
+
+    companion object {
+        private const val PREMIUM_FILTER_COST = 10
+    }
 
     // ===== RECIPES STATE =====
 
@@ -48,6 +57,25 @@ class RecipeViewModel(
 
     private val _activeFilters = MutableStateFlow<Set<RecipeFilter>>(emptySet())
     val activeFilters: StateFlow<Set<RecipeFilter>> = _activeFilters.asStateFlow()
+
+    /**
+     * Filtri disponibili nella UI, derivati dai tag distinti delle ricette caricate
+     * (deduplicati case-insensitive, ordinati per frequenza decrescente). A differenza
+     * dei filtri di generazione (premium, in [RecipeFilters]), questi sono sempre
+     * garantiti a corrispondere ad almeno una ricetta.
+     */
+    val availableFilters: StateFlow<List<RecipeFilter>> = recipeRepository.observeRecipes()
+        .map { recipes ->
+            recipes.flatMap { it.tags }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .groupingBy { it.lowercase() }.eachCount()
+                .entries.sortedWith(
+                    compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }
+                )
+                .map { RecipeFilter(it.key) }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ===== FAVORITE RECIPES STATE =====
 
@@ -70,6 +98,22 @@ class RecipeViewModel(
 
     private val _events = MutableSharedFlow<RecipeUiEvent>()
     val events: SharedFlow<RecipeUiEvent> = _events.asSharedFlow()
+
+    // ===== PREMIUM FILTERS (GAMIFICATION) STATE =====
+
+    /** Saldo eco-punti dell'utente corrente, per abilitare/disabilitare lo sblocco premium. */
+    val ecoPointsBalance: StateFlow<Int> = statsRepository.getUserStats()
+        .map { it.totalEcoPoints }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    /**
+     * Indica se i filtri avanzati di generazione (stile, tempo, vegetariano) sono
+     * sbloccati per la sessione di generazione corrente. Si consuma ad ogni generazione
+     * (vedi [generateFromPantry]): un nuovo utilizzo dei filtri avanzati richiede un
+     * nuovo sblocco da [PREMIUM_FILTER_COST] eco-punti.
+     */
+    private val _isPremiumUnlocked = MutableStateFlow(false)
+    val isPremiumUnlocked: StateFlow<Boolean> = _isPremiumUnlocked.asStateFlow()
 
     // ===== OBSERVATION JOBS =====
 
@@ -130,20 +174,12 @@ class RecipeViewModel(
     }
 
     /**
-     * Filtra [recipes] secondo [filters]: OR fra filtri della stessa categoria
-     * (Style, Time, Vegetarian), AND fra categorie diverse. Un set vuoto non
-     * esclude nessuna ricetta.
+     * Filtra [recipes] secondo [filters]: una ricetta è mostrata se possiede almeno
+     * uno dei tag selezionati (OR). Un set vuoto non esclude nessuna ricetta.
      */
     private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilter>): List<Recipe> {
         if (filters.isEmpty()) return recipes
-        val groups = filters.groupBy { filterCategory(it) }.values
-        return recipes.filter { recipe -> groups.all { group -> group.any { it.matches(recipe) } } }
-    }
-
-    private fun filterCategory(filter: RecipeFilter): String = when (filter) {
-        is RecipeFilter.Style -> "style"
-        is RecipeFilter.Time -> "time"
-        is RecipeFilter.Vegetarian -> "vegetarian"
+        return recipes.filter { recipe -> filters.any { it.matches(recipe) } }
     }
 
     /**
@@ -245,8 +281,8 @@ class RecipeViewModel(
         viewModelScope.launch {
             _isCooking.value = true
             cookRecipeUseCase.execute(recipe).fold(
-                onSuccess = {
-                    _events.emit(RecipeUiEvent.CookSuccess(CookRecipeUseCase.COOK_RECIPE_POINTS))
+                onSuccess = { pointsAwarded ->
+                    _events.emit(RecipeUiEvent.CookSuccess(pointsAwarded))
                 },
                 onFailure = { e ->
                     _events.emit(
@@ -417,21 +453,28 @@ class RecipeViewModel(
     }
 
     /**
-     * Resetta lo stato di generazione ricette.
+     * Resetta lo stato di generazione ricette e blocca nuovamente i filtri avanzati.
      */
     fun resetGenerateState() {
         _generateRecipeUiState.value = GenerateRecipeUiState.Idle
+        _isPremiumUnlocked.value = false
     }
 
     /**
      * Genera ricette dagli ingredienti in scadenza della dispensa con filtri opzionali.
      *
-     * @param filters filtri opzionali (stile cucina, tempo)
+     * I filtri avanzati (stile cucina, tempo, vegetariano) sono una feature premium:
+     * se [isPremiumUnlocked] è false vengono ignorati prima di costruire il prompt,
+     * così una generazione gratuita non può mai usarli. Lo sblocco si consuma ad ogni
+     * tentativo di generazione.
+     *
+     * @param filters filtri opzionali (stile cucina, tempo, vegetariano)
      */
     fun generateFromPantry(filters: RecipeFilters = RecipeFilters()) {
+        val effectiveFilters = if (_isPremiumUnlocked.value) filters else RecipeFilters()
         viewModelScope.launch {
             _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
-            val result = generateRecipesUseCase(filters)
+            val result = generateRecipesUseCase(effectiveFilters)
             _generateRecipeUiState.value = result.fold(
                 onSuccess = { recipes ->
                     if (recipes.isEmpty()) GenerateRecipeUiState.Error("Nessuna ricetta generata")
@@ -444,6 +487,23 @@ class RecipeViewModel(
                     )
                 }
             )
+            _isPremiumUnlocked.value = false
+        }
+    }
+
+    /**
+     * Sblocca i filtri avanzati di generazione per la sessione corrente, spendendo
+     * [PREMIUM_FILTER_COST] eco-punti dal saldo dell'utente.
+     *
+     * Se l'utente non ha saldo sufficiente (o non è autenticato), emette
+     * [RecipeUiEvent.PremiumUnlockFailed] come rete di sicurezza: la UI dovrebbe già
+     * disabilitare il bottone di sblocco quando il saldo è insufficiente.
+     */
+    fun onUnlockPremiumClicked() {
+        viewModelScope.launch {
+            statsRepository.spendEcoPoints(PREMIUM_FILTER_COST)
+                .onSuccess { _isPremiumUnlocked.value = true }
+                .onFailure { _events.emit(RecipeUiEvent.PremiumUnlockFailed) }
         }
     }
 }

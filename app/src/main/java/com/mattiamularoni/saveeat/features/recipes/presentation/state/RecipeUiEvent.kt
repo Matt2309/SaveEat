@@ -19,4 +19,10 @@ sealed class RecipeUiEvent {
      * @param message descrizione dell'errore per l'utente
      */
     data class CookError(val message: String) : RecipeUiEvent()
+
+    /**
+     * Sblocco dei filtri avanzati di generazione ricette fallito (eco-punti insufficienti
+     * o utente non autenticato).
+     */
+    data object PremiumUnlockFailed : RecipeUiEvent()
 }

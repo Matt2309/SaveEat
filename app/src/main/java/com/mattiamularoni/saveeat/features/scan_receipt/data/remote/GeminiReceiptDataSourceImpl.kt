@@ -15,7 +15,7 @@ import dev.shreyaspatil.ai.client.generativeai.type.generationConfig
 class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
     // Configuriamo il modello forzando la risposta come JSON puro
     private val generativeModel = GenerativeModel(
-        modelName = "gemini-3.1-flash-lite",
+        modelName = "gemini-3.5-flash",
         apiKey = BuildConfig.GEMINI_API_KEY,
         generationConfig = generationConfig {
             responseMimeType = "application/json"

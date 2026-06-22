@@ -16,7 +16,8 @@ data class Recipe(
     val createdAt: Long,
     val isVegetarian: Boolean = false,
     val estimatedWeightKg: Double = 0.0,
-    val estimatedCostEuros: Double = 0.0
+    val estimatedCostEuros: Double = 0.0,
+    val imageUrl: String? = null
 ) {
     /**
      * Modello per un singolo ingrediente di una ricetta.

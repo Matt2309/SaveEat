@@ -24,11 +24,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.core.util.ingredientMatchesPantryName
 import com.mattiamularoni.saveeat.features.pantry.presentation.state.PantryUiState
 import com.mattiamularoni.saveeat.features.pantry.presentation.viewmodel.PantryViewModel
@@ -74,6 +76,7 @@ fun RecipeDetailScreen(
                 is RecipeUiEvent.CookError -> {
                     snackbarHostState.showSnackbar(event.message)
                 }
+                is RecipeUiEvent.PremiumUnlockFailed -> Unit // gestito da RecipeScreen
             }
         }
     }
@@ -157,13 +160,28 @@ private fun DetailContent(
             .verticalScroll(rememberScrollState())
             .padding(bottom = contentPadding.calculateBottomPadding())
     ) {
-        // ---- Header immagine (box grigio) con back + cuore ----
+        // ---- Header immagine (foto Pixabay, con fallback su box grigio) con back + cuore ----
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(280.dp)
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest)
         ) {
+            if (!recipe.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = recipe.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.align(Alignment.Center).size(56.dp)
+                )
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

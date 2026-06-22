@@ -16,7 +16,9 @@ data class GeminiRecipeDto(
     @SerialName("estimated_weight_kg")
     val estimatedWeightKg: Double = 0.0,
     @SerialName("estimated_cost_euros")
-    val estimatedCostEuros: Double = 0.0
+    val estimatedCostEuros: Double = 0.0,
+    @SerialName("pixabay_query")
+    val pixabayQuery: String = ""
 )
 
 @Serializable

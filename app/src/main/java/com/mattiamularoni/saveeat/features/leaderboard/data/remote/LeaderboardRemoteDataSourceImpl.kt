@@ -25,7 +25,10 @@ class LeaderboardRemoteDataSourceImpl(
     /**
      * Recupera la leaderboard globale ordinata per eco_points DESC da Supabase.
      *
-     * Query Postgrest: SELECT * FROM users ORDER BY eco_points DESC
+     * Query Postgrest: SELECT * FROM leaderboard ORDER BY eco_points DESC
+     *
+     * Gli eco_points sono ora calcolati dalla vista `leaderboard` (users LEFT JOIN user_stats),
+     * unica fonte di verità: user_stats.total_eco_points.
      *
      * @return lista di DTO ordinata per punteggio decrescente
      * @throws Exception in caso di errore rete o parsing
@@ -34,7 +37,7 @@ class LeaderboardRemoteDataSourceImpl(
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select {
                         order("eco_points", Order.DESCENDING)
                     }
@@ -47,7 +50,7 @@ class LeaderboardRemoteDataSourceImpl(
     /**
      * Recupera i top N utenti della leaderboard da Supabase.
      *
-     * Query Postgrest: SELECT * FROM users ORDER BY eco_points DESC LIMIT :limit
+     * Query Postgrest: SELECT * FROM leaderboard ORDER BY eco_points DESC LIMIT :limit
      *
      * @param limit numero massimo di risultati
      * @return lista dei top N DTO
@@ -57,7 +60,7 @@ class LeaderboardRemoteDataSourceImpl(
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select {
                         order("eco_points", Order.DESCENDING)
                         limit(limit.toLong())
@@ -71,7 +74,7 @@ class LeaderboardRemoteDataSourceImpl(
     /**
      * Recupera la posizione di un utente specifico nella leaderboard.
      *
-     * Query Postgrest: SELECT * FROM users WHERE id = :userId
+     * Query Postgrest: SELECT * FROM leaderboard WHERE id = :userId
      *
      * @param userId UUID dell'utente
      * @return DTO dell'utente, null se non trovato
@@ -81,7 +84,7 @@ class LeaderboardRemoteDataSourceImpl(
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select {
                         filter {
                             eq("id", userId)
@@ -94,35 +97,4 @@ class LeaderboardRemoteDataSourceImpl(
             }
         }
 
-    /**
-     * Aggiorna gli eco_points di un utente su Supabase.
-     *
-     * Query Postgrest: UPDATE users SET eco_points = eco_points + :points WHERE id = :userId
-     *
-     * @param userId UUID dell'utente
-     * @param points numero di punti da aggiungere (negativo per sottrarre)
-     * @return nuovo totale eco_points
-     * @throws Exception in caso di errore
-     */
-    override suspend fun updateEcoPoints(userId: String, points: Int): Int =
-        withContext(Dispatchers.IO) {
-            try {
-                val current = supabaseClient
-                    .from("users")
-                    .select { filter { eq("id", userId) } }
-                    .decodeList<LeaderboardUserDto>()
-                    .firstOrNull()?.ecoPoints ?: 0
-                val newTotal = current + points
-                supabaseClient
-                    .from("users")
-                    .update(mapOf("eco_points" to newTotal)) {
-                        filter { eq("id", userId) }
-                        select()
-                    }
-                    .decodeSingle<LeaderboardUserDto>()
-                    .ecoPoints
-            } catch (e: Exception) {
-                throw Exception("Failed to update eco_points: ${e.message}", e)
-            }
-        }
 }
