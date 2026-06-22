@@ -58,6 +58,25 @@ class RecipeViewModel(
     private val _activeFilters = MutableStateFlow<Set<RecipeFilter>>(emptySet())
     val activeFilters: StateFlow<Set<RecipeFilter>> = _activeFilters.asStateFlow()
 
+    /**
+     * Filtri disponibili nella UI, derivati dai tag distinti delle ricette caricate
+     * (deduplicati case-insensitive, ordinati per frequenza decrescente). A differenza
+     * dei filtri di generazione (premium, in [RecipeFilters]), questi sono sempre
+     * garantiti a corrispondere ad almeno una ricetta.
+     */
+    val availableFilters: StateFlow<List<RecipeFilter>> = recipeRepository.observeRecipes()
+        .map { recipes ->
+            recipes.flatMap { it.tags }
+                .map { it.trim() }
+                .filter { it.isNotBlank() }
+                .groupingBy { it.lowercase() }.eachCount()
+                .entries.sortedWith(
+                    compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }
+                )
+                .map { RecipeFilter(it.key) }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
     // ===== FAVORITE RECIPES STATE =====
 
     private val _favoriteRecipesUiState =
@@ -155,20 +174,12 @@ class RecipeViewModel(
     }
 
     /**
-     * Filtra [recipes] secondo [filters]: OR fra filtri della stessa categoria
-     * (Style, Time, Vegetarian), AND fra categorie diverse. Un set vuoto non
-     * esclude nessuna ricetta.
+     * Filtra [recipes] secondo [filters]: una ricetta è mostrata se possiede almeno
+     * uno dei tag selezionati (OR). Un set vuoto non esclude nessuna ricetta.
      */
     private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilter>): List<Recipe> {
         if (filters.isEmpty()) return recipes
-        val groups = filters.groupBy { filterCategory(it) }.values
-        return recipes.filter { recipe -> groups.all { group -> group.any { it.matches(recipe) } } }
-    }
-
-    private fun filterCategory(filter: RecipeFilter): String = when (filter) {
-        is RecipeFilter.Style -> "style"
-        is RecipeFilter.Time -> "time"
-        is RecipeFilter.Vegetarian -> "vegetarian"
+        return recipes.filter { recipe -> filters.any { it.matches(recipe) } }
     }
 
     /**

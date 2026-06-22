@@ -13,6 +13,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.LockOpen
+import androidx.compose.material.icons.filled.LockPerson
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
@@ -62,6 +64,7 @@ fun RecipeScreen(
     val uiState by viewModel.recipesUiState.collectAsState()
     val generateState by viewModel.generateRecipeUiState.collectAsState()
     val activeFilters by viewModel.activeFilters.collectAsState()
+    val availableFilters by viewModel.availableFilters.collectAsState()
     val isPremiumUnlocked by viewModel.isPremiumUnlocked.collectAsState()
     val ecoPointsBalance by viewModel.ecoPointsBalance.collectAsState()
     var showModal by remember { mutableStateOf(false) }
@@ -139,7 +142,7 @@ fun RecipeScreen(
                     .horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                RecipeFilter.all.forEach { filter ->
+                availableFilters.forEach { filter ->
                     FilterChip(
                         selected = filter in activeFilters,
                         onClick = { viewModel.toggleFilter(filter) },
@@ -446,42 +449,111 @@ private fun PremiumUnlockCard(
     modifier: Modifier = Modifier
 ) {
     val canAfford = ecoPointsBalance >= PREMIUM_FILTER_COST
-    ElevatedCard(
-        modifier = modifier.padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(16.dp)
+    val missingPoints = if (!canAfford) PREMIUM_FILTER_COST - ecoPointsBalance else 0
+
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp), // Margini leggermente più ampi per far respirare la UI
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(
+            // Usa il secondaryContainer per dare un look "Premium" e distinguerlo dal resto
+            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ),
+        elevation = CardDefaults.elevatedCardElevation(defaultElevation = 8.dp)
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Icon(
-                Icons.Filled.Lock,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary
-            )
+            // Icona Header con background circolare
+            Box(
+                modifier = Modifier
+                    .size(56.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.1f),
+                        shape = CircleShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome, // Sostituito il lucchetto con le scintille per un feel più "magico/premium"
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // Testo descrittivo (Value Proposition)
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = "Filtri Avanzati",
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = "Personalizza la tua ricetta scegliendo lo stile culinario, il tempo e la dieta.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Bottone di sblocco
             Button(
                 onClick = onUnlockPremium,
                 enabled = canAfford,
-                shape = RoundedCornerShape(12.dp)
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                ),
+                shape = RoundedCornerShape(16.dp),
+                modifier = Modifier.fillMaxWidth().height(52.dp)
             ) {
                 Icon(
-                    Icons.Filled.Eco,
+                    imageVector = if (canAfford) Icons.Filled.LockOpen else Icons.Filled.Lock,
                     contentDescription = null,
-                    modifier = Modifier.size(18.dp)
+                    modifier = Modifier.size(20.dp)
                 )
                 Spacer(Modifier.width(8.dp))
                 Text(
-                    text = "Sblocca filtri avanzati ($PREMIUM_FILTER_COST pt)",
+                    text = "Sblocca per $PREMIUM_FILTER_COST pt",
                     style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.Bold
                 )
             }
-            if (!canAfford) {
+
+            // Stato degli Eco-Punti (Feedback per l'utente)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Eco,
+                    contentDescription = null,
+                    tint = if (canAfford) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
                 Text(
-                    text = "Eco-Punti insufficienti",
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodySmall
+                    text = if (canAfford) {
+                        "Hai $ecoPointsBalance Eco-Punti disponibili"
+                    } else {
+                        "Ti mancano $missingPoints Eco-Punti"
+                    },
+                    color = if (canAfford) MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f) else MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Medium
                 )
             }
         }
