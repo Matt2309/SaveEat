@@ -41,6 +41,8 @@ data class ExpiringItemDto(
     val id: String,
     val name: String,
     val category: String,
+    @SerialName("category_key")
+    val categoryKey: String? = null,
     @SerialName("expiration_date")
     val expirationDate: String,
     val quantity: Double? = null,

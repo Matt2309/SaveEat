@@ -85,6 +85,7 @@ object HomeMapper {
                     id = item.id,
                     name = item.name,
                     category = item.category,
+                    categoryKey = item.categoryKey,
                     expirationDate = DateTimeUtils.parseIso8601OrDefault(item.expirationDate),
                     quantity = item.quantity,
                     unit = item.unit
@@ -149,6 +150,7 @@ object HomeMapper {
                     id = item.id,
                     name = item.name,
                     category = item.category,
+                    categoryKey = item.categoryKey,
                     expirationDate = DateTimeUtils.formatToIso8601(item.expirationDate),
                     quantity = item.quantity,
                     unit = item.unit

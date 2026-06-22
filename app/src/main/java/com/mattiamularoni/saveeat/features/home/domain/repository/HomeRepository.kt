@@ -82,6 +82,7 @@ data class ExpiringItem(
     val id: String,
     val name: String,
     val category: String,
+    val categoryKey: String? = null,
     val expirationDate: Long,
     val quantity: Double? = null,
     val unit: String? = null
