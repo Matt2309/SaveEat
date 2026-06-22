@@ -9,5 +9,6 @@ package com.mattiamularoni.saveeat.features.stats.domain.model
  */
 data class UserStats(
     val totalKgSaved: Double = 0.0,
-    val totalEurosSaved: Double = 0.0
+    val totalEurosSaved: Double = 0.0,
+    val totalEcoPoints: Int = 0
 )

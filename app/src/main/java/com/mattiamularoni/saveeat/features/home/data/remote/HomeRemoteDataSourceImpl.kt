@@ -72,8 +72,9 @@ class HomeRemoteDataSourceImpl(
                     .decodeList<PantryItemDto>()
 
                 val expiryThreshold = Instant.now().plus(Duration.ofDays(7)).toString()
+                // eco_points: unica fonte di verità è user_stats.total_eco_points, esposta dalla vista `leaderboard`.
                 val ecoPoints = supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select { filter { eq("id", userId) } }
                     .decodeList<LeaderboardUserDto>()
                     .firstOrNull()?.ecoPoints ?: 0
@@ -95,7 +96,7 @@ class HomeRemoteDataSourceImpl(
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select {
                         order("eco_points", Order.DESCENDING)
                         limit(limit.toLong())
@@ -110,13 +111,13 @@ class HomeRemoteDataSourceImpl(
         withContext(Dispatchers.IO) {
             try {
                 val userEcoPoints = supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select { filter { eq("id", userId) } }
                     .decodeList<LeaderboardUserDto>()
                     .firstOrNull()?.ecoPoints ?: 0
 
                 val usersAbove = supabaseClient
-                    .from("users")
+                    .from("leaderboard")
                     .select { filter { gt("eco_points", userEcoPoints) } }
                     .decodeList<LeaderboardUserDto>()
 

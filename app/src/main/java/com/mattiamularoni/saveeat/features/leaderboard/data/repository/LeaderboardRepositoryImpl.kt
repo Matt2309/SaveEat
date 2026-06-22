@@ -98,27 +98,6 @@ class LeaderboardRepositoryImpl(
             }
         }
 
-    /**
-     * Aggiorna gli eco_points di un utente.
-     *
-     * Logica:
-     * - Update remoto su Supabase users table
-     * - Ritorna nuovo valore totale
-     *
-     * @param userId UUID dell'utente
-     * @param points numero di punti da aggiungere (negativo per sottrarre)
-     * @return nuovo totale eco_points
-     * @throws Exception in caso di errore
-     */
-    override suspend fun updateEcoPoints(userId: String, points: Int): Int =
-        withContext(Dispatchers.IO) {
-            try {
-                remoteDataSource.updateEcoPoints(userId, points)
-            } catch (e: Exception) {
-                throw Exception("Failed to update eco_points: ${e.message}", e)
-            }
-        }
-
     // ===== PRIVATE HELPERS =====
 
     /**

@@ -57,18 +57,4 @@ interface LeaderboardRepository {
      * @throws Exception in caso di errore
      */
     suspend fun getTopUsers(limit: Int = 10): List<LeaderboardUser>
-
-    /**
-     * Aggiorna gli eco_points di un utente.
-     *
-     * Logica:
-     * - Update remoto su Supabase users table
-     * - Ritorna nuovo valore totale
-     *
-     * @param userId UUID dell'utente
-     * @param points numero di punti da aggiungere (negativo per sottrarre)
-     * @return nuovo totale eco_points
-     * @throws Exception in caso di errore
-     */
-    suspend fun updateEcoPoints(userId: String, points: Int): Int
 }

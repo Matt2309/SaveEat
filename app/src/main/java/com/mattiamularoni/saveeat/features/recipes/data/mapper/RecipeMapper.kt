@@ -27,8 +27,8 @@ object RecipeMapper {
     @Serializable
     private data class IngredientJson(
         val name: String,
-        val amount: Double,
-        val unit: String
+        val amount: Double = 1.0,
+        val unit: String = "qb"
     )
 
     /**
@@ -199,7 +199,8 @@ object RecipeMapper {
                 )
             }
         } catch (e: Exception) {
-            // Silently return empty list on JSON parse error
+            // Return empty list on JSON parse error, but log it so failures are visible
+            android.util.Log.e("RecipeMapper", "Failed to parse ingredients JSON: $ingredientsJson", e)
             emptyList()
         }
     }

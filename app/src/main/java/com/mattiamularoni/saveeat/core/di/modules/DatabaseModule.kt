@@ -5,6 +5,7 @@ import com.mattiamularoni.saveeat.core.data.local.AppDatabase
 import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_4_5
 import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_6_7
 import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_7_8
+import com.mattiamularoni.saveeat.core.data.local.migration.MIGRATION_8_9
 import org.koin.android.ext.koin.androidContext
 import org.koin.dsl.module
 
@@ -15,7 +16,7 @@ val databaseModule = module {
             AppDatabase::class.java,
             "saveeat.db"
         )
-            .addMigrations(MIGRATION_4_5, MIGRATION_6_7, MIGRATION_7_8)
+            .addMigrations(MIGRATION_4_5, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
             .fallbackToDestructiveMigration(dropAllTables = false)
             .build()
     }

@@ -7,6 +7,7 @@ import com.mattiamularoni.saveeat.features.home.presentation.domain.GetHomeDashb
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
 import com.mattiamularoni.saveeat.features.stats.domain.model.UserStats
 import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.RefreshUserStatsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -34,6 +35,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel(
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
     private val getUserStatsUseCase: GetUserStatsUseCase,
+    private val refreshUserStatsUseCase: RefreshUserStatsUseCase,
     private val sessionProvider: SessionProvider
 ) : ViewModel() {
 
@@ -58,6 +60,12 @@ class HomeViewModel(
 
         // Fetch fresh data from Supabase on every open; Room Flow will emit and update UI
         refreshDashboard()
+
+        // Sincronizza kg/euro/eco-punti da Supabase verso Room: getUserStatsUseCase osserva
+        // solo la cache locale, quindi senza questo gli utenti senza una riga locale vedrebbero 0.
+        viewModelScope.launch {
+            refreshUserStatsUseCase()
+        }
     }
 
     /**

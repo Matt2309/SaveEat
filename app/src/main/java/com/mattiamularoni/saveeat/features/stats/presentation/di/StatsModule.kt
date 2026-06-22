@@ -5,6 +5,7 @@ import com.mattiamularoni.saveeat.features.stats.data.remote.UserStatsRemoteData
 import com.mattiamularoni.saveeat.features.stats.data.repository.StatsRepositoryImpl
 import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseCase
+import com.mattiamularoni.saveeat.features.stats.domain.usecase.RefreshUserStatsUseCase
 import org.koin.dsl.module
 
 val statsModule = module {
@@ -19,4 +20,5 @@ val statsModule = module {
         )
     }
     factory { GetUserStatsUseCase(get()) }
+    factory { RefreshUserStatsUseCase(get()) }
 }

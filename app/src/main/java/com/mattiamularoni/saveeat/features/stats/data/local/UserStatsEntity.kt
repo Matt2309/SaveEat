@@ -17,5 +17,7 @@ data class UserStatsEntity(
     @ColumnInfo(name = "total_kg_saved")
     val totalKgSaved: Double = 0.0,
     @ColumnInfo(name = "total_euros_saved")
-    val totalEurosSaved: Double = 0.0
+    val totalEurosSaved: Double = 0.0,
+    @ColumnInfo(name = "total_eco_points")
+    val totalEcoPoints: Int = 0
 )

@@ -245,8 +245,8 @@ class RecipeViewModel(
         viewModelScope.launch {
             _isCooking.value = true
             cookRecipeUseCase.execute(recipe).fold(
-                onSuccess = {
-                    _events.emit(RecipeUiEvent.CookSuccess(CookRecipeUseCase.COOK_RECIPE_POINTS))
+                onSuccess = { pointsAwarded ->
+                    _events.emit(RecipeUiEvent.CookSuccess(pointsAwarded))
                 },
                 onFailure = { e ->
                     _events.emit(

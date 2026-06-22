@@ -144,6 +144,7 @@ fun HomeScreen(
                         firstName = firstName,
                         dashboard = state.dashboard,
                         kgSaved = userStats.totalKgSaved,
+                        ecoPoints = userStats.totalEcoPoints,
                         onSeeAllExpiring = onNavigateToPantry,
                         onOpenRecipe = onNavigateToRecipes
                     )
@@ -196,6 +197,7 @@ private fun DashboardContent(
     firstName: String,
     dashboard: HomeDashboard,
     kgSaved: Double,
+    ecoPoints: Int,
     onSeeAllExpiring: () -> Unit,
     onOpenRecipe: () -> Unit
 ) {
@@ -214,7 +216,8 @@ private fun DashboardContent(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
-            EcoPointsCard(ecoPoints = dashboard.userStats.ecoPoints)
+            // eco-punti: unica fonte di verità è user_stats (StatsRepository), non più dashboard.userStats.
+            EcoPointsCard(ecoPoints = ecoPoints)
         }
 
         // ---- In scadenza ----
