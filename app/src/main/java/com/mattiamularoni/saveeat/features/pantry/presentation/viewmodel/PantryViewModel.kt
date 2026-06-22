@@ -4,7 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
-import com.mattiamularoni.saveeat.features.leaderboard.domain.repository.LeaderboardRepository
+import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryAssetRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
@@ -33,7 +33,7 @@ class PantryViewModel(
     private val pantryRepository: PantryRepository,
     private val pantryAssetRepository: PantryAssetRepository,
     private val sessionProvider: SessionProvider,
-    private val leaderboardRepository: LeaderboardRepository
+    private val statsRepository: StatsRepository
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
     // Id rimossi in modo "ottimistico" lato UI: spariscono subito, prima che la
@@ -118,14 +118,10 @@ class PantryViewModel(
 
                 // Se in scadenza, assegna davvero gli eco-punti all'utente.
                 if (expiring) {
-                    runCatching {
-                        leaderboardRepository.updateEcoPoints(
-                            sessionProvider.getCurrentUserId(),
-                            CONSUME_POINTS
-                        )
-                    }.onFailure {
-                        android.util.Log.e("PantryViewModel", "Aggiornamento eco-punti fallito: ${it.message}")
-                    }
+                    statsRepository.addRecipeCookedStats(kg = 0.0, euros = 0.0, points = CONSUME_POINTS)
+                        .onFailure {
+                            android.util.Log.e("PantryViewModel", "Aggiornamento eco-punti fallito: ${it.message}")
+                        }
                 }
 
                 val msg = if (expiring) {
