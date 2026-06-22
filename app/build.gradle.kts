@@ -50,6 +50,11 @@ android {
             "GOOGLE_WEB_CLIENT_ID",
             localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\""
         )
+        buildConfigField(
+            "String",
+            "PIXABAY_API_KEY",
+            "\"${localProperties.getProperty("PIXABAY_API_KEY")}\""
+        )
     }
 
     signingConfigs {
@@ -116,6 +121,8 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.supabase.kt)
     implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(platform(libs.supabase.bom))
     implementation(libs.supabase.postgrest)
     implementation(libs.supabase.auth)

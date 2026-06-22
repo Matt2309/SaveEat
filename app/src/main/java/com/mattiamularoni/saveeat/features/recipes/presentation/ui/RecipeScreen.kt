@@ -16,6 +16,7 @@ import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.LockOpen
 import androidx.compose.material.icons.filled.LockPerson
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.BookmarkBorder
 import androidx.compose.material.icons.outlined.Notifications
@@ -29,11 +30,13 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilter
 import com.mattiamularoni.saveeat.features.recipes.domain.model.RecipeFilters
 import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
@@ -590,13 +593,30 @@ private fun FeaturedRecipeCard(recipe: Recipe, onClick: () -> Unit = {}) {
             .background(MaterialTheme.colorScheme.surfaceContainerLow)
             .clickable { onClick() }
     ) {
-        // Box grigio al posto della foto
+        // Foto della ricetta (da Pixabay), con fallback su un'icona se non disponibile
         Box(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(180.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        )
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!recipe.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = recipe.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
+        }
         Column(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
@@ -633,8 +653,25 @@ private fun SmallRecipeCard(recipe: Recipe, modifier: Modifier = Modifier, onCli
             modifier = Modifier
                 .fillMaxWidth()
                 .height(110.dp)
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
-        )
+                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!recipe.imageUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = recipe.imageUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Icon(
+                    Icons.Filled.Restaurant,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.outline,
+                    modifier = Modifier.size(32.dp)
+                )
+            }
+        }
         Column(
             modifier = Modifier.padding(12.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)

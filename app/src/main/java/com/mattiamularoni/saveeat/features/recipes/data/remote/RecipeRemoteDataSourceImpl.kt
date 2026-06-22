@@ -1,5 +1,6 @@
 package com.mattiamularoni.saveeat.features.recipes.data.remote
 
+import com.mattiamularoni.saveeat.features.recipes.data.remote.pixabay.PixabayRemoteDataSource
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
@@ -12,7 +13,8 @@ import java.util.UUID
 
 class RecipeRemoteDataSourceImpl(
     private val supabaseClient: SupabaseClient,
-    private val geminiRecipeDataSource: GeminiRecipeDataSource
+    private val geminiRecipeDataSource: GeminiRecipeDataSource,
+    private val pixabayRemoteDataSource: PixabayRemoteDataSource
 ) : RecipeRemoteDataSource {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -88,6 +90,10 @@ class RecipeRemoteDataSourceImpl(
                 val geminiDtos = generateGeminiDtosWithRetry(ingredients, preferences)
                 val now = Instant.now()
                 geminiDtos.map { geminiDto ->
+                    // Una foto realistica della ricetta viene recuperata da Pixabay usando la
+                    // query suggerita da Gemini; un fallimento qui non deve mai bloccare la
+                    // generazione della ricetta, quindi si ricade su imageUrl = null.
+                    val imageUrl = pixabayRemoteDataSource.fetchImageUrl(geminiDto.pixabayQuery)
                     RecipeDto(
                         id = UUID.randomUUID().toString(),
                         title = geminiDto.title,
@@ -99,7 +105,8 @@ class RecipeRemoteDataSourceImpl(
                         isVegetarian = geminiDto.isVegetarian ||
                             geminiDto.tags.any { it.contains("veget", ignoreCase = true) },
                         estimatedWeightKg = geminiDto.estimatedWeightKg,
-                        estimatedCostEuros = geminiDto.estimatedCostEuros
+                        estimatedCostEuros = geminiDto.estimatedCostEuros,
+                        imageUrl = imageUrl
                     )
                 }
             } catch (e: Exception) {

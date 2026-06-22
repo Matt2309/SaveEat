@@ -25,7 +25,7 @@ import com.mattiamularoni.saveeat.features.stats.data.local.UserStatsEntity
         HomeDashboardEntity::class,
         UserStatsEntity::class
     ],
-    version = 9,
+    version = 10,
     exportSchema = true
 )
 @TypeConverters(PantryTypeConverters::class)
