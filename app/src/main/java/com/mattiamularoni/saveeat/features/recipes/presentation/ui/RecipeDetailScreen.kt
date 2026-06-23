@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -63,6 +64,7 @@ fun RecipeDetailScreen(
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         recipeViewModel.events.collect { event ->
@@ -75,6 +77,9 @@ fun RecipeDetailScreen(
                 }
                 is RecipeUiEvent.CookError -> {
                     snackbarHostState.showSnackbar(event.message)
+                }
+                is RecipeUiEvent.AddedToShoppingList -> {
+                    snackbarHostState.showSnackbar("Aggiunto alla lista della spesa")
                 }
                 is RecipeUiEvent.PremiumUnlockFailed -> Unit // gestito da RecipeScreen
             }
@@ -138,7 +143,8 @@ fun RecipeDetailScreen(
                 recipe = recipe,
                 pantryNames = pantryNames,
                 onNavigateBack = onNavigateBack,
-                contentPadding = padding
+                contentPadding = padding,
+                onAddIngredient = { name -> recipeViewModel.addIngredientToShoppingList(name) }
             )
         }
     }
@@ -149,7 +155,8 @@ private fun DetailContent(
     recipe: Recipe,
     pantryNames: List<String>,
     onNavigateBack: () -> Unit,
-    contentPadding: PaddingValues
+    contentPadding: PaddingValues,
+    onAddIngredient: (String) -> Unit
 ) {
     var isFavorite by remember { mutableStateOf(false) }
     val steps = remember(recipe.instructions) { splitSteps(recipe.instructions) }
@@ -248,7 +255,8 @@ private fun DetailContent(
                     recipe.ingredients.forEach { ing ->
                         IngredientRow(
                             label = ingredientLabel(ing),
-                            inPantry = ingredientInPantry(ing.name, pantryNames)
+                            inPantry = ingredientInPantry(ing.name, pantryNames),
+                            onAddClick = { onAddIngredient(ing.name) }
                         )
                     }
                     if (recipe.ingredients.isEmpty()) {
@@ -311,7 +319,7 @@ private fun MetaChip(
 }
 
 @Composable
-private fun IngredientRow(label: String, inPantry: Boolean) {
+private fun IngredientRow(label: String, inPantry: Boolean, onAddClick: () -> Unit) {
     if (inPantry) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -343,7 +351,7 @@ private fun IngredientRow(label: String, inPantry: Boolean) {
                 color = MaterialTheme.colorScheme.surfaceContainerHighest,
                 modifier = Modifier.size(32.dp)
             ) {
-                IconButton(onClick = { /* TODO: aggiungi alla lista della spesa (placeholder) */ }) {
+                IconButton(onClick = onAddClick) {
                     Icon(Icons.Filled.Add, contentDescription = "Aggiungi", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                 }
             }

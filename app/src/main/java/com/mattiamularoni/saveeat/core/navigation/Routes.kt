@@ -34,3 +34,6 @@ object SettingsRoute
 
 @Serializable
 object ReceiptHistoryRoute
+
+@Serializable
+object ShoppingListRoute

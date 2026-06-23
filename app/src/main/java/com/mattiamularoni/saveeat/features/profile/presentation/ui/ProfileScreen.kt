@@ -20,6 +20,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Receipt
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Shield
+import androidx.compose.material.icons.outlined.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -42,6 +43,7 @@ fun ProfileScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToReceiptHistory: () -> Unit = {},
+    onNavigateToShoppingList: () -> Unit = {},
     viewModel: ProfileViewModel = koinViewModel()
 ) {
     val state by viewModel.state.collectAsState()
@@ -147,6 +149,8 @@ fun ProfileScreen(
                     ) {
                         Column {
                             AccountRow(Icons.Outlined.Receipt, "Cronologia Scontrini", onNavigateToReceiptHistory)
+                            RowDivider()
+                            AccountRow(Icons.Outlined.ShoppingCart, "Lista della spesa", onNavigateToShoppingList)
                             RowDivider()
                             AccountRow(Icons.Outlined.Shield, "Privacy & Sicurezza") { /* TODO */ }
                             RowDivider()
