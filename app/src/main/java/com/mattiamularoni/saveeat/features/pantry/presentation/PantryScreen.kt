@@ -30,6 +30,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.CategoryFilterRow
@@ -149,11 +150,6 @@ private fun PantryContent(
         else -> sections.filter { it.category == state.selectedCategory && it.items.isNotEmpty() }
     }
 
-    if (visibleSections.isEmpty()) {
-        EmptyContent(modifier = modifier.fillMaxSize())
-        return
-    }
-
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
@@ -165,16 +161,24 @@ private fun PantryContent(
                 onCategorySelected = onCategorySelected
             )
         }
-        items(visibleSections) { section ->
-            PantrySection(
-                title = section.title,
-                icon = section.icon,
-                items = section.items,
-                assets = state.assets,
-                onAddToShoppingList = onAddToShoppingList,
-                onDelete = onDelete,
-                onConsume = onConsume
-            )
+        if (visibleSections.isEmpty()) {
+            item {
+                EmptyContent(
+                    modifier = Modifier.fillParentMaxHeight(0.8f).fillMaxWidth()
+                )
+            }
+        } else {
+            items(visibleSections) { section ->
+                PantrySection(
+                    title = section.title,
+                    icon = section.icon,
+                    items = section.items,
+                    assets = state.assets,
+                    onAddToShoppingList = onAddToShoppingList,
+                    onDelete = onDelete,
+                    onConsume = onConsume
+                )
+            }
         }
     }
 }
@@ -250,12 +254,14 @@ private fun EmptyContent(modifier: Modifier = Modifier) {
         Text(
             text = "Dispensa vuota",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center
         )
         Text(
             text = "Aggiungi prodotti con lo scanner o manualmente.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
         )
     }
 }
