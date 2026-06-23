@@ -79,7 +79,9 @@ data class SuggestedRecipeDto(
     @SerialName("prep_time_minutes")
     val prepTimeMinutes: Int? = null,
     @SerialName("matching_ingredients")
-    val matchingIngredients: Int = 0 // Numero ingredienti che matchano con expiring items
+    val matchingIngredients: Int = 0, // Numero ingredienti che matchano con expiring items
+    @SerialName("image_url")
+    val imageUrl: String? = null
 )
 
 /**

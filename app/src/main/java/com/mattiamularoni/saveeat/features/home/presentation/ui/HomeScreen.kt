@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
@@ -273,6 +274,7 @@ private fun DashboardContent(
             SavedFoodCard(kgSaved = kgSaved, modifier = Modifier.weight(1f))
             RecipeCard(
                 title = dashboard.suggestedRecipes.firstOrNull()?.title ?: "Nessun suggerimento",
+                imageUrl = dashboard.suggestedRecipes.firstOrNull()?.imageUrl,
                 onClick = onOpenRecipe,
                 modifier = Modifier.weight(1f)
             )
@@ -480,6 +482,7 @@ private fun SavedFoodCard(kgSaved: Double, modifier: Modifier = Modifier) {
 @Composable
 private fun RecipeCard(
     title: String,
+    imageUrl: String?,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -489,10 +492,30 @@ private fun RecipeCard(
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.tertiaryContainer)
             .clickable { onClick() }
-            .padding(16.dp),
-        contentAlignment = Alignment.BottomStart
     ) {
-        Column {
+        if (!imageUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = imageUrl,
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            // Scrim per garantire leggibilità del testo bianco sopra la foto.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
+                        )
+                    )
+            )
+        }
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(16.dp)
+        ) {
             Surface(
                 color = Color.White.copy(alpha = 0.25f),
                 shape = RoundedCornerShape(4.dp)

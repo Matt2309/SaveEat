@@ -112,7 +112,8 @@ data class SuggestedRecipe(
     val title: String,
     val tags: List<String> = emptyList(),
     val prepTimeMinutes: Int? = null,
-    val matchingIngredients: Int = 0
+    val matchingIngredients: Int = 0,
+    val imageUrl: String? = null
 )
 
 /**
