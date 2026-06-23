@@ -80,8 +80,9 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
 
             val jsonText = response.text
 
-            android.util.Log.d("OUTPUT_GEMINI", "$jsonText")
-
+            if (BuildConfig.DEBUG) {
+                android.util.Log.d("OUTPUT_GEMINI", "$jsonText")
+            }
 
             if (jsonText.isNullOrBlank()) {
                 throw Exception("L'AI ha restituito una risposta vuota.")

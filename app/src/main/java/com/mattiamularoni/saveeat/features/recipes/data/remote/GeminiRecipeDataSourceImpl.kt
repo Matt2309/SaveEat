@@ -87,7 +87,9 @@ class GeminiRecipeDataSourceImpl : GeminiRecipeDataSource {
             )
 
             val jsonText = response.text
-            android.util.Log.d("OUTPUT_GEMINI_RECIPE", "$jsonText")
+            if (BuildConfig.DEBUG) {
+                android.util.Log.d("OUTPUT_GEMINI_RECIPE", "$jsonText")
+            }
 
             if (jsonText.isNullOrBlank()) {
                 throw Exception("Gemini ha restituito una risposta vuota.")
