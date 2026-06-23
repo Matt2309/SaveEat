@@ -25,6 +25,7 @@ import com.mattiamularoni.saveeat.features.settings.presentation.navigation.sett
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeDetailScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.navigation.scanReceiptScreen
+import com.mattiamularoni.saveeat.features.shopping_list.presentation.navigation.shoppingListScreen
 import io.github.jan.supabase.auth.status.SessionStatus
 import org.koin.androidx.compose.koinViewModel
 
@@ -171,9 +172,15 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                     navController.popBackStack()
                 },
                 onNavigateToSettings = { navController.navigate(SettingsRoute) },
-                onNavigateToReceiptHistory = { navController.navigate(ReceiptHistoryRoute) }
+                onNavigateToReceiptHistory = { navController.navigate(ReceiptHistoryRoute) },
+                onNavigateToShoppingList = { navController.navigate(ShoppingListRoute) }
             )
             receiptHistoryScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                }
+            )
+            shoppingListScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 }

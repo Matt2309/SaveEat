@@ -8,13 +8,15 @@ import com.mattiamularoni.saveeat.features.profile.presentation.ui.ProfileScreen
 fun NavGraphBuilder.profileScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
-    onNavigateToReceiptHistory: () -> Unit = {}
+    onNavigateToReceiptHistory: () -> Unit = {},
+    onNavigateToShoppingList: () -> Unit = {}
 ) {
     composable<ProfileRoute> {
         ProfileScreen(
             onNavigateBack = onNavigateBack,
             onNavigateToSettings = onNavigateToSettings,
-            onNavigateToReceiptHistory = onNavigateToReceiptHistory
+            onNavigateToReceiptHistory = onNavigateToReceiptHistory,
+            onNavigateToShoppingList = onNavigateToShoppingList
         )
     }
 }

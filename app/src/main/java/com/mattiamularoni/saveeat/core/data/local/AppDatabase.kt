@@ -13,6 +13,8 @@ import com.mattiamularoni.saveeat.features.pantry.data.local.PantryTypeConverter
 import com.mattiamularoni.saveeat.features.recipes.data.local.FavoriteRecipeEntity
 import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeDao
 import com.mattiamularoni.saveeat.features.recipes.data.local.RecipeEntity
+import com.mattiamularoni.saveeat.features.shopping_list.data.local.ShoppingListDao
+import com.mattiamularoni.saveeat.features.shopping_list.data.local.ShoppingListItemEntity
 import com.mattiamularoni.saveeat.features.stats.data.local.UserStatsDao
 import com.mattiamularoni.saveeat.features.stats.data.local.UserStatsEntity
 
@@ -23,9 +25,10 @@ import com.mattiamularoni.saveeat.features.stats.data.local.UserStatsEntity
         RecipeEntity::class,
         FavoriteRecipeEntity::class,
         HomeDashboardEntity::class,
-        UserStatsEntity::class
+        UserStatsEntity::class,
+        ShoppingListItemEntity::class
     ],
-    version = 10,
+    version = 11,
     exportSchema = true
 )
 @TypeConverters(PantryTypeConverters::class)
@@ -35,4 +38,5 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
     abstract fun homeDao(): HomeDao
     abstract fun userStatsDao(): UserStatsDao
+    abstract fun shoppingListDao(): ShoppingListDao
 }
