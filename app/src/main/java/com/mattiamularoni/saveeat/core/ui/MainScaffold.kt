@@ -44,8 +44,8 @@ fun MainScaffold(
 
     val navigationItems = listOf(
         BottomNavigationItem(HomeRoute, "Home", Icons.Outlined.Home),
-        BottomNavigationItem(PantryRoute, "Pantry", Icons.Outlined.ShoppingBasket),
-        BottomNavigationItem(RecipeRoute, "Recipes", Icons.Outlined.Restaurant),
+        BottomNavigationItem(PantryRoute, "Dispensa", Icons.Outlined.ShoppingBasket),
+        BottomNavigationItem(RecipeRoute, "Ricette", Icons.Outlined.Restaurant),
         BottomNavigationItem(LeaderboardRoute, "Leaderboard", Icons.Outlined.EmojiEvents)
     )
 
