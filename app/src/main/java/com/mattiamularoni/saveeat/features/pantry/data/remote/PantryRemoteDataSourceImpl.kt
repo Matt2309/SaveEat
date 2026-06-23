@@ -4,6 +4,9 @@ import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.JsonNull
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 
 /**
  * Implementazione di PantryRemoteDataSource usando Supabase Postgrest.
@@ -75,13 +78,30 @@ class PantryRemoteDataSourceImpl(
      */
     override suspend fun updatePantryItem(
         itemId: String,
-        updates: Map<String, Any>
+        updates: Map<String, Any?>
     ): PantryItemDto =
         withContext(Dispatchers.IO) {
             try {
+                // Postgrest non sa serializzare un Map<String, Any> (nessun serializer per
+                // 'Any'): convertiamo manualmente in JsonObject prima di inviarlo.
+                val payload = buildJsonObject {
+                    updates.forEach { (key, value) ->
+                        when (value) {
+                            null -> put(key, JsonNull)
+                            is String -> put(key, value)
+                            is Boolean -> put(key, value)
+                            is Int -> put(key, value)
+                            is Long -> put(key, value)
+                            is Double -> put(key, value)
+                            is Float -> put(key, value)
+                            else -> put(key, value.toString())
+                        }
+                    }
+                }
+
                 supabaseClient
                     .from("pantry_items")
-                    .update(updates) {
+                    .update(payload) {
                         filter {
                             eq("id", itemId)
                         }

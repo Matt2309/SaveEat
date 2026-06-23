@@ -162,14 +162,14 @@ class PantryRepositoryImpl(
             try {
                 val existing = pantryDao.getPantryItemById(itemId) ?: return@withContext false
 
-                val updateMap: Map<String, Any> = mapOf(
+                val updateMap: Map<String, Any?> = mapOf(
                     "name" to item.name,
                     "category" to item.category,
                     "quantity" to item.quantity,
                     "unit" to (item.unit ?: ""),
-                    "expiration_date" to (item.expirationDate?.let {
+                    "expiration_date" to item.expirationDate?.let {
                         Instant.ofEpochMilli(it).toString()
-                    } ?: ""),
+                    },
                     "status" to item.status,
                     "updated_at" to Instant.now().toString()
                 )
@@ -291,16 +291,16 @@ class PantryRepositoryImpl(
             val placeholder = pantryDao.getPantryItemById(placeholderId)
                 ?: throw Exception("Placeholder not found: $placeholderId")
 
-            val updateMap: Map<String, Any> = mapOf(
+            val updateMap: Map<String, Any?> = mapOf(
                 "is_placeholder" to false,
                 "receipt_id" to (realItem.receiptId ?: ""),
                 "name" to realItem.name,
                 "category" to realItem.category,
                 "quantity" to realItem.quantity,
                 "unit" to (realItem.unit ?: ""),
-                "expiration_date" to (realItem.expirationDate?.let {
+                "expiration_date" to realItem.expirationDate?.let {
                     Instant.ofEpochMilli(it).toString()
-                } ?: ""),
+                },
                 "status" to "ACTIVE",
                 "updated_at" to Instant.now().toString()
             )
