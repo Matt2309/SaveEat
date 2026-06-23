@@ -1,5 +1,7 @@
 package com.mattiamularoni.saveeat.features.recipes.presentation.state
 
+import com.mattiamularoni.saveeat.features.shopping_list.domain.model.ShoppingListItem
+
 /**
  * Eventi one-shot del modulo Recipes, da consumare una sola volta lato UI
  * (es. snackbar, navigazione) senza essere ri-emessi in caso di recomposition.
@@ -12,6 +14,13 @@ sealed class RecipeUiEvent {
      * @param pointsAwarded eco-punti assegnati per l'azione
      */
     data class CookSuccess(val pointsAwarded: Int) : RecipeUiEvent()
+
+    /**
+     * Un ingrediente è stato aggiunto alla lista della spesa locale.
+     *
+     * @param items lista della spesa aggiornata, da passare all'app Note
+     */
+    data class AddedToShoppingList(val items: List<ShoppingListItem>) : RecipeUiEvent()
 
     /**
      * Errore durante l'azione "segna come cucinata".

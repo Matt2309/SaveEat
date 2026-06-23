@@ -12,6 +12,8 @@ import com.mattiamularoni.saveeat.features.recipes.presentation.state.FavoriteRe
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.GenerateRecipeUiState
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiEvent
 import com.mattiamularoni.saveeat.features.recipes.presentation.state.RecipeUiState
+import com.mattiamularoni.saveeat.features.shopping_list.domain.usecase.AddToShoppingListUseCase
+import com.mattiamularoni.saveeat.features.shopping_list.domain.usecase.GetShoppingListUseCase
 import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -23,6 +25,7 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.stateIn
@@ -41,7 +44,9 @@ class RecipeViewModel(
     private val recipeRepository: RecipeRepository,
     private val generateRecipesUseCase: GenerateRecipesUseCase,
     private val cookRecipeUseCase: CookRecipeUseCase,
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
+    private val addToShoppingListUseCase: AddToShoppingListUseCase,
+    private val getShoppingListUseCase: GetShoppingListUseCase
 ) : ViewModel() {
 
     companion object {
@@ -298,6 +303,31 @@ class RecipeViewModel(
                 }
             )
             _isCooking.value = false
+        }
+    }
+
+    // ===== SHOPPING LIST OPERATIONS =====
+
+    /**
+     * Aggiunge un ingrediente mancante alla lista della spesa locale e, se
+     * l'operazione riesce, emette la lista aggiornata perché la UI possa
+     * mostrarla nell'app Note.
+     *
+     * @param name nome dell'ingrediente da aggiungere
+     */
+    fun addIngredientToShoppingList(name: String) {
+        viewModelScope.launch {
+            addToShoppingListUseCase(name).fold(
+                onSuccess = {
+                    val currentList = getShoppingListUseCase().first()
+                    _events.emit(RecipeUiEvent.AddedToShoppingList(currentList))
+                },
+                onFailure = { e ->
+                    _events.emit(
+                        RecipeUiEvent.CookError(e.message ?: "Errore nell'aggiunta alla lista della spesa")
+                    )
+                }
+            )
         }
     }
 
