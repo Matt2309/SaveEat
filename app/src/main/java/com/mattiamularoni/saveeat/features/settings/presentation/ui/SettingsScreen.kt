@@ -114,7 +114,7 @@ fun SettingsScreen(
                 InfoRow(
                     icon = Icons.Outlined.Info,
                     title = "Versione",
-                    subtitle = "v2.4.1 (Build 108)"
+                    subtitle = "v0.0.1 (Build 1)"
                 )
                 RowDivider()
                 NavRow(
@@ -142,7 +142,7 @@ fun SettingsScreen(
 
             // ---- Footer ----
             Text(
-                text = "SaveEat © 2024 · Made with ♥ for the Planet",
+                text = "SaveEat © 2026 · Made with ♥ for the Planet",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline,
                 textAlign = TextAlign.Center,
