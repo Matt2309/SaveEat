@@ -34,7 +34,7 @@ interface PantryRemoteDataSource {
      * @return DTO aggiornato
      * @throws Exception in caso di errore
      */
-    suspend fun updatePantryItem(itemId: String, updates: Map<String, Any>): PantryItemDto
+    suspend fun updatePantryItem(itemId: String, updates: Map<String, Any?>): PantryItemDto
 
     /**
      * Cancella un elemento da Supabase.

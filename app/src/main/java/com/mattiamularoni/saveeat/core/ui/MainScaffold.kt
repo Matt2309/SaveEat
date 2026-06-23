@@ -16,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -43,8 +44,8 @@ fun MainScaffold(
 
     val navigationItems = listOf(
         BottomNavigationItem(HomeRoute, "Home", Icons.Outlined.Home),
-        BottomNavigationItem(PantryRoute, "Pantry", Icons.Outlined.ShoppingBasket),
-        BottomNavigationItem(RecipeRoute, "Recipes", Icons.Outlined.Restaurant),
+        BottomNavigationItem(PantryRoute, "Dispensa", Icons.Outlined.ShoppingBasket),
+        BottomNavigationItem(RecipeRoute, "Ricette", Icons.Outlined.Restaurant),
         BottomNavigationItem(LeaderboardRoute, "Leaderboard", Icons.Outlined.EmojiEvents)
     )
 
@@ -70,7 +71,11 @@ fun MainScaffold(
 
                         NavigationBarItem(
                             icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(item.label) },
+                            label = { Text(
+                                text = item.label,
+                                overflow = TextOverflow.Ellipsis,
+                                softWrap = false
+                            ) },
                             selected = isSelected,
                             onClick = {
                                 navController.navigate(item.route) {

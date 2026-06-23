@@ -106,7 +106,8 @@ object HomeMapper {
                     title = recipe.title,
                     tags = recipe.tags?.split(",")?.map { it.trim() } ?: emptyList(),
                     prepTimeMinutes = recipe.prepTimeMinutes,
-                    matchingIngredients = recipe.matchingIngredients
+                    matchingIngredients = recipe.matchingIngredients,
+                    imageUrl = recipe.imageUrl
                 )
             },
             userStats = com.mattiamularoni.saveeat.features.home.domain.repository.UserStats(
@@ -171,7 +172,8 @@ object HomeMapper {
                     title = recipe.title,
                     tags = recipe.tags.joinToString(","),
                     prepTimeMinutes = recipe.prepTimeMinutes,
-                    matchingIngredients = recipe.matchingIngredients
+                    matchingIngredients = recipe.matchingIngredients,
+                    imageUrl = recipe.imageUrl
                 )
             },
             userStats = com.mattiamularoni.saveeat.features.home.data.remote.UserStatsDto(

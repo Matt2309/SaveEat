@@ -129,6 +129,13 @@ class RecipeViewModel(
 
     init {
         observeRecipes()
+        viewModelScope.launch {
+            try {
+                recipeRepository.syncRecipes()
+            } catch (e: Exception) {
+                android.util.Log.e("RecipeViewModel", "Sync ricette fallito: ${e.message}", e)
+            }
+        }
     }
 
     // ===== RECIPES OPERATIONS =====

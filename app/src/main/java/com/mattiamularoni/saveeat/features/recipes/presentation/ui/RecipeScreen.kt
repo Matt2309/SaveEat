@@ -172,7 +172,8 @@ fun RecipeScreen(
                     Text(
                         text = "Nessuna ricetta disponibile al momento.",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 24.dp)
+                        modifier = Modifier.padding(top = 24.dp),
+                        textAlign = TextAlign.Center
                     )
                 }
                 is RecipeUiState.Success -> {
