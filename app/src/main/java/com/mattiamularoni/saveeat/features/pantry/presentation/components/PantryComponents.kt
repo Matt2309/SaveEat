@@ -26,6 +26,8 @@ import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.key
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -147,15 +149,17 @@ fun PantrySection(
         }
 
         items.forEach { item ->
-            if (item.isPlaceholder) {
-                PlaceholderItemCard(item = item, onAddToShoppingList = onAddToShoppingList)
-            } else {
-                SwipeablePantryItemCard(
-                    item = item,
-                    assets = assets,
-                    onDelete = onDelete,
-                    onConsume = onConsume
-                )
+            key(item.id) {
+                if (item.isPlaceholder) {
+                    PlaceholderItemCard(item = item, onAddToShoppingList = onAddToShoppingList)
+                } else {
+                    SwipeablePantryItemCard(
+                        item = item,
+                        assets = assets,
+                        onDelete = onDelete,
+                        onConsume = onConsume
+                    )
+                }
             }
         }
     }
@@ -170,14 +174,27 @@ private fun SwipeablePantryItemCard(
     onConsume: (String) -> Unit
 ) {
     val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> { onDelete(item.id); true }   // destra → elimina
-                SwipeToDismissBoxValue.EndToStart -> { onConsume(item.id); true }  // sinistra → consumato
-                SwipeToDismissBoxValue.Settled -> false
-            }
-        }
+        // Predicate puro: nessun effetto qui, altrimenti Compose può invocarlo più di una
+        // volta per uno stesso swipe e l'azione (e il relativo snackbar) scatterebbe due volte.
+        confirmValueChange = { it != SwipeToDismissBoxValue.Settled }
     )
+
+    // L'azione vera viene eseguita una sola volta quando currentValue cambia, poi il box
+    // viene resettato così lo sfondo colorato collassa invece di restare visibile.
+    LaunchedEffect(dismissState.currentValue) {
+        when (dismissState.currentValue) {
+            SwipeToDismissBoxValue.StartToEnd -> { // destra → elimina
+                onDelete(item.id)
+                dismissState.reset()
+            }
+            SwipeToDismissBoxValue.EndToStart -> { // sinistra → consumato
+                onConsume(item.id)
+                dismissState.reset()
+            }
+            SwipeToDismissBoxValue.Settled -> Unit
+        }
+    }
+
     // +5 punti se il prodotto è in scadenza (CRITICAL/MEDIUM), 0 se a lunga conservazione
     val consumePoints = if (
         item.freshnessLevel == FreshnessLevel.CRITICAL ||

@@ -110,7 +110,7 @@ class PantryViewModel(
         val item = allItems.value.firstOrNull { it.id == itemId }
         val expiring = item?.freshnessLevel == FreshnessLevel.CRITICAL ||
                 item?.freshnessLevel == FreshnessLevel.MEDIUM
-        _removedIds.value = _removedIds.value + itemId // sparisce subito dalla UI
+        _removedIds.value += itemId // sparisce subito dalla UI
         viewModelScope.launch {
             try {
                 // "Consumato" = rimosso dalla dispensa.
