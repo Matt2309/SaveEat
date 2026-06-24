@@ -306,6 +306,12 @@ class RecipeViewModel(
         }
     }
 
+    /**
+     * Calcola gli eco-punti che la ricetta assegnerebbe se cucinata ora (anteprima),
+     * usando la stessa formula di CookRecipeUseCase applicata alla cucinata reale.
+     */
+    fun pointsPreviewFor(recipe: Recipe): Int = CookRecipeUseCase.pointsFor(recipe)
+
     // ===== SHOPPING LIST OPERATIONS =====
 
     /**

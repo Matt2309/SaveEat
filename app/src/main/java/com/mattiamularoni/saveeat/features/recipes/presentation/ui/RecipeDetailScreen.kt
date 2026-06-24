@@ -12,8 +12,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.RestaurantMenu
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
@@ -144,7 +142,8 @@ fun RecipeDetailScreen(
                 pantryNames = pantryNames,
                 onNavigateBack = onNavigateBack,
                 contentPadding = padding,
-                onAddIngredient = { name -> recipeViewModel.addIngredientToShoppingList(name) }
+                onAddIngredient = { name -> recipeViewModel.addIngredientToShoppingList(name) },
+                ecoPoints = recipeViewModel.pointsPreviewFor(recipe)
             )
         }
     }
@@ -156,9 +155,9 @@ private fun DetailContent(
     pantryNames: List<String>,
     onNavigateBack: () -> Unit,
     contentPadding: PaddingValues,
-    onAddIngredient: (String) -> Unit
+    onAddIngredient: (String) -> Unit,
+    ecoPoints: Int
 ) {
-    var isFavorite by remember { mutableStateOf(false) }
     val steps = remember(recipe.instructions) { splitSteps(recipe.instructions) }
 
     Column(
@@ -191,17 +190,10 @@ private fun DetailContent(
             }
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                    .padding(start = 12.dp, top = 4.dp)
             ) {
                 CircleIconButton(Icons.AutoMirrored.Filled.ArrowBack, "Indietro") { onNavigateBack() }
-                CircleIconButton(
-                    if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                    "Preferiti",
-                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
-                ) { isFavorite = !isFavorite }
             }
         }
 
@@ -234,10 +226,9 @@ private fun DetailContent(
                     container = MaterialTheme.colorScheme.surfaceContainerLow,
                     content = MaterialTheme.colorScheme.onSurface
                 )
-                // Placeholder: punti
                 MetaChip(
                     icon = Icons.Filled.Eco,
-                    text = "+50 pt",
+                    text = "+$ecoPoints pt",
                     container = MaterialTheme.colorScheme.secondaryContainer,
                     content = MaterialTheme.colorScheme.onSecondaryContainer
                 )

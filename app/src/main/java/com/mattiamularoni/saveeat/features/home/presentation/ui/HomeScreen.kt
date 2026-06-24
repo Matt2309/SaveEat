@@ -166,28 +166,36 @@ private fun HomeTopBar(
     onAvatarClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {}
 ) {
-    Row(
+    Box(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding()
-            .padding(horizontal = 16.dp)
-            .height(56.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .height(56.dp)
     ) {
         // Avatar condiviso (foto locale > foto Google > icona)
-        com.mattiamularoni.saveeat.core.ui.UserAvatar(size = 32.dp, onClick = onAvatarClick)
+        com.mattiamularoni.saveeat.core.ui.UserAvatar(
+            size = 32.dp,
+            onClick = onAvatarClick,
+            modifier = Modifier
+                .align(Alignment.CenterStart)
+                .padding(start = 16.dp)
+        )
 
         Text(
             text = "SaveEat",
             color = MaterialTheme.colorScheme.primary,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f),
-            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+            modifier = Modifier.align(Alignment.Center)
         )
 
-        IconButton(onClick = onNotificationsClick) {
+        IconButton(
+            onClick = onNotificationsClick,
+            modifier = Modifier
+                .align(Alignment.CenterEnd)
+                .padding(end = 8.dp)
+        ) {
             Icon(
                 imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
