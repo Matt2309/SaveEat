@@ -175,7 +175,8 @@ private fun SettingsTopBar(onNavigateBack: () -> Unit) {
             color = MaterialTheme.colorScheme.primary,
             fontSize = 22.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.weight(1f),
+            textAlign = TextAlign.Center
         )
         IconButton(onClick = { /* TODO: ricerca impostazioni */ }) {
             Icon(
