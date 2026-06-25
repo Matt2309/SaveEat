@@ -1,14 +1,26 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.kotlin.serialization)
+    id("org.jlleitschuh.gradle.ktlint")
+}
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
 }
 
 android {
     namespace = "com.mattiamularoni.saveeat"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version =
+            release(36) {
+                minorApiLevel = 1
+            }
     }
 
     defaultConfig {
@@ -19,6 +31,41 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField(
+            "String",
+            "SUPABASE_URL",
+            localProperties.getProperty("SUPABASE_URL") ?: "\"\"",
+        )
+        buildConfigField(
+            "String",
+            "SUPABASE_ANON_KEY",
+            localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\"",
+        )
+        buildConfigField(
+            "String",
+            "GEMINI_API_KEY",
+            "\"${localProperties.getProperty("GEMINI_API_KEY")}\"",
+        )
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\"",
+        )
+        buildConfigField(
+            "String",
+            "PIXABAY_API_KEY",
+            "\"${localProperties.getProperty("PIXABAY_API_KEY")}\"",
+        )
+    }
+
+    signingConfigs {
+        create("sharedDebug") {
+            storeFile = file("keystore/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -26,8 +73,11 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
+        }
+        debug {
+            signingConfig = signingConfigs.getByName("sharedDebug")
         }
     }
     compileOptions {
@@ -36,18 +86,52 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
+}
+
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.process)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    implementation(libs.androidx.navigation.common.ktx)
+    implementation(libs.work.runtime.ktx)
+    ksp(libs.androidx.room.compiler)
+    implementation(libs.koin.android)
+    implementation(libs.koin.androidx.compose)
+    implementation(libs.koin.androidx.compose.navigation)
+    implementation(libs.coil.compose)
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services)
+    implementation(libs.google.identity.googleid)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.supabase.kt)
+    implementation(libs.ktor.client.android)
+    implementation(libs.ktor.client.content.negotiation)
+    implementation(libs.ktor.serialization.kotlinx.json)
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.storage)
+    implementation(libs.generativeai)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.koin.workmanager)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
