@@ -8,10 +8,10 @@ import kotlinx.coroutines.flow.first
 
 class GenerateRecipesUseCase(
     private val pantryRepository: PantryRepository,
-    private val recipeRepository: RecipeRepository
+    private val recipeRepository: RecipeRepository,
 ) {
-    suspend operator fun invoke(filters: RecipeFilters): Result<List<Recipe>> {
-        return try {
+    suspend operator fun invoke(filters: RecipeFilters): Result<List<Recipe>> =
+        try {
             val expiringItems = pantryRepository.getExpiringItems(7).first()
             val ingredients = expiringItems.map { it.name }
             val preferences = buildPreferencesMap(filters)
@@ -20,7 +20,6 @@ class GenerateRecipesUseCase(
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 
     private fun buildPreferencesMap(filters: RecipeFilters): Map<String, Any> {
         val prefs = mutableMapOf<String, Any>()

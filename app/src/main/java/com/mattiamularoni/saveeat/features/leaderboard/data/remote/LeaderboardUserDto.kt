@@ -18,5 +18,5 @@ data class LeaderboardUserDto(
     @SerialName("avatar_url")
     val avatarUrl: String?,
     @SerialName("eco_points")
-    val ecoPoints: Int
+    val ecoPoints: Int,
 )

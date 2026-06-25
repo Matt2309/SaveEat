@@ -17,7 +17,6 @@ import com.mattiamularoni.saveeat.features.auth.domain.model.BiometricAvailabili
  * conferma di identità da qualsiasi ViewModel sia visibile agli altri.
  */
 interface BiometricRepository {
-
     /**
      * Verifica se il dispositivo supporta la biometria e se l'utente
      * ha registrato almeno una credenziale biometrica valida.

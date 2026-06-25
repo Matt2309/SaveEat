@@ -16,9 +16,8 @@ import kotlinx.coroutines.flow.Flow
  * NOTE: userId è gestito internamente nel repository (MVP: "test-user-uuid")
  */
 class GetHomeDashboardUseCase(
-    private val homeRepository: HomeRepository
+    private val homeRepository: HomeRepository,
 ) {
-
     /**
      * Osserva i dati della dashboard Home per l'utente corrente.
      *
@@ -27,9 +26,7 @@ class GetHomeDashboardUseCase(
      *
      * @return Flow<HomeDashboard> che emette dati aggregati dashboard
      */
-    operator fun invoke(): Flow<HomeDashboard?> {
-        return homeRepository.observeHomeDashboard()
-    }
+    operator fun invoke(): Flow<HomeDashboard?> = homeRepository.observeHomeDashboard()
 
     /**
      * Refresh manuale della dashboard da Supabase.
@@ -38,9 +35,7 @@ class GetHomeDashboardUseCase(
      *
      * @return true se refresh riuscito, false se errore (ma fallback alla cache rimane)
      */
-    suspend fun refresh(): Boolean {
-        return homeRepository.refreshHomeDashboard()
-    }
+    suspend fun refresh(): Boolean = homeRepository.refreshHomeDashboard()
 
     /**
      * Recupera snapshot singolo della dashboard dalla cache.
@@ -49,7 +44,5 @@ class GetHomeDashboardUseCase(
      *
      * @return HomeDashboard se disponibile in cache, null altrimenti
      */
-    suspend fun getCachedDashboard(): HomeDashboard? {
-        return homeRepository.getHomeDashboard()
-    }
+    suspend fun getCachedDashboard(): HomeDashboard? = homeRepository.getHomeDashboard()
 }

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.jsonPrimitive
 
 interface SessionProvider {
     fun getCurrentUserId(): String
+
     fun getUserDisplayName(): String
 
     /** URL della foto profilo da Google (metadati auth), null se non presente. */
@@ -17,9 +18,8 @@ interface SessionProvider {
  * Estrae l'ID e i metadati direttamente dalla sessione attiva di Supabase.
  */
 class AuthSessionProviderImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : SessionProvider {
-
     override fun getCurrentUserId(): String {
         // Estrae l'ID dell'utente attualmente loggato (grazie al token JWT)
         return supabaseClient.auth.currentUserOrNull()?.id ?: ""

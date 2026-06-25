@@ -4,16 +4,15 @@ import com.mattiamularoni.saveeat.features.pantry.data.remote.PantryItemDto
 import io.github.jan.supabase.SupabaseClient
 import io.github.jan.supabase.postgrest.from
 import io.github.jan.supabase.postgrest.query.Order
-import java.time.Duration
-import java.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import java.time.Duration
+import java.time.Instant
 
 class HomeRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : HomeRemoteDataSource {
-
     override suspend fun getHomeDashboard(userId: String): HomeDashboardDto =
         withContext(Dispatchers.IO) {
             try {
@@ -32,7 +31,7 @@ class HomeRemoteDataSourceImpl(
                     suggestedRecipes = suggestedRecipes,
                     userStats = userStats,
                     userProfile = userProfile.copy(rankPosition = rankPosition),
-                    lastSyncedAt = System.currentTimeMillis().toString()
+                    lastSyncedAt = System.currentTimeMillis().toString(),
                 )
             } catch (e: Exception) {
                 throw Exception("Failed to fetch home dashboard: ${e.message}", e)
@@ -51,8 +50,7 @@ class HomeRemoteDataSourceImpl(
                             lte("expiration_date", sevenDaysFromNow)
                         }
                         order("expiration_date", Order.ASCENDING)
-                    }
-                    .decodeList<ExpiringItemDto>()
+                    }.decodeList<ExpiringItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch expiring items: ${e.message}", e)
             }
@@ -61,31 +59,34 @@ class HomeRemoteDataSourceImpl(
     override suspend fun getUserStats(userId: String): UserStatsDto =
         withContext(Dispatchers.IO) {
             try {
-                val activeItems = supabaseClient
-                    .from("pantry_items")
-                    .select {
-                        filter {
-                            eq("user_id", userId)
-                            eq("status", "ACTIVE")
-                        }
-                    }
-                    .decodeList<PantryItemDto>()
+                val activeItems =
+                    supabaseClient
+                        .from("pantry_items")
+                        .select {
+                            filter {
+                                eq("user_id", userId)
+                                eq("status", "ACTIVE")
+                            }
+                        }.decodeList<PantryItemDto>()
 
                 val expiryThreshold = Instant.now().plus(Duration.ofDays(7)).toString()
                 // eco_points: unica fonte di verità è user_stats.total_eco_points, esposta dalla vista `leaderboard`.
-                val ecoPoints = supabaseClient
-                    .from("leaderboard")
-                    .select { filter { eq("id", userId) } }
-                    .decodeList<LeaderboardUserDto>()
-                    .firstOrNull()?.ecoPoints ?: 0
+                val ecoPoints =
+                    supabaseClient
+                        .from("leaderboard")
+                        .select { filter { eq("id", userId) } }
+                        .decodeList<LeaderboardUserDto>()
+                        .firstOrNull()
+                        ?.ecoPoints ?: 0
 
                 UserStatsDto(
                     totalItems = activeItems.size,
-                    expiringCount = activeItems.count {
-                        it.expirationDate != null && it.expirationDate <= expiryThreshold
-                    },
+                    expiringCount =
+                        activeItems.count {
+                            it.expirationDate != null && it.expirationDate <= expiryThreshold
+                        },
                     activePlaceholders = activeItems.count { it.isPlaceholder },
-                    ecoPoints = ecoPoints
+                    ecoPoints = ecoPoints,
                 )
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user stats: ${e.message}", e)
@@ -100,8 +101,7 @@ class HomeRemoteDataSourceImpl(
                     .select {
                         order("eco_points", Order.DESCENDING)
                         limit(limit.toLong())
-                    }
-                    .decodeList<LeaderboardUserDto>()
+                    }.decodeList<LeaderboardUserDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch top leaderboard users: ${e.message}", e)
             }
@@ -110,16 +110,19 @@ class HomeRemoteDataSourceImpl(
     override suspend fun getUserRankPosition(userId: String): Int =
         withContext(Dispatchers.IO) {
             try {
-                val userEcoPoints = supabaseClient
-                    .from("leaderboard")
-                    .select { filter { eq("id", userId) } }
-                    .decodeList<LeaderboardUserDto>()
-                    .firstOrNull()?.ecoPoints ?: 0
+                val userEcoPoints =
+                    supabaseClient
+                        .from("leaderboard")
+                        .select { filter { eq("id", userId) } }
+                        .decodeList<LeaderboardUserDto>()
+                        .firstOrNull()
+                        ?.ecoPoints ?: 0
 
-                val usersAbove = supabaseClient
-                    .from("leaderboard")
-                    .select { filter { gt("eco_points", userEcoPoints) } }
-                    .decodeList<LeaderboardUserDto>()
+                val usersAbove =
+                    supabaseClient
+                        .from("leaderboard")
+                        .select { filter { gt("eco_points", userEcoPoints) } }
+                        .decodeList<LeaderboardUserDto>()
 
                 usersAbove.size + 1
             } catch (e: Exception) {
@@ -154,23 +157,27 @@ class HomeRemoteDataSourceImpl(
 
     private fun matchRecipesToExpiringItems(
         recipes: List<SuggestedRecipeDto>,
-        expiringItems: List<ExpiringItemDto>
+        expiringItems: List<ExpiringItemDto>,
     ): List<SuggestedRecipeDto> {
         val expiringNames = expiringItems.map { it.name.lowercase() }
 
-        val scoredRecipes = recipes.map { recipe ->
-            val tagList: List<String> = try {
-                Json.decodeFromString<List<String>>(recipe.tags ?: "[]")
-                    .map { it.lowercase() }
-            } catch (_: Exception) {
-                recipe.title.lowercase().split(" ")
-            }
+        val scoredRecipes =
+            recipes.map { recipe ->
+                val tagList: List<String> =
+                    try {
+                        Json
+                            .decodeFromString<List<String>>(recipe.tags ?: "[]")
+                            .map { it.lowercase() }
+                    } catch (_: Exception) {
+                        recipe.title.lowercase().split(" ")
+                    }
 
-            val matchCount = tagList.count { tag ->
-                expiringNames.any { name -> name.contains(tag) || tag.contains(name) }
+                val matchCount =
+                    tagList.count { tag ->
+                        expiringNames.any { name -> name.contains(tag) || tag.contains(name) }
+                    }
+                recipe.copy(matchingIngredients = matchCount)
             }
-            recipe.copy(matchingIngredients = matchCount)
-        }
 
         return scoredRecipes
             .filter { it.matchingIngredients > 0 }

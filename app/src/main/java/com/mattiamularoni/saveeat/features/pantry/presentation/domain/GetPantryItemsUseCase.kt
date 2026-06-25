@@ -1,24 +1,23 @@
 package com.mattiamularoni.saveeat.features.pantry.presentation.domain
 
-import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem as DomainPantryItem
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryCategory
 import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
+import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem as DomainPantryItem
 
 class GetPantryItemsUseCase(
-    private val pantryRepository: PantryRepository
+    private val pantryRepository: PantryRepository,
 ) {
-    operator fun invoke(): Flow<List<PantryItem>> {
-        return pantryRepository.observePantryItems().map { items ->
+    operator fun invoke(): Flow<List<PantryItem>> =
+        pantryRepository.observePantryItems().map { items ->
             items.map { item -> item.toUiModel() }
         }
-    }
 
     private fun DomainPantryItem.toUiModel(): PantryItem {
         val freshnessLevel = resolveFreshness(expirationDate)
@@ -32,7 +31,7 @@ class GetPantryItemsUseCase(
             imageUrl = null,
             category = mapDomainCategory(category),
             isPlaceholder = isPlaceholder,
-            categoryKey = categoryKey
+            categoryKey = categoryKey,
         )
     }
 
@@ -40,14 +39,13 @@ class GetPantryItemsUseCase(
      * Mappa il valore stringa category dal domain al PantryCategory enum.
      * Fallback a PANTRY se categoria non riconosciuta.
      */
-    private fun mapDomainCategory(categoryString: String): PantryCategory {
-        return when (categoryString.uppercase()) {
+    private fun mapDomainCategory(categoryString: String): PantryCategory =
+        when (categoryString.uppercase()) {
             "FRIDGE" -> PantryCategory.FRIDGE
             "FREEZER" -> PantryCategory.FREEZER
             "PANTRY" -> PantryCategory.PANTRY
             else -> PantryCategory.PANTRY
         }
-    }
 }
 
 private fun resolveFreshness(expirationDate: Long?): FreshnessLevel {
@@ -73,12 +71,15 @@ private fun formatExpirationLabel(expirationDate: Long?): String {
     }
 }
 
-private fun formatQuantity(quantity: Double, unit: String?): String {
-    val formattedQuantity = if (quantity % 1.0 == 0.0) {
-        quantity.toLong().toString()
-    } else {
-        quantity.toString().trimEnd('0').trimEnd('.')
-    }
+private fun formatQuantity(
+    quantity: Double,
+    unit: String?,
+): String {
+    val formattedQuantity =
+        if (quantity % 1.0 == 0.0) {
+            quantity.toLong().toString()
+        } else {
+            quantity.toString().trimEnd('0').trimEnd('.')
+        }
     return if (unit.isNullOrBlank()) formattedQuantity else "$formattedQuantity $unit"
 }
-

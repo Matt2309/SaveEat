@@ -17,7 +17,10 @@ package com.mattiamularoni.saveeat.core.util
  * @param pantryName nome dell'elemento della dispensa
  * @return true se i due nomi sono considerati corrispondenti
  */
-fun ingredientMatchesPantryName(ingredientName: String, pantryName: String): Boolean {
+fun ingredientMatchesPantryName(
+    ingredientName: String,
+    pantryName: String,
+): Boolean {
     val key = ingredientName.lowercase().substringBefore("(").trim()
     if (key.isBlank()) return false
     val pantry = pantryName.lowercase().trim()

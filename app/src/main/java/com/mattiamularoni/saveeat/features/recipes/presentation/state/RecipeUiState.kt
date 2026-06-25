@@ -24,7 +24,7 @@ sealed class RecipeUiState {
      */
     data class Success(
         val recipes: List<Recipe> = emptyList(),
-        val isRefreshing: Boolean = false
+        val isRefreshing: Boolean = false,
     ) : RecipeUiState()
 
     /**
@@ -35,7 +35,7 @@ sealed class RecipeUiState {
      */
     data class Error(
         val message: String,
-        val exception: Exception? = null
+        val exception: Exception? = null,
     ) : RecipeUiState()
 
     /**
@@ -62,7 +62,7 @@ sealed class FavoriteRecipeUiState {
      * @param recipes lista di ricette preferite
      */
     data class Success(
-        val recipes: List<Recipe> = emptyList()
+        val recipes: List<Recipe> = emptyList(),
     ) : FavoriteRecipeUiState()
 
     /**
@@ -73,7 +73,7 @@ sealed class FavoriteRecipeUiState {
      */
     data class Error(
         val message: String,
-        val exception: Exception? = null
+        val exception: Exception? = null,
     ) : FavoriteRecipeUiState()
 
     /**
@@ -85,7 +85,7 @@ sealed class FavoriteRecipeUiState {
 /**
  * Modello dello stato UI per la generazione ricette intelligenti.
  *
-     */
+ */
 sealed class GenerateRecipeUiState {
     /**
      * Stato iniziale (nessuna generazione in corso).
@@ -98,7 +98,7 @@ sealed class GenerateRecipeUiState {
      * @param progress percentuale di avanzamento (0-100)
      */
     data class Generating(
-        val progress: Int = 0
+        val progress: Int = 0,
     ) : GenerateRecipeUiState()
 
     /**
@@ -107,7 +107,7 @@ sealed class GenerateRecipeUiState {
      * @param recipes lista di ricette generate dall'AI
      */
     data class Success(
-        val recipes: List<Recipe> = emptyList()
+        val recipes: List<Recipe> = emptyList(),
     ) : GenerateRecipeUiState()
 
     /**
@@ -118,6 +118,6 @@ sealed class GenerateRecipeUiState {
      */
     data class Error(
         val message: String,
-        val exception: Exception? = null
+        val exception: Exception? = null,
     ) : GenerateRecipeUiState()
 }

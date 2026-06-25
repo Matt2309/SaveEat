@@ -9,7 +9,7 @@ enum class RankingBadge {
     GOLD,
     SILVER,
     BRONZE,
-    NONE
+    NONE,
 }
 
 /**
@@ -25,5 +25,5 @@ data class LeaderboardUserUi(
     val rank: Int,
     val formattedPoints: String,
     val badge: RankingBadge,
-    val ecoTitle: EcoTitle
+    val ecoTitle: EcoTitle,
 )

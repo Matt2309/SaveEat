@@ -13,12 +13,12 @@ import androidx.room.PrimaryKey
  */
 @Entity(
     tableName = "shopping_list_items",
-    indices = [Index(value = ["normalizedName"], unique = true)]
+    indices = [Index(value = ["normalizedName"], unique = true)],
 )
 data class ShoppingListItemEntity(
     @PrimaryKey
     val id: String,
     val name: String,
     val normalizedName: String,
-    val addedAt: Long
+    val addedAt: Long,
 )

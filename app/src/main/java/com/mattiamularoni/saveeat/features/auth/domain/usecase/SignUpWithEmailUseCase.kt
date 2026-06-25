@@ -9,9 +9,14 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.AuthRepository
  * Allows domain layer to maintain clean separation from data layer.
  */
 class SignUpWithEmailUseCase(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) {
-    suspend operator fun invoke(email: String, password: String, firstName: String, lastName: String) {
+    suspend operator fun invoke(
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String,
+    ) {
         authRepository.signUpWithEmail(email, password, firstName, lastName)
     }
 }

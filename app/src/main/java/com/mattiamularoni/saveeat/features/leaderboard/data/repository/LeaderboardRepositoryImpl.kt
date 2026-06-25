@@ -19,9 +19,8 @@ import kotlinx.coroutines.withContext
  * - Esporre dati come Flow per streaming
  */
 class LeaderboardRepositoryImpl(
-    private val remoteDataSource: LeaderboardRemoteDataSource
+    private val remoteDataSource: LeaderboardRemoteDataSource,
 ) : LeaderboardRepository {
-
     /**
      * Osserva la leaderboard globale con aggiornamenti real-time.
      *
@@ -32,14 +31,15 @@ class LeaderboardRepositoryImpl(
      *
      * @return Flow della lista leaderboard aggiornato
      */
-    override fun observeLeaderboard(): Flow<List<LeaderboardUser>> = flow {
-        try {
-            val users = refreshLeaderboardInternal()
-            emit(users)
-        } catch (e: Exception) {
-            throw Exception("Failed to observe leaderboard: ${e.message}", e)
+    override fun observeLeaderboard(): Flow<List<LeaderboardUser>> =
+        flow {
+            try {
+                val users = refreshLeaderboardInternal()
+                emit(users)
+            } catch (e: Exception) {
+                throw Exception("Failed to observe leaderboard: ${e.message}", e)
+            }
         }
-    }
 
     /**
      * Sincronizza la leaderboard con Supabase.
@@ -49,14 +49,15 @@ class LeaderboardRepositoryImpl(
      * @return numero di utenti sincronizzati
      * @throws Exception in caso di errore rete o parsing
      */
-    override suspend fun refreshLeaderboard(): Int = withContext(Dispatchers.IO) {
-        try {
-            val users = refreshLeaderboardInternal()
-            users.size
-        } catch (e: Exception) {
-            throw Exception("Sync failed: ${e.message}", e)
+    override suspend fun refreshLeaderboard(): Int =
+        withContext(Dispatchers.IO) {
+            try {
+                val users = refreshLeaderboardInternal()
+                users.size
+            } catch (e: Exception) {
+                throw Exception("Sync failed: ${e.message}", e)
+            }
         }
-    }
 
     /**
      * Recupera la posizione dell'utente corrente nella leaderboard.
@@ -91,7 +92,8 @@ class LeaderboardRepositoryImpl(
         withContext(Dispatchers.IO) {
             try {
                 val dtos = remoteDataSource.getTopUsers(limit)
-                LeaderboardMapper.dtosToDomain(dtos)
+                LeaderboardMapper
+                    .dtosToDomain(dtos)
                     .mapIndexed { index, user -> user.copy(rank = index + 1) }
             } catch (e: Exception) {
                 throw Exception("Failed to fetch top users: ${e.message}", e)
@@ -108,7 +110,8 @@ class LeaderboardRepositoryImpl(
     private suspend fun refreshLeaderboardInternal(): List<LeaderboardUser> =
         withContext(Dispatchers.IO) {
             val dtos = remoteDataSource.getLeaderboard()
-            LeaderboardMapper.dtosToDomain(dtos)
+            LeaderboardMapper
+                .dtosToDomain(dtos)
                 .mapIndexed { index, user -> user.copy(rank = index + 1) }
         }
 }

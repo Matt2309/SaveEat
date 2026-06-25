@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Eco
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -25,20 +24,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import coil.compose.AsyncImage
 import com.mattiamularoni.saveeat.BuildConfig
-import com.mattiamularoni.saveeat.features.notifications.data.worker.NotificationWorker
 import com.mattiamularoni.saveeat.features.home.domain.repository.ExpiringItem
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.presentation.state.HomeUiState
 import com.mattiamularoni.saveeat.features.home.presentation.viewmodel.HomeViewModel
+import com.mattiamularoni.saveeat.features.notifications.data.worker.NotificationWorker
 import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ExpandableFab
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormDialog
@@ -60,7 +59,7 @@ fun HomeScreen(
     onNavigateToRecipes: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     pantryViewModel: PantryViewModel = koinViewModel(),
-    homeViewModel: HomeViewModel = koinViewModel()
+    homeViewModel: HomeViewModel = koinViewModel(),
 ) {
     var showManualForm by remember { mutableStateOf(false) }
     val uiState by homeViewModel.uiState.collectAsState()
@@ -71,14 +70,15 @@ fun HomeScreen(
             onSubmit = { formState ->
                 pantryViewModel.onManualItemInsert(formState)
                 showManualForm = false
-            }
+            },
         )
     }
 
-    val firstName = homeViewModel.currentUserName
-        .trim()
-        .substringBefore(' ')
-        .ifBlank { "Utente" }
+    val firstName =
+        homeViewModel.currentUserName
+            .trim()
+            .substringBefore(' ')
+            .ifBlank { "Utente" }
     val isRefreshing by homeViewModel.isRefreshing.collectAsState()
     val context = LocalContext.current
 
@@ -91,7 +91,9 @@ fun HomeScreen(
         containerColor = MaterialTheme.colorScheme.surface,
         // Gli insets sono già gestiti da MainScaffold: evitiamo il doppio inset
         // (striscia bianca in basso + FAB troppo in alto).
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
+        contentWindowInsets =
+            androidx.compose.foundation.layout
+                .WindowInsets(0),
         topBar = {
             HomeTopBar(
                 avatarUrl = (uiState as? HomeUiState.Success)?.dashboard?.userProfile?.avatarUrl,
@@ -99,46 +101,49 @@ fun HomeScreen(
                 onAvatarClick = onNavigateToProfile,
                 onNotificationsClick = {
                     if (BuildConfig.DEBUG) {
-                        WorkManager.getInstance(context)
+                        WorkManager
+                            .getInstance(context)
                             .enqueue(OneTimeWorkRequestBuilder<NotificationWorker>().build())
                     }
-                }
+                },
             )
         },
         floatingActionButton = {
             ExpandableFab(
                 onScannerClick = onNavigateToScan,
-                onManualInsertClick = { showManualForm = true }
+                onManualInsertClick = { showManualForm = true },
             )
-        }
+        },
     ) { paddingValues ->
         PullToRefreshBox(
             isRefreshing = isRefreshing,
             onRefresh = { homeViewModel.refreshDashboard() },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             when (val state = uiState) {
                 is HomeUiState.Loading -> {
                     com.mattiamularoni.saveeat.core.ui.SaveEatLoadingSkeleton(
-                        modifier = Modifier.align(Alignment.TopCenter)
+                        modifier = Modifier.align(Alignment.TopCenter),
                     )
                 }
                 is HomeUiState.Error -> {
                     Text(
                         text = state.message,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .padding(24.dp)
+                        modifier =
+                            Modifier
+                                .align(Alignment.Center)
+                                .padding(24.dp),
                     )
                 }
                 is HomeUiState.Empty -> {
                     EmptyState(
                         firstName = firstName,
                         onScan = onNavigateToScan,
-                        modifier = Modifier.align(Alignment.Center)
+                        modifier = Modifier.align(Alignment.Center),
                     )
                 }
                 is HomeUiState.Success -> {
@@ -151,7 +156,7 @@ fun HomeScreen(
                         ecoPoints = userStats.totalEcoPoints,
                         assets = pantryAssets,
                         onSeeAllExpiring = onNavigateToPantry,
-                        onOpenRecipe = onNavigateToRecipes
+                        onOpenRecipe = onNavigateToRecipes,
                     )
                 }
             }
@@ -164,22 +169,24 @@ private fun HomeTopBar(
     avatarUrl: String?,
     expiryAlertsEnabled: Boolean = true,
     onAvatarClick: () -> Unit = {},
-    onNotificationsClick: () -> Unit = {}
+    onNotificationsClick: () -> Unit = {},
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .statusBarsPadding()
-            .height(56.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
+                .height(56.dp),
     ) {
         // Avatar condiviso (foto locale > foto Google > icona)
         com.mattiamularoni.saveeat.core.ui.UserAvatar(
             size = 32.dp,
             onClick = onAvatarClick,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 16.dp),
         )
 
         Text(
@@ -187,19 +194,20 @@ private fun HomeTopBar(
             color = MaterialTheme.colorScheme.primary,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
         )
 
         IconButton(
             onClick = onNotificationsClick,
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 8.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 8.dp),
         ) {
             Icon(
                 imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -213,22 +221,23 @@ private fun DashboardContent(
     ecoPoints: Int,
     assets: Map<String, PantryAsset>,
     onSeeAllExpiring: () -> Unit,
-    onOpenRecipe: () -> Unit
+    onOpenRecipe: () -> Unit,
 ) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(top = 8.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         // ---- Saluto + Eco-punti ----
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(
                 text = "Bentornato, $firstName!",
                 style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             // eco-punti: unica fonte di verità è user_stats (StatsRepository), non più dashboard.userStats.
             EcoPointsCard(ecoPoints = ecoPoints)
@@ -239,20 +248,20 @@ private fun DashboardContent(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Bottom
+                verticalAlignment = Alignment.Bottom,
             ) {
                 Text(
                     text = "In scadenza",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = "Vedi tutto",
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     fontWeight = FontWeight.Medium,
-                    modifier = Modifier.clickable { onSeeAllExpiring() }
+                    modifier = Modifier.clickable { onSeeAllExpiring() },
                 )
             }
 
@@ -260,12 +269,12 @@ private fun DashboardContent(
                 Text(
                     text = "Nessun alimento in scadenza. Ottimo lavoro!",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             } else {
                 LazyRow(
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    contentPadding = PaddingValues(end = 4.dp)
+                    contentPadding = PaddingValues(end = 4.dp),
                 ) {
                     items(dashboard.expiringItems, key = { it.id }) { item ->
                         ExpiringItemCard(item = item, asset = item.categoryKey?.let { assets[it] })
@@ -277,14 +286,14 @@ private fun DashboardContent(
         // ---- Bento: stat + ricetta ----
         Row(
             modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             SavedFoodCard(kgSaved = kgSaved, modifier = Modifier.weight(1f))
             RecipeCard(
                 title = dashboard.suggestedRecipes.firstOrNull()?.title ?: "Nessun suggerimento",
                 imageUrl = dashboard.suggestedRecipes.firstOrNull()?.imageUrl,
                 onClick = onOpenRecipe,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
         }
     }
@@ -293,44 +302,46 @@ private fun DashboardContent(
 @Composable
 private fun EcoPointsCard(ecoPoints: Int) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(24.dp))
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .padding(24.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(24.dp))
+                .background(MaterialTheme.colorScheme.secondaryContainer)
+                .padding(24.dp),
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.Top
+            verticalAlignment = Alignment.Top,
         ) {
             Column {
                 Text(
                     text = "Eco-punti",
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
                 Text(
                     text = formatThousands(ecoPoints),
                     color = MaterialTheme.colorScheme.primary,
                     fontSize = 48.sp,
                     lineHeight = 56.sp,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
                 )
             }
             Box(
-                modifier = Modifier
-                    .size(44.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(44.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.surface),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Filled.Eco,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(24.dp)
+                    modifier = Modifier.size(24.dp),
                 )
             }
         }
@@ -338,88 +349,98 @@ private fun EcoPointsCard(ecoPoints: Int) {
 }
 
 @Composable
-private fun ExpiringItemCard(item: ExpiringItem, asset: PantryAsset?) {
+private fun ExpiringItemCard(
+    item: ExpiringItem,
+    asset: PantryAsset?,
+) {
     val days = daysUntil(item.expirationDate)
-    val barColor = when {
-        days <= 1 -> FreshnessCritical
-        days <= 4 -> FreshnessMedium
-        else -> FreshnessHigh
-    }
-    val (label, labelColor) = when {
-        days < 0 -> "Scaduto" to FreshnessCritical
-        days == 0L -> "Scade oggi" to FreshnessCritical
-        days == 1L -> "Domani" to FreshnessCritical
-        days <= 4 -> "Tra $days giorni" to Color(0xFFB26A00)
-        else -> "Tra $days giorni" to MaterialTheme.colorScheme.onSurfaceVariant
-    }
+    val barColor =
+        when {
+            days <= 1 -> FreshnessCritical
+            days <= 4 -> FreshnessMedium
+            else -> FreshnessHigh
+        }
+    val (label, labelColor) =
+        when {
+            days < 0 -> "Scaduto" to FreshnessCritical
+            days == 0L -> "Scade oggi" to FreshnessCritical
+            days == 1L -> "Domani" to FreshnessCritical
+            days <= 4 -> "Tra $days giorni" to Color(0xFFB26A00)
+            else -> "Tra $days giorni" to MaterialTheme.colorScheme.onSurfaceVariant
+        }
 
     Box(
-        modifier = Modifier
-            .width(160.dp)
-            .height(180.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerLow)
+        modifier =
+            Modifier
+                .width(160.dp)
+                .height(180.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerLow),
     ) {
         // Barra verticale freshness
         Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(6.dp)
-                .background(barColor)
-                .align(Alignment.CenterStart)
+            modifier =
+                Modifier
+                    .fillMaxHeight()
+                    .width(6.dp)
+                    .background(barColor)
+                    .align(Alignment.CenterStart),
         )
 
         Column(modifier = Modifier.fillMaxSize()) {
             // Foto del prodotto (se disponibile in pantry_item_assets) + badge categoria,
             // fallback su box grigio neutro come in PantryComponents.AssetThumbnail.
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(96.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(96.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             ) {
                 if (!asset?.imageUrl.isNullOrBlank()) {
                     AsyncImage(
                         model = asset!!.imageUrl,
                         contentDescription = null,
                         modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
+                        contentScale = ContentScale.Crop,
                     )
                 }
                 Surface(
                     color = MaterialTheme.colorScheme.surface,
                     shape = RoundedCornerShape(6.dp),
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(8.dp),
                 ) {
                     Text(
                         text = item.category,
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                     )
                 }
             }
             Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
-                verticalArrangement = Arrangement.Top
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .padding(start = 16.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.Top,
             ) {
                 Text(
                     text = item.name,
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
                     text = label,
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Medium,
-                    color = labelColor
+                    color = labelColor,
                 )
             }
         }
@@ -427,38 +448,44 @@ private fun ExpiringItemCard(item: ExpiringItem, asset: PantryAsset?) {
 }
 
 @Composable
-private fun SavedFoodCard(kgSaved: Double, modifier: Modifier = Modifier) {
+private fun SavedFoodCard(
+    kgSaved: Double,
+    modifier: Modifier = Modifier,
+) {
     Box(
-        modifier = modifier
-            .height(140.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .padding(16.dp)
+        modifier =
+            modifier
+                .height(140.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainer)
+                .padding(16.dp),
     ) {
         Icon(
             Icons.Outlined.DeleteOutline,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.20f),
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .size(36.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .size(36.dp),
         )
         Column(
             modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.SpaceBetween,
         ) {
             Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.20f)),
-                contentAlignment = Alignment.Center
+                modifier =
+                    Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.20f)),
+                contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     Icons.Outlined.ShoppingBasket,
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(22.dp)
+                    modifier = Modifier.size(22.dp),
                 )
             }
             Column {
@@ -467,20 +494,20 @@ private fun SavedFoodCard(kgSaved: Double, modifier: Modifier = Modifier) {
                         text = "%.1f".format(kgSaved),
                         fontSize = 28.sp,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = MaterialTheme.colorScheme.onSurface,
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "kg",
                         style = MaterialTheme.typography.titleMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 4.dp),
                     )
                 }
                 Text(
                     text = "Cibo salvato cucinando ricette",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
@@ -492,48 +519,51 @@ private fun RecipeCard(
     title: String,
     imageUrl: String?,
     onClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .height(140.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.tertiaryContainer)
-            .clickable { onClick() }
+        modifier =
+            modifier
+                .height(140.dp)
+                .clip(RoundedCornerShape(16.dp))
+                .background(MaterialTheme.colorScheme.tertiaryContainer)
+                .clickable { onClick() },
     ) {
         if (!imageUrl.isNullOrBlank()) {
             AsyncImage(
                 model = imageUrl,
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
             // Scrim per garantire leggibilità del testo bianco sopra la foto.
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f))
-                        )
-                    )
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.55f)),
+                            ),
+                        ),
             )
         }
         Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(16.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(16.dp),
         ) {
             Surface(
                 color = Color.White.copy(alpha = 0.25f),
-                shape = RoundedCornerShape(4.dp)
+                shape = RoundedCornerShape(4.dp),
             ) {
                 Text(
                     text = "RICETTA PER TE",
                     color = Color.White,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
             Spacer(modifier = Modifier.height(4.dp))
@@ -543,7 +573,7 @@ private fun RecipeCard(
                 fontWeight = FontWeight.SemiBold,
                 color = Color.White,
                 maxLines = 2,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
@@ -553,22 +583,22 @@ private fun RecipeCard(
 private fun EmptyState(
     firstName: String,
     onScan: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier.padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = "Bentornato, $firstName!",
             style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Text(
             text = "La tua dispensa è vuota. Scansiona uno scontrino per iniziare.",
             style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Button(onClick = onScan) { Text("Scansiona scontrino") }
     }

@@ -7,7 +7,6 @@ package com.mattiamularoni.saveeat.features.auth.domain.model
  * per determinare se il prompt biometrico può essere mostrato.
  */
 sealed class BiometricAvailabilityStatus {
-
     /** Il dispositivo supporta la biometria e l'utente ha credenziali registrate. */
     object Available : BiometricAvailabilityStatus()
 

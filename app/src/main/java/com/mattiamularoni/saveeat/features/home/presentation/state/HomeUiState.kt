@@ -26,14 +26,18 @@ sealed class HomeUiState {
      *
      * @param dashboard dati aggregati della dashboard pronti per il rendering
      */
-    data class Success(val dashboard: HomeDashboard) : HomeUiState()
+    data class Success(
+        val dashboard: HomeDashboard,
+    ) : HomeUiState()
 
     /**
      * Stato di errore.
      *
      * @param message messaggio di errore da mostrare all'utente
      */
-    data class Error(val message: String) : HomeUiState()
+    data class Error(
+        val message: String,
+    ) : HomeUiState()
 
     /**
      * Stato di cache vuota (offline, nessun dato precedente).

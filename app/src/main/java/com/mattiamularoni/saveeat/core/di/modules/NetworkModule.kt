@@ -8,14 +8,15 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
 
-val networkModule = module {
-    single { SupabaseClientProvider.getOrCreate() }
+val networkModule =
+    module {
+        single { SupabaseClientProvider.getOrCreate() }
 
-    single {
-        HttpClient(Android) {
-            install(ContentNegotiation) {
-                json(Json { ignoreUnknownKeys = true })
+        single {
+            HttpClient(Android) {
+                install(ContentNegotiation) {
+                    json(Json { ignoreUnknownKeys = true })
+                }
             }
         }
     }
-}

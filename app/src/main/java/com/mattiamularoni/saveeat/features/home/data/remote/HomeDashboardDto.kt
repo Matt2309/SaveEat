@@ -28,7 +28,7 @@ data class HomeDashboardDto(
     @SerialName("user_profile")
     val userProfile: UserProfileDto = UserProfileDto(),
     @SerialName("last_synced_at")
-    val lastSyncedAt: String? = null
+    val lastSyncedAt: String? = null,
 )
 
 /**
@@ -46,7 +46,7 @@ data class ExpiringItemDto(
     @SerialName("expiration_date")
     val expirationDate: String,
     val quantity: Double? = null,
-    val unit: String? = null
+    val unit: String? = null,
 )
 
 /**
@@ -63,7 +63,7 @@ data class LeaderboardUserDto(
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     @SerialName("eco_points")
-    val ecoPoints: Int = 0
+    val ecoPoints: Int = 0,
 )
 
 /**
@@ -81,7 +81,7 @@ data class SuggestedRecipeDto(
     @SerialName("matching_ingredients")
     val matchingIngredients: Int = 0, // Numero ingredienti che matchano con expiring items
     @SerialName("image_url")
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
 )
 
 /**
@@ -98,7 +98,7 @@ data class UserStatsDto(
     @SerialName("active_placeholders")
     val activePlaceholders: Int = 0,
     @SerialName("eco_points")
-    val ecoPoints: Int = 0
+    val ecoPoints: Int = 0,
 )
 
 /**
@@ -114,5 +114,5 @@ data class UserProfileDto(
     @SerialName("avatar_url")
     val avatarUrl: String? = null,
     @SerialName("rank_position")
-    val rankPosition: Int = 0
+    val rankPosition: Int = 0,
 )

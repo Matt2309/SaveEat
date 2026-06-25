@@ -14,8 +14,10 @@ sealed class LeaderboardUiState {
     data object Loading : LeaderboardUiState()
 
     data class Success(
-        val users: List<LeaderboardUserUi>
+        val users: List<LeaderboardUserUi>,
     ) : LeaderboardUiState()
 
-    data class Error(val message: String) : LeaderboardUiState()
+    data class Error(
+        val message: String,
+    ) : LeaderboardUiState()
 }

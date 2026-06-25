@@ -9,7 +9,6 @@ package com.mattiamularoni.saveeat.features.pantry.data.mapper
  * - Similarity scoring
  */
 object PlaceholderMatcher {
-
     /**
      * Esegue un fuzzy match tra una query (placeholder) e un target (item reale).
      *
@@ -23,7 +22,10 @@ object PlaceholderMatcher {
      * @param target nome item reale (es. "Latte intero 1L")
      * @return true se match, false altrimenti
      */
-    fun fuzzyMatch(query: String, target: String): Boolean {
+    fun fuzzyMatch(
+        query: String,
+        target: String,
+    ): Boolean {
         val normalizedQuery = normalizeProductName(query)
         val normalizedTarget = normalizeProductName(target)
 
@@ -49,13 +51,12 @@ object PlaceholderMatcher {
      * @param name nome prodotto raw
      * @return nome normalizzato per matching
      */
-    fun normalizeProductName(name: String): String {
-        return name
+    fun normalizeProductName(name: String): String =
+        name
             .lowercase()
             .trim()
             .replace(Regex("[^a-z0-9\\s]"), "")
             .replace(Regex("\\s+"), " ")
-    }
 
     /**
      * Calcola la distanza di Levenshtein tra due stringhe.
@@ -67,7 +68,10 @@ object PlaceholderMatcher {
      * @param b seconda stringa
      * @return distanza Levenshtein (numero di operazioni)
      */
-    private fun levenshteinDistance(a: String, b: String): Int {
+    private fun levenshteinDistance(
+        a: String,
+        b: String,
+    ): Int {
         val dp = Array(a.length + 1) { IntArray(b.length + 1) }
 
         for (i in 0..a.length) {
@@ -80,11 +84,12 @@ object PlaceholderMatcher {
         for (i in 1..a.length) {
             for (j in 1..b.length) {
                 val cost = if (a[i - 1] == b[j - 1]) 0 else 1
-                dp[i][j] = minOf(
-                    dp[i - 1][j] + 1,      // delete
-                    dp[i][j - 1] + 1,      // insert
-                    dp[i - 1][j - 1] + cost // replace
-                )
+                dp[i][j] =
+                    minOf(
+                        dp[i - 1][j] + 1, // delete
+                        dp[i][j - 1] + 1, // insert
+                        dp[i - 1][j - 1] + cost, // replace
+                    )
             }
         }
 
@@ -103,7 +108,10 @@ object PlaceholderMatcher {
      * @param target item name
      * @return score 0.0-1.0
      */
-    fun similarityScore(query: String, target: String): Double {
+    fun similarityScore(
+        query: String,
+        target: String,
+    ): Double {
         val normalizedQuery = normalizeProductName(query)
         val normalizedTarget = normalizeProductName(target)
 

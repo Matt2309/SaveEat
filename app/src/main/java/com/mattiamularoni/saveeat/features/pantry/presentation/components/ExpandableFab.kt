@@ -27,55 +27,55 @@ import androidx.compose.ui.unit.dp
 fun ExpandableFab(
     onScannerClick: () -> Unit,
     onManualInsertClick: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var isExpanded by remember { mutableStateOf(false) }
 
     Column(
         // bottom ridotto per abbassare il FAB verso la bottom bar
         modifier = modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 2.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         AnimatedVisibility(
             visible = isExpanded,
             enter = expandVertically(expandFrom = androidx.compose.ui.Alignment.Bottom) + fadeIn(),
-            exit = shrinkVertically(shrinkTowards = androidx.compose.ui.Alignment.Bottom) + fadeOut()
+            exit = shrinkVertically(shrinkTowards = androidx.compose.ui.Alignment.Bottom) + fadeOut(),
         ) {
             Column(
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                verticalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 FloatingActionButton(
                     onClick = {
                         onManualInsertClick()
                         isExpanded = false
                     },
-                    containerColor = MaterialTheme.colorScheme.secondary
+                    containerColor = MaterialTheme.colorScheme.secondary,
                 ) {
                     Icon(
                         Icons.Rounded.Add,
-                        contentDescription = "Aggiungi manualmente"
+                        contentDescription = "Aggiungi manualmente",
                     )
                 }
                 FloatingActionButton(
                     onClick = {
                         onScannerClick()
                         isExpanded = false
-                    }
+                    },
                 ) {
                     Icon(
                         Icons.Rounded.DocumentScanner,
-                        contentDescription = "Scansiona scontrino"
+                        contentDescription = "Scansiona scontrino",
                     )
                 }
             }
         }
 
         FloatingActionButton(
-            onClick = { isExpanded = !isExpanded }
+            onClick = { isExpanded = !isExpanded },
         ) {
             Icon(
                 if (isExpanded) Icons.Rounded.Remove else Icons.Rounded.DocumentScanner,
-                contentDescription = if (isExpanded) "Chiudi" else "Aggiungi"
+                contentDescription = if (isExpanded) "Chiudi" else "Aggiungi",
             )
         }
     }

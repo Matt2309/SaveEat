@@ -10,12 +10,15 @@ import com.mattiamularoni.saveeat.features.notifications.data.worker.Notificatio
 import org.koin.androidx.workmanager.factory.KoinWorkerFactory
 import java.util.concurrent.TimeUnit
 
-class SaveEatApplication : Application(), Configuration.Provider {
-
+class SaveEatApplication :
+    Application(),
+    Configuration.Provider {
     override val workManagerConfiguration: Configuration
-        get() = Configuration.Builder()
-            .setWorkerFactory(KoinWorkerFactory())
-            .build()
+        get() =
+            Configuration
+                .Builder()
+                .setWorkerFactory(KoinWorkerFactory())
+                .build()
 
     override fun onCreate() {
         super.onCreate()
@@ -28,7 +31,7 @@ class SaveEatApplication : Application(), Configuration.Provider {
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(
             NotificationWorker.WORK_NAME,
             ExistingPeriodicWorkPolicy.UPDATE,
-            request
+            request,
         )
     }
 }

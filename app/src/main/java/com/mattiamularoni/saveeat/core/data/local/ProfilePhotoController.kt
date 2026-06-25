@@ -16,8 +16,9 @@ import java.io.File
  * Se non è stata impostata nessuna foto locale, l'avatar usa come fallback la foto di Google
  * (vedi SessionProvider.getAvatarUrl()).
  */
-class ProfilePhotoController(context: Context) {
-
+class ProfilePhotoController(
+    context: Context,
+) {
     private val appContext = context.applicationContext
     private val prefs = appContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
@@ -34,7 +35,8 @@ class ProfilePhotoController(context: Context) {
                 file.outputStream().use { output -> input.copyTo(output) }
             }
             // rimuove le foto profilo precedenti per non accumulare file
-            appContext.filesDir.listFiles { f -> f.name.startsWith("profile_") && f != file }
+            appContext.filesDir
+                .listFiles { f -> f.name.startsWith("profile_") && f != file }
                 ?.forEach { it.delete() }
 
             _localPhotoPath.value = file.absolutePath

@@ -5,6 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.kotlin.serialization)
+    id("org.jlleitschuh.gradle.ktlint")
 }
 
 val localProperties = Properties()
@@ -16,9 +17,10 @@ if (localPropertiesFile.exists()) {
 android {
     namespace = "com.mattiamularoni.saveeat"
     compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
+        version =
+            release(36) {
+                minorApiLevel = 1
+            }
     }
 
     defaultConfig {
@@ -33,27 +35,27 @@ android {
         buildConfigField(
             "String",
             "SUPABASE_URL",
-            localProperties.getProperty("SUPABASE_URL") ?: "\"\""
+            localProperties.getProperty("SUPABASE_URL") ?: "\"\"",
         )
         buildConfigField(
             "String",
             "SUPABASE_ANON_KEY",
-            localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\""
+            localProperties.getProperty("SUPABASE_ANON_KEY") ?: "\"\"",
         )
         buildConfigField(
             "String",
             "GEMINI_API_KEY",
-            "\"${localProperties.getProperty("GEMINI_API_KEY")}\""
+            "\"${localProperties.getProperty("GEMINI_API_KEY")}\"",
         )
         buildConfigField(
             "String",
             "GOOGLE_WEB_CLIENT_ID",
-            localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\""
+            localProperties.getProperty("GOOGLE_WEB_CLIENT_ID") ?: "\"\"",
         )
         buildConfigField(
             "String",
             "PIXABAY_API_KEY",
-            "\"${localProperties.getProperty("PIXABAY_API_KEY")}\""
+            "\"${localProperties.getProperty("PIXABAY_API_KEY")}\"",
         )
     }
 
@@ -71,7 +73,7 @@ android {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                "proguard-rules.pro",
             )
         }
         debug {

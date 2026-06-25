@@ -6,5 +6,5 @@ package com.mattiamularoni.saveeat.features.shopping_list.domain.model
 data class ShoppingListItem(
     val id: String,
     val name: String,
-    val addedAt: Long
+    val addedAt: Long,
 )

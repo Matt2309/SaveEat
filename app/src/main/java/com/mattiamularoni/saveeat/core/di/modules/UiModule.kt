@@ -6,8 +6,9 @@ import com.mattiamularoni.saveeat.ui.theme.ThemeController
 import org.koin.android.ext.koin.androidApplication
 import org.koin.dsl.module
 
-val uiModule = module {
-    single { ThemeController(androidApplication()) }
-    single { ProfilePhotoController(androidApplication()) }
-    single { NotificationPreferencesController(androidApplication()) }
-}
+val uiModule =
+    module {
+        single { ThemeController(androidApplication()) }
+        single { ProfilePhotoController(androidApplication()) }
+        single { NotificationPreferencesController(androidApplication()) }
+    }

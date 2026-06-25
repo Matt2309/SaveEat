@@ -46,9 +46,8 @@ class RecipeViewModel(
     private val cookRecipeUseCase: CookRecipeUseCase,
     private val statsRepository: StatsRepository,
     private val addToShoppingListUseCase: AddToShoppingListUseCase,
-    private val getShoppingListUseCase: GetShoppingListUseCase
+    private val getShoppingListUseCase: GetShoppingListUseCase,
 ) : ViewModel() {
-
     companion object {
         private const val PREMIUM_FILTER_COST = 10
     }
@@ -69,18 +68,21 @@ class RecipeViewModel(
      * dei filtri di generazione (premium, in [RecipeFilters]), questi sono sempre
      * garantiti a corrispondere ad almeno una ricetta.
      */
-    val availableFilters: StateFlow<List<RecipeFilter>> = recipeRepository.observeRecipes()
-        .map { recipes ->
-            recipes.flatMap { it.tags }
-                .map { it.trim() }
-                .filter { it.isNotBlank() }
-                .groupingBy { it.lowercase() }.eachCount()
-                .entries.sortedWith(
-                    compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key }
-                )
-                .map { RecipeFilter(it.key) }
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+    val availableFilters: StateFlow<List<RecipeFilter>> =
+        recipeRepository
+            .observeRecipes()
+            .map { recipes ->
+                recipes
+                    .flatMap { it.tags }
+                    .map { it.trim() }
+                    .filter { it.isNotBlank() }
+                    .groupingBy { it.lowercase() }
+                    .eachCount()
+                    .entries
+                    .sortedWith(
+                        compareByDescending<Map.Entry<String, Int>> { it.value }.thenBy { it.key },
+                    ).map { RecipeFilter(it.key) }
+            }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ===== FAVORITE RECIPES STATE =====
 
@@ -107,9 +109,11 @@ class RecipeViewModel(
     // ===== PREMIUM FILTERS (GAMIFICATION) STATE =====
 
     /** Saldo eco-punti dell'utente corrente, per abilitare/disabilitare lo sblocco premium. */
-    val ecoPointsBalance: StateFlow<Int> = statsRepository.getUserStats()
-        .map { it.totalEcoPoints }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+    val ecoPointsBalance: StateFlow<Int> =
+        statsRepository
+            .getUserStats()
+            .map { it.totalEcoPoints }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
     /**
      * Indica se i filtri avanzati di generazione (stile, tempo, vegetariano) sono
@@ -150,27 +154,27 @@ class RecipeViewModel(
      */
     private fun observeRecipes() {
         observeRecipesJob?.cancel()
-        observeRecipesJob = viewModelScope.launch {
-            combine(recipeRepository.observeRecipes(), _activeFilters) { recipes, filters ->
-                applyFilters(recipes, filters)
-            }
-                .onStart {
+        observeRecipesJob =
+            viewModelScope.launch {
+                combine(recipeRepository.observeRecipes(), _activeFilters) { recipes, filters ->
+                    applyFilters(recipes, filters)
+                }.onStart {
                     _recipesUiState.value = RecipeUiState.Loading
+                }.catch { exception ->
+                    _recipesUiState.value =
+                        RecipeUiState.Error(
+                            message = "Errore nel caricamento ricette",
+                            exception = exception as? Exception,
+                        )
+                }.collect { recipes ->
+                    _recipesUiState.value =
+                        if (recipes.isEmpty()) {
+                            RecipeUiState.Empty
+                        } else {
+                            RecipeUiState.Success(recipes = recipes)
+                        }
                 }
-                .catch { exception ->
-                    _recipesUiState.value = RecipeUiState.Error(
-                        message = "Errore nel caricamento ricette",
-                        exception = exception as? Exception
-                    )
-                }
-                .collect { recipes ->
-                    _recipesUiState.value = if (recipes.isEmpty()) {
-                        RecipeUiState.Empty
-                    } else {
-                        RecipeUiState.Success(recipes = recipes)
-                    }
-                }
-        }
+            }
     }
 
     /**
@@ -180,16 +184,20 @@ class RecipeViewModel(
      * sono combinate in AND (vedi [applyFilters]).
      */
     fun toggleFilter(filter: RecipeFilter) {
-        _activeFilters.value = _activeFilters.value.let { current ->
-            if (filter in current) current - filter else current + filter
-        }
+        _activeFilters.value =
+            _activeFilters.value.let { current ->
+                if (filter in current) current - filter else current + filter
+            }
     }
 
     /**
      * Filtra [recipes] secondo [filters]: una ricetta è mostrata se possiede almeno
      * uno dei tag selezionati (OR). Un set vuoto non esclude nessuna ricetta.
      */
-    private fun applyFilters(recipes: List<Recipe>, filters: Set<RecipeFilter>): List<Recipe> {
+    private fun applyFilters(
+        recipes: List<Recipe>,
+        filters: Set<RecipeFilter>,
+    ): List<Recipe> {
         if (filters.isEmpty()) return recipes
         return recipes.filter { recipe -> filters.any { it.matches(recipe) } }
     }
@@ -209,10 +217,11 @@ class RecipeViewModel(
 
                 recipeRepository.syncRecipes()
             } catch (e: Exception) {
-                _recipesUiState.value = RecipeUiState.Error(
-                    message = "Errore nella sincronizzazione",
-                    exception = e
-                )
+                _recipesUiState.value =
+                    RecipeUiState.Error(
+                        message = "Errore nella sincronizzazione",
+                        exception = e,
+                    )
             }
         }
     }
@@ -232,16 +241,18 @@ class RecipeViewModel(
             try {
                 _recipesUiState.value = RecipeUiState.Loading
                 val results = recipeRepository.searchRecipes(query)
-                _recipesUiState.value = if (results.isEmpty()) {
-                    RecipeUiState.Empty
-                } else {
-                    RecipeUiState.Success(recipes = results)
-                }
+                _recipesUiState.value =
+                    if (results.isEmpty()) {
+                        RecipeUiState.Empty
+                    } else {
+                        RecipeUiState.Success(recipes = results)
+                    }
             } catch (e: Exception) {
-                _recipesUiState.value = RecipeUiState.Error(
-                    message = "Errore nella ricerca",
-                    exception = e
-                )
+                _recipesUiState.value =
+                    RecipeUiState.Error(
+                        message = "Errore nella ricerca",
+                        exception = e,
+                    )
             }
         }
     }
@@ -256,16 +267,18 @@ class RecipeViewModel(
             try {
                 _recipesUiState.value = RecipeUiState.Loading
                 val results = recipeRepository.getRecipesByTags(tags)
-                _recipesUiState.value = if (results.isEmpty()) {
-                    RecipeUiState.Empty
-                } else {
-                    RecipeUiState.Success(recipes = results)
-                }
+                _recipesUiState.value =
+                    if (results.isEmpty()) {
+                        RecipeUiState.Empty
+                    } else {
+                        RecipeUiState.Success(recipes = results)
+                    }
             } catch (e: Exception) {
-                _recipesUiState.value = RecipeUiState.Error(
-                    message = "Errore nel filtro per tag",
-                    exception = e
-                )
+                _recipesUiState.value =
+                    RecipeUiState.Error(
+                        message = "Errore nel filtro per tag",
+                        exception = e,
+                    )
             }
         }
     }
@@ -275,11 +288,10 @@ class RecipeViewModel(
      *
      * @param recipeId UUID della ricetta
      */
-    fun getRecipeDetail(recipeId: String): Recipe? {
-        return (_recipesUiState.value as? RecipeUiState.Success)
+    fun getRecipeDetail(recipeId: String): Recipe? =
+        (_recipesUiState.value as? RecipeUiState.Success)
             ?.recipes
             ?.firstOrNull { it.id == recipeId }
-    }
 
     // ===== COOK RECIPE OPERATIONS =====
 
@@ -298,9 +310,9 @@ class RecipeViewModel(
                 },
                 onFailure = { e ->
                     _events.emit(
-                        RecipeUiEvent.CookError(e.message ?: "Errore durante l'operazione")
+                        RecipeUiEvent.CookError(e.message ?: "Errore durante l'operazione"),
                     )
-                }
+                },
             )
             _isCooking.value = false
         }
@@ -330,9 +342,9 @@ class RecipeViewModel(
                 },
                 onFailure = { e ->
                     _events.emit(
-                        RecipeUiEvent.CookError(e.message ?: "Errore nell'aggiunta alla lista della spesa")
+                        RecipeUiEvent.CookError(e.message ?: "Errore nell'aggiunta alla lista della spesa"),
                     )
-                }
+                },
             )
         }
     }
@@ -346,26 +358,27 @@ class RecipeViewModel(
      */
     fun observeFavoriteRecipes(userId: String) {
         observeFavoriteRecipesJob?.cancel()
-        observeFavoriteRecipesJob = viewModelScope.launch {
-            recipeRepository
-                .observeFavoriteRecipes(userId)
-                .onStart {
-                    _favoriteRecipesUiState.value = FavoriteRecipeUiState.Loading
-                }
-                .catch { exception ->
-                    _favoriteRecipesUiState.value = FavoriteRecipeUiState.Error(
-                        message = "Errore nel caricamento preferiti",
-                        exception = exception as? Exception
-                    )
-                }
-                .collect { recipes ->
-                    _favoriteRecipesUiState.value = if (recipes.isEmpty()) {
-                        FavoriteRecipeUiState.Empty
-                    } else {
-                        FavoriteRecipeUiState.Success(recipes = recipes)
+        observeFavoriteRecipesJob =
+            viewModelScope.launch {
+                recipeRepository
+                    .observeFavoriteRecipes(userId)
+                    .onStart {
+                        _favoriteRecipesUiState.value = FavoriteRecipeUiState.Loading
+                    }.catch { exception ->
+                        _favoriteRecipesUiState.value =
+                            FavoriteRecipeUiState.Error(
+                                message = "Errore nel caricamento preferiti",
+                                exception = exception as? Exception,
+                            )
+                    }.collect { recipes ->
+                        _favoriteRecipesUiState.value =
+                            if (recipes.isEmpty()) {
+                                FavoriteRecipeUiState.Empty
+                            } else {
+                                FavoriteRecipeUiState.Success(recipes = recipes)
+                            }
                     }
-                }
-        }
+            }
     }
 
     /**
@@ -374,15 +387,19 @@ class RecipeViewModel(
      * @param userId UUID dell'utente
      * @param recipeId UUID della ricetta
      */
-    fun addFavoriteRecipe(userId: String, recipeId: String) {
+    fun addFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ) {
         viewModelScope.launch {
             try {
                 recipeRepository.addFavoriteRecipe(userId, recipeId)
             } catch (e: Exception) {
-                _favoriteRecipesUiState.value = FavoriteRecipeUiState.Error(
-                    message = "Errore nell'aggiungere ai preferiti",
-                    exception = e
-                )
+                _favoriteRecipesUiState.value =
+                    FavoriteRecipeUiState.Error(
+                        message = "Errore nell'aggiungere ai preferiti",
+                        exception = e,
+                    )
             }
         }
     }
@@ -393,15 +410,19 @@ class RecipeViewModel(
      * @param userId UUID dell'utente
      * @param recipeId UUID della ricetta
      */
-    fun removeFavoriteRecipe(userId: String, recipeId: String) {
+    fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ) {
         viewModelScope.launch {
             try {
                 recipeRepository.removeFavoriteRecipe(userId, recipeId)
             } catch (e: Exception) {
-                _favoriteRecipesUiState.value = FavoriteRecipeUiState.Error(
-                    message = "Errore nella rimozione dai preferiti",
-                    exception = e
-                )
+                _favoriteRecipesUiState.value =
+                    FavoriteRecipeUiState.Error(
+                        message = "Errore nella rimozione dai preferiti",
+                        exception = e,
+                    )
             }
         }
     }
@@ -416,22 +437,24 @@ class RecipeViewModel(
      */
     fun generateRecipes(
         ingredients: List<String>,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ) {
         viewModelScope.launch {
             try {
                 _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
                 val recipes = recipeRepository.generateRecipes(ingredients, preferences)
-                _generateRecipeUiState.value = if (recipes.isEmpty()) {
-                    GenerateRecipeUiState.Error("Nessuna ricetta generata")
-                } else {
-                    GenerateRecipeUiState.Success(recipes = recipes)
-                }
+                _generateRecipeUiState.value =
+                    if (recipes.isEmpty()) {
+                        GenerateRecipeUiState.Error("Nessuna ricetta generata")
+                    } else {
+                        GenerateRecipeUiState.Success(recipes = recipes)
+                    }
             } catch (e: Exception) {
-                _generateRecipeUiState.value = GenerateRecipeUiState.Error(
-                    message = "Errore nella generazione ricette",
-                    exception = e
-                )
+                _generateRecipeUiState.value =
+                    GenerateRecipeUiState.Error(
+                        message = "Errore nella generazione ricette",
+                        exception = e,
+                    )
             }
         }
     }
@@ -444,25 +467,28 @@ class RecipeViewModel(
      */
     fun suggestRecipesForExpiringItems(
         expiringItems: List<String>,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ) {
         viewModelScope.launch {
             try {
                 _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
-                val recipes = recipeRepository.getSuggestedRecipesForExpiringItems(
-                    expiringItems,
-                    preferences
-                )
-                _generateRecipeUiState.value = if (recipes.isEmpty()) {
-                    GenerateRecipeUiState.Error("Nessuna ricetta suggerita")
-                } else {
-                    GenerateRecipeUiState.Success(recipes = recipes)
-                }
+                val recipes =
+                    recipeRepository.getSuggestedRecipesForExpiringItems(
+                        expiringItems,
+                        preferences,
+                    )
+                _generateRecipeUiState.value =
+                    if (recipes.isEmpty()) {
+                        GenerateRecipeUiState.Error("Nessuna ricetta suggerita")
+                    } else {
+                        GenerateRecipeUiState.Success(recipes = recipes)
+                    }
             } catch (e: Exception) {
-                _generateRecipeUiState.value = GenerateRecipeUiState.Error(
-                    message = "Errore nel suggerimento ricette",
-                    exception = e
-                )
+                _generateRecipeUiState.value =
+                    GenerateRecipeUiState.Error(
+                        message = "Errore nel suggerimento ricette",
+                        exception = e,
+                    )
             }
         }
     }
@@ -475,22 +501,24 @@ class RecipeViewModel(
      */
     fun getSeasonalRecipes(
         season: String,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ) {
         viewModelScope.launch {
             try {
                 _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
                 val recipes = recipeRepository.getSeasonalRecipes(season, preferences)
-                _generateRecipeUiState.value = if (recipes.isEmpty()) {
-                    GenerateRecipeUiState.Error("Nessuna ricetta stagionale disponibile")
-                } else {
-                    GenerateRecipeUiState.Success(recipes = recipes)
-                }
+                _generateRecipeUiState.value =
+                    if (recipes.isEmpty()) {
+                        GenerateRecipeUiState.Error("Nessuna ricetta stagionale disponibile")
+                    } else {
+                        GenerateRecipeUiState.Success(recipes = recipes)
+                    }
             } catch (e: Exception) {
-                _generateRecipeUiState.value = GenerateRecipeUiState.Error(
-                    message = "Errore nel caricamento ricette stagionali",
-                    exception = e
-                )
+                _generateRecipeUiState.value =
+                    GenerateRecipeUiState.Error(
+                        message = "Errore nel caricamento ricette stagionali",
+                        exception = e,
+                    )
             }
         }
     }
@@ -518,18 +546,22 @@ class RecipeViewModel(
         viewModelScope.launch {
             _generateRecipeUiState.value = GenerateRecipeUiState.Generating()
             val result = generateRecipesUseCase(effectiveFilters)
-            _generateRecipeUiState.value = result.fold(
-                onSuccess = { recipes ->
-                    if (recipes.isEmpty()) GenerateRecipeUiState.Error("Nessuna ricetta generata")
-                    else GenerateRecipeUiState.Success(recipes)
-                },
-                onFailure = { e ->
-                    GenerateRecipeUiState.Error(
-                        message = e.message ?: "Errore nella generazione ricette",
-                        exception = e as? Exception
-                    )
-                }
-            )
+            _generateRecipeUiState.value =
+                result.fold(
+                    onSuccess = { recipes ->
+                        if (recipes.isEmpty()) {
+                            GenerateRecipeUiState.Error("Nessuna ricetta generata")
+                        } else {
+                            GenerateRecipeUiState.Success(recipes)
+                        }
+                    },
+                    onFailure = { e ->
+                        GenerateRecipeUiState.Error(
+                            message = e.message ?: "Errore nella generazione ricette",
+                            exception = e as? Exception,
+                        )
+                    },
+                )
             _isPremiumUnlocked.value = false
         }
     }
@@ -544,7 +576,8 @@ class RecipeViewModel(
      */
     fun onUnlockPremiumClicked() {
         viewModelScope.launch {
-            statsRepository.spendEcoPoints(PREMIUM_FILTER_COST)
+            statsRepository
+                .spendEcoPoints(PREMIUM_FILTER_COST)
                 .onSuccess { _isPremiumUnlocked.value = true }
                 .onFailure { _events.emit(RecipeUiEvent.PremiumUnlockFailed) }
         }

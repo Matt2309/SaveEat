@@ -9,14 +9,14 @@ fun NavGraphBuilder.homeScreen(
     onNavigateToScan: () -> Unit = {},
     onNavigateToPantry: () -> Unit = {},
     onNavigateToRecipes: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
 ) {
     composable<HomeRoute> {
         HomeScreen(
             onNavigateToScan = onNavigateToScan,
             onNavigateToPantry = onNavigateToPantry,
             onNavigateToRecipes = onNavigateToRecipes,
-            onNavigateToProfile = onNavigateToProfile
+            onNavigateToProfile = onNavigateToProfile,
         )
     }
 }

@@ -9,22 +9,23 @@ import com.mattiamularoni.saveeat.features.scan_receipt.presentation.viewmodel.S
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val scanReceiptModule = module {
-    // Data Source
-    single<GeminiReceiptDataSource> { GeminiReceiptDataSourceImpl() }
+val scanReceiptModule =
+    module {
+        // Data Source
+        single<GeminiReceiptDataSource> { GeminiReceiptDataSourceImpl() }
 
-    // Repository
-    single<ScanReceiptRepository> {
-        ScanReceiptRepositoryImpl(geminiDataSource = get())
+        // Repository
+        single<ScanReceiptRepository> {
+            ScanReceiptRepositoryImpl(geminiDataSource = get())
+        }
+
+        // Use Case
+        factory {
+            AnalyzeReceiptUseCase(
+                scanReceiptRepository = get(),
+                receiptRepository = get(),
+            )
+        }
+
+        viewModelOf(::ScanReceiptViewModel)
     }
-
-    // Use Case
-    factory {
-        AnalyzeReceiptUseCase(
-            scanReceiptRepository = get(),
-            receiptRepository = get()
-        )
-    }
-
-    viewModelOf(::ScanReceiptViewModel)
-}

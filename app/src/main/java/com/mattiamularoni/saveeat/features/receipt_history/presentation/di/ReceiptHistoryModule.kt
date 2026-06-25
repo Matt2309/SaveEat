@@ -11,17 +11,18 @@ import com.mattiamularoni.saveeat.features.receipt_history.presentation.viewmode
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val receiptHistoryModule = module {
-    single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
-    factory<ReceiptRemoteDataSource> {
-        ReceiptRemoteDataSourceImpl(supabaseClient = get())
+val receiptHistoryModule =
+    module {
+        single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
+        factory<ReceiptRemoteDataSource> {
+            ReceiptRemoteDataSourceImpl(supabaseClient = get())
+        }
+        single<ReceiptRepository> {
+            ReceiptRepositoryImpl(
+                remoteDataSource = get(),
+                sessionProvider = get(),
+            )
+        }
+        factory { GetReceiptHistoryUseCase(get()) }
+        viewModelOf(::ReceiptHistoryViewModel)
     }
-    single<ReceiptRepository> {
-        ReceiptRepositoryImpl(
-            remoteDataSource = get(),
-            sessionProvider = get()
-        )
-    }
-    factory { GetReceiptHistoryUseCase(get()) }
-    viewModelOf(::ReceiptHistoryViewModel)
-}

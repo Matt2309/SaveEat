@@ -32,9 +32,16 @@ import kotlinx.coroutines.launch
  */
 sealed class AuthUiState {
     object Idle : AuthUiState()
+
     object Loading : AuthUiState()
-    data class Success(val message: String = "") : AuthUiState()
-    data class Error(val message: String) : AuthUiState()
+
+    data class Success(
+        val message: String = "",
+    ) : AuthUiState()
+
+    data class Error(
+        val message: String,
+    ) : AuthUiState()
 }
 
 /**
@@ -47,16 +54,23 @@ sealed class AuthUiState {
  */
 sealed class BiometricUiState {
     object Idle : BiometricUiState()
+
     object Authenticating : BiometricUiState()
+
     object Authenticated : BiometricUiState()
-    data class Error(val message: String) : BiometricUiState()
+
+    data class Error(
+        val message: String,
+    ) : BiometricUiState()
 }
 
 /**
  * Effetti one-time per le schermate di autenticazione email/password.
  */
 sealed class AuthEffect {
-    data class ShowSnackbar(val message: String) : AuthEffect()
+    data class ShowSnackbar(
+        val message: String,
+    ) : AuthEffect()
 }
 
 /**
@@ -87,9 +101,8 @@ class AuthViewModel(
     private val checkBiometricAvailabilityUseCase: CheckBiometricAvailabilityUseCase,
     private val restoreAuthenticatedSessionUseCase: RestoreAuthenticatedSessionUseCase,
     private val biometricRepository: BiometricRepository,
-    observeSessionStatusUseCase: ObserveSessionStatusUseCase
+    observeSessionStatusUseCase: ObserveSessionStatusUseCase,
 ) : ViewModel() {
-
     private val _authUiState = MutableStateFlow<AuthUiState>(AuthUiState.Idle)
     val authUiState: StateFlow<AuthUiState> = _authUiState.asStateFlow()
 
@@ -124,10 +137,11 @@ class AuthViewModel(
     init {
         viewModelScope.launch {
             sessionStatus.collect { status ->
-                _biometricRequired.value = when (status) {
-                    is SessionStatus.Authenticated -> restoreAuthenticatedSessionUseCase()
-                    else -> false
-                }
+                _biometricRequired.value =
+                    when (status) {
+                        is SessionStatus.Authenticated -> restoreAuthenticatedSessionUseCase()
+                        else -> false
+                    }
             }
         }
     }
@@ -155,7 +169,10 @@ class AuthViewModel(
      * @param email l'indirizzo email dell'utente.
      * @param password la password dell'utente.
      */
-    fun signIn(email: String, password: String) {
+    fun signIn(
+        email: String,
+        password: String,
+    ) {
         viewModelScope.launch {
             try {
                 _authUiState.value = AuthUiState.Loading
@@ -206,7 +223,12 @@ class AuthViewModel(
      * @param firstName il nome dell'utente.
      * @param lastName il cognome dell'utente.
      */
-    fun signUp(email: String, password: String, firstName: String, lastName: String) {
+    fun signUp(
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String,
+    ) {
         viewModelScope.launch {
             try {
                 _authUiState.value = AuthUiState.Loading
@@ -263,7 +285,10 @@ class AuthViewModel(
      * @param errorCode codice errore di [BiometricPrompt].
      * @param errString messaggio leggibile dall'utente restituito dal sistema.
      */
-    fun onBiometricError(errorCode: Int, errString: CharSequence) {
+    fun onBiometricError(
+        errorCode: Int,
+        errString: CharSequence,
+    ) {
         _biometricUiState.value = BiometricUiState.Error(errString.toString())
     }
 
@@ -281,7 +306,9 @@ class AuthViewModel(
             try {
                 signOutUseCase()
                 // Nessun resetSessionConfirmation: l'utente non è ancora autenticato
-            } catch (_: Exception) { /* il nav guard gestirà NotAuthenticated se necessario */ }
+            } catch (_: Exception) {
+                // il nav guard gestirà NotAuthenticated se necessario
+            }
         }
     }
 

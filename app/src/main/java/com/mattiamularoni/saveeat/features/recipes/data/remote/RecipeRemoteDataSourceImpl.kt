@@ -14,9 +14,8 @@ import java.util.UUID
 class RecipeRemoteDataSourceImpl(
     private val supabaseClient: SupabaseClient,
     private val geminiRecipeDataSource: GeminiRecipeDataSource,
-    private val pixabayRemoteDataSource: PixabayRemoteDataSource
+    private val pixabayRemoteDataSource: PixabayRemoteDataSource,
 ) : RecipeRemoteDataSource {
-
     private val json = Json { ignoreUnknownKeys = true }
 
     override suspend fun getRecipes(): List<RecipeDto> =
@@ -40,8 +39,7 @@ class RecipeRemoteDataSourceImpl(
                         filter {
                             eq("id", recipeId)
                         }
-                    }
-                    .decodeList<RecipeDto>()
+                    }.decodeList<RecipeDto>()
                     .firstOrNull()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch recipe by id: ${e.message}", e)
@@ -57,8 +55,7 @@ class RecipeRemoteDataSourceImpl(
                         filter {
                             ilike("title", "%$query%")
                         }
-                    }
-                    .decodeList<RecipeDto>()
+                    }.decodeList<RecipeDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to search recipes: ${e.message}", e)
             }
@@ -74,8 +71,7 @@ class RecipeRemoteDataSourceImpl(
                         filter {
                             ilike("tags", "%${tags.first()}%")
                         }
-                    }
-                    .decodeList<RecipeDto>()
+                    }.decodeList<RecipeDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch recipes by tags: ${e.message}", e)
             }
@@ -83,7 +79,7 @@ class RecipeRemoteDataSourceImpl(
 
     override suspend fun generateRecipe(
         ingredients: List<String>,
-        preferences: Map<String, Any>
+        preferences: Map<String, Any>,
     ): List<RecipeDto> =
         withContext(Dispatchers.IO) {
             try {
@@ -102,11 +98,12 @@ class RecipeRemoteDataSourceImpl(
                         prepTimeMinutes = geminiDto.prepTimeMinutes,
                         tags = geminiDto.tags.joinToString(","),
                         createdAt = now.toString(),
-                        isVegetarian = geminiDto.isVegetarian ||
-                            geminiDto.tags.any { it.contains("veget", ignoreCase = true) },
+                        isVegetarian =
+                            geminiDto.isVegetarian ||
+                                geminiDto.tags.any { it.contains("veget", ignoreCase = true) },
                         estimatedWeightKg = geminiDto.estimatedWeightKg,
                         estimatedCostEuros = geminiDto.estimatedCostEuros,
-                        imageUrl = imageUrl
+                        imageUrl = imageUrl,
                     )
                 }
             } catch (e: Exception) {
@@ -122,7 +119,7 @@ class RecipeRemoteDataSourceImpl(
     private suspend fun generateGeminiDtosWithRetry(
         ingredients: List<String>,
         preferences: Map<String, Any>,
-        attempts: Int = 2
+        attempts: Int = 2,
     ): List<GeminiRecipeDto> {
         var lastError: SerializationException? = null
         repeat(attempts) {
@@ -159,7 +156,10 @@ class RecipeRemoteDataSourceImpl(
             }
         }
 
-    override suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Boolean =
+    override suspend fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
@@ -185,14 +185,16 @@ class RecipeRemoteDataSourceImpl(
                         filter {
                             eq("user_id", userId)
                         }
-                    }
-                    .decodeList<FavoriteRecipeDto>()
+                    }.decodeList<FavoriteRecipeDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch favorite recipes: ${e.message}", e)
             }
         }
 
-    override suspend fun isFavoriteRecipe(userId: String, recipeId: String): Boolean =
+    override suspend fun isFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
@@ -202,8 +204,7 @@ class RecipeRemoteDataSourceImpl(
                             eq("user_id", userId)
                             eq("recipe_id", recipeId)
                         }
-                    }
-                    .decodeList<FavoriteRecipeDto>()
+                    }.decodeList<FavoriteRecipeDto>()
                     .isNotEmpty()
             } catch (e: Exception) {
                 throw Exception("Failed to check favorite recipe: ${e.message}", e)

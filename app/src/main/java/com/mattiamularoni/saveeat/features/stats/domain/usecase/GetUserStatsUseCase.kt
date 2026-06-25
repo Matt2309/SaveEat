@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.Flow
  * Usato sia dal Dashboard (kg salvati) che dal Profilo (euro risparmiati).
  */
 class GetUserStatsUseCase(
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
 ) {
     operator fun invoke(): Flow<UserStats> = statsRepository.getUserStats()
 }

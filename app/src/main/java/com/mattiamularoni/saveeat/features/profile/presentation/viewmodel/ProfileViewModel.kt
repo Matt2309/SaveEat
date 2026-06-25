@@ -23,7 +23,7 @@ data class ProfileUiState(
     val email: String = "",
     val avatarUrl: String? = null,
     val ecoPoints: Int = 0,
-    val savedEuros: Double = 0.0
+    val savedEuros: Double = 0.0,
 )
 
 /**
@@ -42,9 +42,8 @@ class ProfileViewModel(
     private val getHomeDashboardUseCase: GetHomeDashboardUseCase,
     private val getUserStatsUseCase: GetUserStatsUseCase,
     private val refreshUserStatsUseCase: RefreshUserStatsUseCase,
-    private val signOutUseCase: SignOutUseCase
+    private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
-
     private val _state = MutableStateFlow(ProfileUiState())
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
 
@@ -54,7 +53,11 @@ class ProfileViewModel(
 
     private fun load() {
         val name = sessionProvider.getUserDisplayName()
-        val email = supabaseClient.auth.currentUserOrNull()?.email.orEmpty()
+        val email =
+            supabaseClient.auth
+                .currentUserOrNull()
+                ?.email
+                .orEmpty()
         _state.update { it.copy(name = name, email = email) }
 
         viewModelScope.launch {
@@ -78,7 +81,7 @@ class ProfileViewModel(
                 _state.update {
                     it.copy(
                         ecoPoints = stats.totalEcoPoints,
-                        savedEuros = stats.totalEurosSaved
+                        savedEuros = stats.totalEurosSaved,
                     )
                 }
             }

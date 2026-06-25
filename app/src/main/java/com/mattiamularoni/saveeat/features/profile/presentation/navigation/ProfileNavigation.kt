@@ -9,14 +9,14 @@ fun NavGraphBuilder.profileScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToSettings: () -> Unit = {},
     onNavigateToReceiptHistory: () -> Unit = {},
-    onNavigateToShoppingList: () -> Unit = {}
+    onNavigateToShoppingList: () -> Unit = {},
 ) {
     composable<ProfileRoute> {
         ProfileScreen(
             onNavigateBack = onNavigateBack,
             onNavigateToSettings = onNavigateToSettings,
             onNavigateToReceiptHistory = onNavigateToReceiptHistory,
-            onNavigateToShoppingList = onNavigateToShoppingList
+            onNavigateToShoppingList = onNavigateToShoppingList,
         )
     }
 }

@@ -9,7 +9,7 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepos
  * sulla tabella `users` di Supabase a `false`.
  */
 class DisableBiometricUseCase(
-    private val biometricRepository: BiometricRepository
+    private val biometricRepository: BiometricRepository,
 ) {
     suspend operator fun invoke() {
         biometricRepository.disableBiometricLogin()

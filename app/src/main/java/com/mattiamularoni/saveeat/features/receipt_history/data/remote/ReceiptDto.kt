@@ -15,5 +15,5 @@ data class ReceiptDto(
     @SerialName("image_url")
     val imageUrl: String,
     @SerialName("scanned_at")
-    val scannedAt: String
+    val scannedAt: String,
 )

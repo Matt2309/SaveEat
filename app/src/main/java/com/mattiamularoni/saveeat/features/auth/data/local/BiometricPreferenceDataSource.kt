@@ -19,8 +19,9 @@ private const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
  * è condiviso tra tutte le istanze di ViewModel che la iniettano, garantendo coerenza anche
  * in presenza di multiple istanze di [AuthViewModel] (Activity-scoped vs NavBackStackEntry-scoped).
  */
-class BiometricPreferenceDataSource(context: Context) {
-
+class BiometricPreferenceDataSource(
+    context: Context,
+) {
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     /**

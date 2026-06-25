@@ -18,9 +18,7 @@ import kotlinx.coroutines.flow.StateFlow
  * ```
  */
 class ObserveSessionStatusUseCase(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) {
-    operator fun invoke(): StateFlow<SessionStatus> {
-        return authRepository.sessionStatus
-    }
+    operator fun invoke(): StateFlow<SessionStatus> = authRepository.sessionStatus
 }

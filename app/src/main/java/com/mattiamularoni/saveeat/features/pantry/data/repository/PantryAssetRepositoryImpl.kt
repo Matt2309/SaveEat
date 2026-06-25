@@ -13,16 +13,17 @@ import kotlinx.coroutines.withContext
 
 class PantryAssetRepositoryImpl(
     private val dao: PantryAssetDao,
-    private val remote: PantryAssetRemoteDataSource
+    private val remote: PantryAssetRemoteDataSource,
 ) : PantryAssetRepository {
-
     override fun observeAssets(): Flow<Map<String, PantryAsset>> =
         dao.observeAll().map { list -> list.associate { it.categoryKey to it.toDomain() } }
 
-    override suspend fun syncAssets() = withContext(Dispatchers.IO) {
-        val entities = remote.getAllAssets().map { dto ->
-            PantryAssetEntity(dto.categoryKey, dto.names, dto.imageUrl)
+    override suspend fun syncAssets() =
+        withContext(Dispatchers.IO) {
+            val entities =
+                remote.getAllAssets().map { dto ->
+                    PantryAssetEntity(dto.categoryKey, dto.names, dto.imageUrl)
+                }
+            dao.upsertAll(entities)
         }
-        dao.upsertAll(entities)
-    }
 }

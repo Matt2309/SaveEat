@@ -4,13 +4,13 @@ enum class PantryCategory {
     ALL,
     FRIDGE,
     PANTRY,
-    FREEZER
+    FREEZER,
 }
 
 enum class FreshnessLevel {
     HIGH,
     MEDIUM,
-    CRITICAL
+    CRITICAL,
 }
 
 data class PantryItem(
@@ -23,5 +23,5 @@ data class PantryItem(
     val category: PantryCategory,
     val isPlaceholder: Boolean,
     val categoryKey: String = "",
-    val placeholderIcon: String = "inventory_2"
+    val placeholderIcon: String = "inventory_2",
 )

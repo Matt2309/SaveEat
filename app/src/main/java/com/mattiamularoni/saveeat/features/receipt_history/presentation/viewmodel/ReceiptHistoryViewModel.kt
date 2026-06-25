@@ -15,9 +15,8 @@ import kotlinx.coroutines.launch
 import java.util.Locale
 
 class ReceiptHistoryViewModel(
-    private val getReceiptHistoryUseCase: GetReceiptHistoryUseCase
+    private val getReceiptHistoryUseCase: GetReceiptHistoryUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow(ReceiptHistoryUiState(isLoading = true))
     val uiState: StateFlow<ReceiptHistoryUiState> = _uiState.asStateFlow()
 
@@ -41,11 +40,12 @@ class ReceiptHistoryViewModel(
         }
     }
 
-    private fun toUiState(receipt: Receipt) = ReceiptUiState(
-        id = receipt.id,
-        storeName = receipt.storeName,
-        date = DateTimeUtils.formatReceiptDisplayDate(receipt.scannedAt),
-        totalPrice = "€ " + String.format(Locale.ITALY, "%.2f", receipt.totalPrice),
-        imageUrl = receipt.imageUrl
-    )
+    private fun toUiState(receipt: Receipt) =
+        ReceiptUiState(
+            id = receipt.id,
+            storeName = receipt.storeName,
+            date = DateTimeUtils.formatReceiptDisplayDate(receipt.scannedAt),
+            totalPrice = "€ " + String.format(Locale.ITALY, "%.2f", receipt.totalPrice),
+            imageUrl = receipt.imageUrl,
+        )
 }

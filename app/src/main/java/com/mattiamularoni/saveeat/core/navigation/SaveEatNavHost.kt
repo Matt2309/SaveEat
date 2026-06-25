@@ -21,10 +21,10 @@ import com.mattiamularoni.saveeat.features.leaderboard.presentation.navigation.l
 import com.mattiamularoni.saveeat.features.pantry.presentation.navigation.pantryScreen
 import com.mattiamularoni.saveeat.features.profile.presentation.navigation.profileScreen
 import com.mattiamularoni.saveeat.features.receipt_history.presentation.navigation.receiptHistoryScreen
-import com.mattiamularoni.saveeat.features.settings.presentation.navigation.settingsScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeDetailScreen
 import com.mattiamularoni.saveeat.features.recipes.presentation.navigation.recipeScreen
 import com.mattiamularoni.saveeat.features.scan_receipt.presentation.navigation.scanReceiptScreen
+import com.mattiamularoni.saveeat.features.settings.presentation.navigation.settingsScreen
 import com.mattiamularoni.saveeat.features.shopping_list.presentation.navigation.shoppingListScreen
 import io.github.jan.supabase.auth.status.SessionStatus
 import org.koin.androidx.compose.koinViewModel
@@ -56,15 +56,16 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
         // Senza questo filtro, ogni rotazione richiamerebbe onAppForeground() e causerebbe il
         // rimbalzo di navigazione Home -> Biometric -> Home (flickering).
         var isInitialSync = true
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_START) {
-                if (isInitialSync) {
-                    isInitialSync = false
-                } else {
-                    authViewModel.onAppForeground()
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_START) {
+                    if (isInitialSync) {
+                        isInitialSync = false
+                    } else {
+                        authViewModel.onAppForeground()
+                    }
                 }
             }
-        }
         ProcessLifecycleOwner.get().lifecycle.addObserver(observer)
         onDispose { ProcessLifecycleOwner.get().lifecycle.removeObserver(observer) }
     }
@@ -72,13 +73,16 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
     // [FIX] 3 - aggiunta currentBackStackEntry tra le chiavi
     LaunchedEffect(sessionStatus, biometricRequired, showBiometricProposal, currentBackStackEntry) {
         // [FIX] 3 - se il grafo non è ancora pronto, la route è null: NON navigare (evita il crash).
-        val currentDestination = currentBackStackEntry?.destination?.route
-            ?: return@LaunchedEffect
-        val isOnLoginRoute = currentDestination == LoginRoute::class.qualifiedName ||
+        val currentDestination =
+            currentBackStackEntry?.destination?.route
+                ?: return@LaunchedEffect
+        val isOnLoginRoute =
+            currentDestination == LoginRoute::class.qualifiedName ||
                 currentDestination == "LoginRoute"
-        val isOnBiometricRoute = currentDestination.contains(
-            BiometricRoute::class.qualifiedName.orEmpty()
-        )
+        val isOnBiometricRoute =
+            currentDestination.contains(
+                BiometricRoute::class.qualifiedName.orEmpty(),
+            )
 
         val bioRequired = biometricRequired ?: return@LaunchedEffect
 
@@ -114,7 +118,7 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
         NavHost(
             navController = navController,
             startDestination = LoginRoute,
-            modifier = modifier
+            modifier = modifier,
         ) {
             authScreen(
                 authViewModel = authViewModel,
@@ -122,7 +126,7 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                     navController.navigate(HomeRoute) {
                         popUpTo(LoginRoute) { inclusive = true }
                     }
-                }
+                },
             )
 
             biometricScreen(
@@ -131,7 +135,7 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                     navController.navigate(HomeRoute) {
                         popUpTo(0) { inclusive = true }
                     }
-                }
+                },
             )
 
             homeScreen(
@@ -152,20 +156,20 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                         restoreState = true
                     }
                 },
-                onNavigateToProfile = { navController.navigate(ProfileRoute) }
+                onNavigateToProfile = { navController.navigate(ProfileRoute) },
             )
             pantryScreen(
                 onNavigateToScan = {
                     navController.navigate(ScanReceiptRoute)
                 },
-                onNavigateToProfile = { navController.navigate(ProfileRoute) }
+                onNavigateToProfile = { navController.navigate(ProfileRoute) },
             )
             recipeScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
                 onNavigateToProfile = { navController.navigate(ProfileRoute) },
-                onOpenRecipe = { recipeId -> navController.navigate(RecipeDetailRoute(recipeId)) }
+                onOpenRecipe = { recipeId -> navController.navigate(RecipeDetailRoute(recipeId)) },
             )
             profileScreen(
                 onNavigateBack = {
@@ -173,39 +177,39 @@ fun SaveEatNavHost(modifier: Modifier = Modifier) {
                 },
                 onNavigateToSettings = { navController.navigate(SettingsRoute) },
                 onNavigateToReceiptHistory = { navController.navigate(ReceiptHistoryRoute) },
-                onNavigateToShoppingList = { navController.navigate(ShoppingListRoute) }
+                onNavigateToShoppingList = { navController.navigate(ShoppingListRoute) },
             )
             receiptHistoryScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
             )
             shoppingListScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
             )
             settingsScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onLogout = { authViewModel.signOut() }
+                onLogout = { authViewModel.signOut() },
             )
             recipeDetailScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
             )
             scanReceiptScreen(
                 onNavigateBack = {
                     navController.popBackStack()
-                }
+                },
             )
             leaderboardScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onNavigateToProfile = { navController.navigate(ProfileRoute) }
+                onNavigateToProfile = { navController.navigate(ProfileRoute) },
             )
         }
     }

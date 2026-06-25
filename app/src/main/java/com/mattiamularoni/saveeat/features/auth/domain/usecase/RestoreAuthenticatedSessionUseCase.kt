@@ -22,11 +22,11 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepos
  * @return `true` se la schermata biometrica deve essere mostrata.
  */
 class RestoreAuthenticatedSessionUseCase(
-    private val biometricRepository: BiometricRepository
+    private val biometricRepository: BiometricRepository,
 ) {
     operator fun invoke(): Boolean =
         !biometricRepository.isBiometricConfirmedThisSession() &&
-        biometricRepository.isSessionAuthenticated() &&
-        biometricRepository.isBiometricLoginEnabled() &&
-        biometricRepository.getBiometricAvailabilityStatus() == BiometricAvailabilityStatus.Available
+            biometricRepository.isSessionAuthenticated() &&
+            biometricRepository.isBiometricLoginEnabled() &&
+            biometricRepository.getBiometricAvailabilityStatus() == BiometricAvailabilityStatus.Available
 }

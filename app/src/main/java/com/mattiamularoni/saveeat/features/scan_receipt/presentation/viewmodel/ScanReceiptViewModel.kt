@@ -21,15 +21,18 @@ import java.util.UUID
 
 sealed class ScanReceiptUiState {
     data object Idle : ScanReceiptUiState()
+
     data object Loading : ScanReceiptUiState()
 
     /** Carosello "Smart Expiry Date Review" sui prodotti freschi da confermare. */
     data class Review(
         val pendingItems: List<ReviewItemUiState>,
-        val savedAutomaticallyCount: Int
+        val savedAutomaticallyCount: Int,
     ) : ScanReceiptUiState()
 
-    data class Error(val message: String) : ScanReceiptUiState()
+    data class Error(
+        val message: String,
+    ) : ScanReceiptUiState()
 }
 
 /** Eventi one-shot consumati dalla UI (la navigazione resta callback-driven). */
@@ -39,9 +42,8 @@ sealed interface ScanReceiptEffect {
 
 class ScanReceiptViewModel(
     private val analyzeReceiptUseCase: AnalyzeReceiptUseCase,
-    private val pantryRepository: PantryRepository
+    private val pantryRepository: PantryRepository,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<ScanReceiptUiState>(ScanReceiptUiState.Idle)
     val uiState: StateFlow<ScanReceiptUiState> = _uiState.asStateFlow()
 
@@ -69,7 +71,7 @@ class ScanReceiptViewModel(
                 onFailure = { exception ->
                     val errorMessage = exception.message ?: "Errore sconosciuto durante la lettura"
                     _uiState.value = ScanReceiptUiState.Error(errorMessage)
-                }
+                },
             )
         }
     }
@@ -87,26 +89,28 @@ class ScanReceiptViewModel(
 
         // 2. Prodotti freschi: in memoria, da rivedere nel carosello.
         perishableById.clear()
-        val reviewItems = perishable.map { item ->
-            val id = UUID.randomUUID().toString()
-            perishableById[id] = item
-            ReviewItemUiState(
-                id = id,
-                title = item.name,
-                imageUrl = "",
-                aiSuggestedDays = item.estimatedExpiryDays,
-                currentSelectedDays = item.estimatedExpiryDays
-            )
-        }
+        val reviewItems =
+            perishable.map { item ->
+                val id = UUID.randomUUID().toString()
+                perishableById[id] = item
+                ReviewItemUiState(
+                    id = id,
+                    title = item.name,
+                    imageUrl = "",
+                    aiSuggestedDays = item.estimatedExpiryDays,
+                    currentSelectedDays = item.estimatedExpiryDays,
+                )
+            }
 
         if (reviewItems.isEmpty()) {
             // Niente da rivedere: chiudiamo il flow.
             _effects.emit(ScanReceiptEffect.NavigateToPantry)
         } else {
-            _uiState.value = ScanReceiptUiState.Review(
-                pendingItems = reviewItems,
-                savedAutomaticallyCount = nonPerishable.size
-            )
+            _uiState.value =
+                ScanReceiptUiState.Review(
+                    pendingItems = reviewItems,
+                    savedAutomaticallyCount = nonPerishable.size,
+                )
         }
     }
 
@@ -114,20 +118,29 @@ class ScanReceiptViewModel(
 
     fun onDecrementDays(itemId: String) = updateDays(itemId) { (it - 1).coerceAtLeast(MIN_DAYS) }
 
-    private inline fun updateDays(itemId: String, transform: (Int) -> Int) {
+    private inline fun updateDays(
+        itemId: String,
+        transform: (Int) -> Int,
+    ) {
         val current = _uiState.value as? ScanReceiptUiState.Review ?: return
-        val updated = current.pendingItems.map { item ->
-            if (item.id == itemId) item.copy(currentSelectedDays = transform(item.currentSelectedDays))
-            else item
-        }
+        val updated =
+            current.pendingItems.map { item ->
+                if (item.id == itemId) {
+                    item.copy(currentSelectedDays = transform(item.currentSelectedDays))
+                } else {
+                    item
+                }
+            }
         _uiState.value = current.copy(pendingItems = updated)
     }
 
     fun onConfirmItem(itemId: String) {
         val parsed = perishableById[itemId] ?: return
-        val days = (_uiState.value as? ScanReceiptUiState.Review)
-            ?.pendingItems?.firstOrNull { it.id == itemId }
-            ?.currentSelectedDays ?: parsed.estimatedExpiryDays
+        val days =
+            (_uiState.value as? ScanReceiptUiState.Review)
+                ?.pendingItems
+                ?.firstOrNull { it.id == itemId }
+                ?.currentSelectedDays ?: parsed.estimatedExpiryDays
 
         val expiration = System.currentTimeMillis() + days.toLong() * MILLIS_PER_DAY
         savePantryItem(parsed.toPantryItem(expirationDate = expiration))
@@ -176,19 +189,20 @@ class ScanReceiptViewModel(
         }
     }
 
-    private fun ParsedReceiptItem.toPantryItem(expirationDate: Long?): PantryItem = PantryItem(
-        id = UUID.randomUUID().toString(),
-        userId = "", // sovrascritto dal repository con l'utente corrente
-        receiptId = currentReceiptId,
-        name = name,
-        category = category,
-        categoryKey = categoryKey,
-        isPlaceholder = false,
-        status = "ACTIVE",
-        quantity = quantity,
-        unit = unit,
-        expirationDate = expirationDate
-    )
+    private fun ParsedReceiptItem.toPantryItem(expirationDate: Long?): PantryItem =
+        PantryItem(
+            id = UUID.randomUUID().toString(),
+            userId = "", // sovrascritto dal repository con l'utente corrente
+            receiptId = currentReceiptId,
+            name = name,
+            category = category,
+            categoryKey = categoryKey,
+            isPlaceholder = false,
+            status = "ACTIVE",
+            quantity = quantity,
+            unit = unit,
+            expirationDate = expirationDate,
+        )
 
     private companion object {
         const val TAG = "ScanReceiptViewModel"

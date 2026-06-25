@@ -8,13 +8,17 @@ data class Receipt(
     val storeName: String,
     val totalPrice: Double,
     val imageUrl: String,
-    val scannedAt: Long
+    val scannedAt: Long,
 )
 
 interface ReceiptRepository {
     suspend fun uploadReceiptImage(bitmap: Bitmap): String
 
-    suspend fun insertReceipt(storeName: String, totalPrice: Double, imageUrl: String): Receipt
+    suspend fun insertReceipt(
+        storeName: String,
+        totalPrice: Double,
+        imageUrl: String,
+    ): Receipt
 
     suspend fun getReceipts(): List<Receipt>
 }

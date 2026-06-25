@@ -19,9 +19,8 @@ import kotlinx.coroutines.withContext
  * Attualmente placeholder per testing dello stack.
  */
 class LeaderboardRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : LeaderboardRemoteDataSource {
-
     /**
      * Recupera la leaderboard globale ordinata per eco_points DESC da Supabase.
      *
@@ -40,8 +39,7 @@ class LeaderboardRemoteDataSourceImpl(
                     .from("leaderboard")
                     .select {
                         order("eco_points", Order.DESCENDING)
-                    }
-                    .decodeList<LeaderboardUserDto>()
+                    }.decodeList<LeaderboardUserDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch leaderboard: ${e.message}", e)
             }
@@ -64,8 +62,7 @@ class LeaderboardRemoteDataSourceImpl(
                     .select {
                         order("eco_points", Order.DESCENDING)
                         limit(limit.toLong())
-                    }
-                    .decodeList<LeaderboardUserDto>()
+                    }.decodeList<LeaderboardUserDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch top users: ${e.message}", e)
             }
@@ -89,12 +86,10 @@ class LeaderboardRemoteDataSourceImpl(
                         filter {
                             eq("id", userId)
                         }
-                    }
-                    .decodeList<LeaderboardUserDto>()
+                    }.decodeList<LeaderboardUserDto>()
                     .firstOrNull()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user: ${e.message}", e)
             }
         }
-
 }

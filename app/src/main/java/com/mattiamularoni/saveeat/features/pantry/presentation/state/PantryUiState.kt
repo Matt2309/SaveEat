@@ -10,8 +10,10 @@ sealed class PantryUiState {
     data class Success(
         val items: List<PantryItem>,
         val assets: Map<String, PantryAsset> = emptyMap(),
-        val selectedCategory: PantryCategory
+        val selectedCategory: PantryCategory,
     ) : PantryUiState()
 
-    data class Error(val message: String) : PantryUiState()
+    data class Error(
+        val message: String,
+    ) : PantryUiState()
 }

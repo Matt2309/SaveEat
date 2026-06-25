@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
  * Offline-first: i totali sono mantenuti in cache Room e sincronizzati con Supabase.
  */
 interface StatsRepository {
-
     /**
      * Osserva i totali di risparmio dell'utente corrente.
      *
@@ -38,7 +37,11 @@ interface StatsRepository {
      * @param points eco-punti assegnati per la cucinata
      * @return [Result] di successo, oppure fallimento con l'eccezione incontrata
      */
-    suspend fun addRecipeCookedStats(kg: Double, euros: Double, points: Int): Result<Unit>
+    suspend fun addRecipeCookedStats(
+        kg: Double,
+        euros: Double,
+        points: Int,
+    ): Result<Unit>
 
     /**
      * Deduce [amount] eco-punti dal saldo dell'utente corrente, a fronte dello sblocco

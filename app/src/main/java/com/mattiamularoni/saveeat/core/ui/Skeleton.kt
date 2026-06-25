@@ -35,26 +35,31 @@ fun shimmerBrush(): Brush {
     val x by transition.animateFloat(
         initialValue = 0f,
         targetValue = 1200f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1100, easing = LinearEasing),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "shimmerX"
+        animationSpec =
+            infiniteRepeatable(
+                animation = tween(durationMillis = 1100, easing = LinearEasing),
+                repeatMode = RepeatMode.Restart,
+            ),
+        label = "shimmerX",
     )
     return Brush.linearGradient(
         colors = listOf(base, highlight, base),
         start = Offset(x - 300f, 0f),
-        end = Offset(x, 0f)
+        end = Offset(x, 0f),
     )
 }
 
 /** Singolo blocco scheletro con shimmer. */
 @Composable
-fun ShimmerBox(modifier: Modifier = Modifier, cornerRadius: Int = 12) {
+fun ShimmerBox(
+    modifier: Modifier = Modifier,
+    cornerRadius: Int = 12,
+) {
     androidx.compose.foundation.layout.Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(cornerRadius.dp))
-            .background(shimmerBrush())
+        modifier =
+            modifier
+                .clip(RoundedCornerShape(cornerRadius.dp))
+                .background(shimmerBrush()),
     )
 }
 
@@ -65,10 +70,11 @@ fun ShimmerBox(modifier: Modifier = Modifier, cornerRadius: Int = 12) {
 @Composable
 fun SaveEatLoadingSkeleton(modifier: Modifier = Modifier) {
     Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        modifier =
+            modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         ShimmerBox(Modifier.fillMaxWidth(0.5f).height(22.dp), cornerRadius = 8)
         ShimmerBox(Modifier.fillMaxWidth().height(150.dp), cornerRadius = 24)

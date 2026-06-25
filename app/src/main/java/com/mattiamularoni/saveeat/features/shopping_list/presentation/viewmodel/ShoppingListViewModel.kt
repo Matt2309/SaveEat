@@ -19,16 +19,17 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
 sealed interface ShoppingListEffect {
-    data class ShowSnackbar(val message: String) : ShoppingListEffect
+    data class ShowSnackbar(
+        val message: String,
+    ) : ShoppingListEffect
 }
 
 class ShoppingListViewModel(
     private val getShoppingListUseCase: GetShoppingListUseCase,
     private val addToShoppingListUseCase: AddToShoppingListUseCase,
     private val removeFromShoppingListUseCase: RemoveFromShoppingListUseCase,
-    private val clearShoppingListUseCase: ClearShoppingListUseCase
+    private val clearShoppingListUseCase: ClearShoppingListUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<ShoppingListUiState>(ShoppingListUiState.Loading)
     val uiState: StateFlow<ShoppingListUiState> = _uiState.asStateFlow()
 
@@ -43,11 +44,11 @@ class ShoppingListViewModel(
         getShoppingListUseCase()
             .onEach { items -> _uiState.value = ShoppingListUiState.Success(items) }
             .catch { e ->
-                _uiState.value = ShoppingListUiState.Error(
-                    e.message ?: "Errore nel caricamento della lista della spesa"
-                )
-            }
-            .launchIn(viewModelScope)
+                _uiState.value =
+                    ShoppingListUiState.Error(
+                        e.message ?: "Errore nel caricamento della lista della spesa",
+                    )
+            }.launchIn(viewModelScope)
     }
 
     fun addItem(name: String) {
@@ -70,7 +71,7 @@ class ShoppingListViewModel(
         viewModelScope.launch {
             clearShoppingListUseCase().fold(
                 onSuccess = { _effects.emit(ShoppingListEffect.ShowSnackbar("Lista della spesa svuotata")) },
-                onFailure = { e -> _effects.emit(ShoppingListEffect.ShowSnackbar(e.message ?: "Errore")) }
+                onFailure = { e -> _effects.emit(ShoppingListEffect.ShowSnackbar(e.message ?: "Errore")) },
             )
         }
     }

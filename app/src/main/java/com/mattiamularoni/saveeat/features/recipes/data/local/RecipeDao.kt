@@ -95,7 +95,7 @@ interface RecipeDao {
         INNER JOIN favorite_recipes fr ON r.id = fr.recipeId
         WHERE fr.userId = :userId
         ORDER BY fr.savedAt DESC
-        """
+        """,
     )
     fun getFavoriteRecipesByUser(userId: String): Flow<List<RecipeEntity>>
 
@@ -111,7 +111,7 @@ interface RecipeDao {
         INNER JOIN favorite_recipes fr ON r.id = fr.recipeId
         WHERE fr.userId = :userId
         ORDER BY fr.savedAt DESC
-        """
+        """,
     )
     suspend fun getFavoriteRecipesListByUser(userId: String): List<RecipeEntity>
 
@@ -131,9 +131,12 @@ interface RecipeDao {
      * @return numero di righe eliminate
      */
     @Query(
-        "DELETE FROM favorite_recipes WHERE userId = :userId AND recipeId = :recipeId"
+        "DELETE FROM favorite_recipes WHERE userId = :userId AND recipeId = :recipeId",
     )
-    suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Int
+    suspend fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Int
 
     /**
      * Verifica se una ricetta è nei preferiti di un utente.
@@ -143,9 +146,12 @@ interface RecipeDao {
      * @return Flow che emette true se preferita, false altrimenti
      */
     @Query(
-        "SELECT COUNT(*) > 0 FROM favorite_recipes WHERE userId = :userId AND recipeId = :recipeId"
+        "SELECT COUNT(*) > 0 FROM favorite_recipes WHERE userId = :userId AND recipeId = :recipeId",
     )
-    fun isFavoriteRecipe(userId: String, recipeId: String): Flow<Boolean>
+    fun isFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Flow<Boolean>
 
     /**
      * Elimina tutti i preferiti di un utente (es. logout).

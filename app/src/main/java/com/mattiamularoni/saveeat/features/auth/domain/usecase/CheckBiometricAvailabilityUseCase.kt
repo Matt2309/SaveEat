@@ -10,8 +10,7 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepos
  * @return lo stato di disponibilità biometrica sul dispositivo.
  */
 class CheckBiometricAvailabilityUseCase(
-    private val biometricRepository: BiometricRepository
+    private val biometricRepository: BiometricRepository,
 ) {
-    operator fun invoke(): BiometricAvailabilityStatus =
-        biometricRepository.getBiometricAvailabilityStatus()
+    operator fun invoke(): BiometricAvailabilityStatus = biometricRepository.getBiometricAvailabilityStatus()
 }

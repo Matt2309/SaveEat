@@ -34,7 +34,8 @@ enum class FreshnessLevel {
     EXPIRED,
     CRITICAL,
     WARNING,
-    NORMAL;
+    NORMAL,
+    ;
 
     companion object {
         /**

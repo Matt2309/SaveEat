@@ -10,8 +10,9 @@ import com.mattiamularoni.saveeat.features.recipes.domain.repository.Recipe
  * ricette caricate (vedi [com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.RecipeViewModel.availableFilters]),
  * così ogni badge mostrato su una ricetta corrisponde sempre a un filtro selezionabile.
  */
-data class RecipeFilter(val tag: String) {
-
+data class RecipeFilter(
+    val tag: String,
+) {
     /** Etichetta del chip, con iniziale maiuscola (es. "fusion" -> "Fusion"). */
     val label: String
         get() = tag.replaceFirstChar { it.uppercase() }
@@ -19,6 +20,5 @@ data class RecipeFilter(val tag: String) {
     /**
      * Verifica se [recipe] possiede questo tag (case-insensitive).
      */
-    fun matches(recipe: Recipe): Boolean =
-        recipe.tags.any { it.trim().equals(tag, ignoreCase = true) }
+    fun matches(recipe: Recipe): Boolean = recipe.tags.any { it.trim().equals(tag, ignoreCase = true) }
 }

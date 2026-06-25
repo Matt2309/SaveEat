@@ -10,7 +10,7 @@ import com.mattiamularoni.saveeat.features.shopping_list.domain.repository.Shopp
  * qui: evita la race condition di un "leggi-poi-scrivi" su due tap rapidi.
  */
 class AddToShoppingListUseCase(
-    private val repository: ShoppingListRepository
+    private val repository: ShoppingListRepository,
 ) {
     suspend operator fun invoke(name: String): Result<Unit> {
         val trimmed = name.trim()

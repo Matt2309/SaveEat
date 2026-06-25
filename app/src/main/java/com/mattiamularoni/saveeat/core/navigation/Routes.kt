@@ -18,7 +18,9 @@ object ScanReceiptRoute
 object RecipeRoute
 
 @Serializable
-data class RecipeDetailRoute(val id: String)
+data class RecipeDetailRoute(
+    val id: String,
+)
 
 @Serializable
 object LeaderboardRoute

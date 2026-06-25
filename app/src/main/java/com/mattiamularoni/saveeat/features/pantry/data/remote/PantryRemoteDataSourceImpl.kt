@@ -21,9 +21,8 @@ import kotlinx.serialization.json.put
  * Attualmente placeholder per testing dello stack.
  */
 class PantryRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : PantryRemoteDataSource {
-
     /**
      * Recupera tutti gli elementi della dispensa dell'utente da Supabase.
      *
@@ -42,8 +41,7 @@ class PantryRemoteDataSourceImpl(
                         filter {
                             eq("user_id", userId)
                         }
-                    }
-                    .decodeList<PantryItemDto>()
+                    }.decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch pantry items: ${e.message}", e)
             }
@@ -62,8 +60,7 @@ class PantryRemoteDataSourceImpl(
                     .from("pantry_items")
                     .insert(item) {
                         select()
-                    }
-                    .decodeSingle<PantryItemDto>()
+                    }.decodeSingle<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to add pantry item: ${e.message}", e)
             }
@@ -78,26 +75,27 @@ class PantryRemoteDataSourceImpl(
      */
     override suspend fun updatePantryItem(
         itemId: String,
-        updates: Map<String, Any?>
+        updates: Map<String, Any?>,
     ): PantryItemDto =
         withContext(Dispatchers.IO) {
             try {
                 // Postgrest non sa serializzare un Map<String, Any> (nessun serializer per
                 // 'Any'): convertiamo manualmente in JsonObject prima di inviarlo.
-                val payload = buildJsonObject {
-                    updates.forEach { (key, value) ->
-                        when (value) {
-                            null -> put(key, JsonNull)
-                            is String -> put(key, value)
-                            is Boolean -> put(key, value)
-                            is Int -> put(key, value)
-                            is Long -> put(key, value)
-                            is Double -> put(key, value)
-                            is Float -> put(key, value)
-                            else -> put(key, value.toString())
+                val payload =
+                    buildJsonObject {
+                        updates.forEach { (key, value) ->
+                            when (value) {
+                                null -> put(key, JsonNull)
+                                is String -> put(key, value)
+                                is Boolean -> put(key, value)
+                                is Int -> put(key, value)
+                                is Long -> put(key, value)
+                                is Double -> put(key, value)
+                                is Float -> put(key, value)
+                                else -> put(key, value.toString())
+                            }
                         }
                     }
-                }
 
                 supabaseClient
                     .from("pantry_items")
@@ -106,8 +104,7 @@ class PantryRemoteDataSourceImpl(
                             eq("id", itemId)
                         }
                         select()
-                    }
-                    .decodeSingle<PantryItemDto>()
+                    }.decodeSingle<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to update pantry item: ${e.message}", e)
             }
@@ -151,8 +148,7 @@ class PantryRemoteDataSourceImpl(
                             eq("user_id", userId)
                             eq("is_placeholder", true)
                         }
-                    }
-                    .decodeList<PantryItemDto>()
+                    }.decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch placeholders: ${e.message}", e)
             }
@@ -165,7 +161,10 @@ class PantryRemoteDataSourceImpl(
      * @param query stringa di ricerca
      * @return lista di DTO matching
      */
-    override suspend fun searchPlaceholders(userId: String, query: String): List<PantryItemDto> =
+    override suspend fun searchPlaceholders(
+        userId: String,
+        query: String,
+    ): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient
@@ -175,8 +174,7 @@ class PantryRemoteDataSourceImpl(
                             eq("user_id", userId)
                             ilike("name", "%$query%")
                         }
-                    }
-                    .decodeList<PantryItemDto>()
+                    }.decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to search placeholders: ${e.message}", e)
             }
@@ -189,10 +187,16 @@ class PantryRemoteDataSourceImpl(
      * @param thresholdMs timestamp limite (ms)
      * @return lista di DTO in scadenza
      */
-    override suspend fun getExpiringItems(userId: String, thresholdMs: Long): List<PantryItemDto> =
+    override suspend fun getExpiringItems(
+        userId: String,
+        thresholdMs: Long,
+    ): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {
-                val thresholdInstant = java.time.Instant.ofEpochMilli(thresholdMs).toString()
+                val thresholdInstant =
+                    java.time.Instant
+                        .ofEpochMilli(thresholdMs)
+                        .toString()
                 supabaseClient
                     .from("pantry_items")
                     .select {
@@ -200,8 +204,7 @@ class PantryRemoteDataSourceImpl(
                             eq("user_id", userId)
                             lte("expiration_date", thresholdInstant)
                         }
-                    }
-                    .decodeList<PantryItemDto>()
+                    }.decodeList<PantryItemDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch expiring items: ${e.message}", e)
             }
@@ -218,7 +221,7 @@ class PantryRemoteDataSourceImpl(
      */
     override suspend fun saveReceiptItems(
         receiptId: String,
-        items: List<PantryItemDto>
+        items: List<PantryItemDto>,
     ): List<PantryItemDto> =
         withContext(Dispatchers.IO) {
             try {

@@ -9,9 +9,8 @@ import kotlinx.coroutines.withContext
  * Implementazione di UserStatsRemoteDataSource usando Supabase Postgrest.
  */
 class UserStatsRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : UserStatsRemoteDataSource {
-
     override suspend fun getUserStats(userId: String): UserStatsDto? =
         withContext(Dispatchers.IO) {
             try {
@@ -21,8 +20,7 @@ class UserStatsRemoteDataSourceImpl(
                         filter {
                             eq("user_id", userId)
                         }
-                    }
-                    .decodeList<UserStatsDto>()
+                    }.decodeList<UserStatsDto>()
                     .firstOrNull()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch user stats: ${e.message}", e)
@@ -36,8 +34,7 @@ class UserStatsRemoteDataSourceImpl(
                     .from("user_stats")
                     .upsert(dto) {
                         select()
-                    }
-                    .decodeSingle<UserStatsDto>()
+                    }.decodeSingle<UserStatsDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to upsert user stats: ${e.message}", e)
             }

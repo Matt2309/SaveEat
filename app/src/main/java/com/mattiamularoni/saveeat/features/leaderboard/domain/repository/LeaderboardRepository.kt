@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
  * - Gestire ranking e aggiornamenti eco_points
  */
 interface LeaderboardRepository {
-
     /**
      * Osserva la leaderboard globale con aggiornamenti real-time.
      *

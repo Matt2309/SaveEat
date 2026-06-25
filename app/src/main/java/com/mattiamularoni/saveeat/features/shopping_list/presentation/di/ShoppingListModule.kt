@@ -10,18 +10,19 @@ import com.mattiamularoni.saveeat.features.shopping_list.presentation.viewmodel.
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val shoppingListModule = module {
-    factory<ShoppingListRepository> {
-        ShoppingListRepositoryImpl(dao = get())
+val shoppingListModule =
+    module {
+        factory<ShoppingListRepository> {
+            ShoppingListRepositoryImpl(dao = get())
+        }
+
+        factory { AddToShoppingListUseCase(repository = get()) }
+
+        factory { GetShoppingListUseCase(repository = get()) }
+
+        factory { RemoveFromShoppingListUseCase(repository = get()) }
+
+        factory { ClearShoppingListUseCase(repository = get()) }
+
+        viewModelOf(::ShoppingListViewModel)
     }
-
-    factory { AddToShoppingListUseCase(repository = get()) }
-
-    factory { GetShoppingListUseCase(repository = get()) }
-
-    factory { RemoveFromShoppingListUseCase(repository = get()) }
-
-    factory { ClearShoppingListUseCase(repository = get()) }
-
-    viewModelOf(::ShoppingListViewModel)
-}

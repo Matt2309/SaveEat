@@ -26,17 +26,22 @@ import com.mattiamularoni.saveeat.features.stats.data.local.UserStatsEntity
         FavoriteRecipeEntity::class,
         HomeDashboardEntity::class,
         UserStatsEntity::class,
-        ShoppingListItemEntity::class
+        ShoppingListItemEntity::class,
     ],
     version = 11,
-    exportSchema = true
+    exportSchema = true,
 )
 @TypeConverters(PantryTypeConverters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun pantryDao(): PantryDao
+
     abstract fun pantryAssetDao(): PantryAssetDao
+
     abstract fun recipeDao(): RecipeDao
+
     abstract fun homeDao(): HomeDao
+
     abstract fun userStatsDao(): UserStatsDao
+
     abstract fun shoppingListDao(): ShoppingListDao
 }

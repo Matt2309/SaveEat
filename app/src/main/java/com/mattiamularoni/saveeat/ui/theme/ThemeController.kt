@@ -12,10 +12,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * false = tema chiaro (default, coerente con i mockup brand)
  * true  = tema scuro
  */
-class ThemeController(context: Context) {
-
-    private val prefs = context.applicationContext
-        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+class ThemeController(
+    context: Context,
+) {
+    private val prefs =
+        context.applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _darkMode = MutableStateFlow(prefs.getBoolean(KEY_DARK, false))
     val darkMode: StateFlow<Boolean> = _darkMode.asStateFlow()

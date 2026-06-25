@@ -7,7 +7,6 @@ package com.mattiamularoni.saveeat.features.recipes.data.remote.pixabay
  * evitando la generazione AI di immagini (lenta e costosa).
  */
 interface PixabayRemoteDataSource {
-
     /**
      * Cerca un'immagine su Pixabay per la query fornita.
      *

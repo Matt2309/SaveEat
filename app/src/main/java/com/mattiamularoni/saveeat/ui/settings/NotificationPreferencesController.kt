@@ -10,10 +10,12 @@ import kotlinx.coroutines.flow.asStateFlow
  * SharedPreferences (sopravvive al riavvio dell'app). Stesso pattern di
  * ThemeController per le preferenze UI globali.
  */
-class NotificationPreferencesController(context: Context) {
-
-    private val prefs = context.applicationContext
-        .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+class NotificationPreferencesController(
+    context: Context,
+) {
+    private val prefs =
+        context.applicationContext
+            .getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     private val _expiryAlertsEnabled = MutableStateFlow(prefs.getBoolean(KEY_EXPIRY_ALERTS, true))
     val expiryAlertsEnabled: StateFlow<Boolean> = _expiryAlertsEnabled.asStateFlow()

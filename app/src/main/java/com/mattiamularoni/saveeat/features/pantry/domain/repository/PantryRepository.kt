@@ -69,7 +69,10 @@ interface PantryRepository {
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun updatePantryItem(itemId: String, item: PantryItem): Boolean
+    suspend fun updatePantryItem(
+        itemId: String,
+        item: PantryItem,
+    ): Boolean
 
     /**
      * Cancella un elemento dalla dispensa.
@@ -99,7 +102,10 @@ interface PantryRepository {
      * @return UUID del placeholder creato
      * @throws Exception in caso di errore
      */
-    suspend fun addPlaceholder(name: String, category: String): String
+    suspend fun addPlaceholder(
+        name: String,
+        category: String,
+    ): String
 
     /**
      * Converte un placeholder in un elemento reale quando viene trovato
@@ -115,7 +121,10 @@ interface PantryRepository {
      * @param realItem elemento reale estratto dallo scontrino
      * @throws Exception se placeholder non trovato o errore update
      */
-    suspend fun convertPlaceholderToRealItem(placeholderId: String, realItem: PantryItem)
+    suspend fun convertPlaceholderToRealItem(
+        placeholderId: String,
+        realItem: PantryItem,
+    )
 
     /**
      * Trova il miglior placeholder matching per un nome di prodotto.
@@ -138,7 +147,10 @@ interface PantryRepository {
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun updatePlaceholder(placeholderId: String, updates: Map<String, Any>): Boolean
+    suspend fun updatePlaceholder(
+        placeholderId: String,
+        updates: Map<String, Any>,
+    ): Boolean
 
     /**
      * Rimuove un placeholder dalla dispensa.
@@ -164,7 +176,10 @@ interface PantryRepository {
      * @param items elementi estratti da Gemini OCR
      * @throws Exception in caso di errore
      */
-    suspend fun saveReceiptItems(receiptId: String, items: List<PantryItem>)
+    suspend fun saveReceiptItems(
+        receiptId: String,
+        items: List<PantryItem>,
+    )
 
     /**
      * Merge automatico di items estratti da scontrino con placeholder esistenti.
@@ -180,7 +195,10 @@ interface PantryRepository {
      * @param receiptItems items estratti dallo scontrino
      * @throws Exception in caso di errore
      */
-    suspend fun mergeReceiptItemsWithPantry(receiptId: String, receiptItems: List<PantryItem>)
+    suspend fun mergeReceiptItemsWithPantry(
+        receiptId: String,
+        receiptItems: List<PantryItem>,
+    )
 
     /**
      * Deduplica gli elementi della dispensa.
@@ -207,7 +225,10 @@ interface PantryRepository {
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun updateItemStatus(itemId: String, status: String): Boolean
+    suspend fun updateItemStatus(
+        itemId: String,
+        status: String,
+    ): Boolean
 
     /**
      * Aggiorna la data di scadenza di un elemento.
@@ -217,7 +238,10 @@ interface PantryRepository {
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun updateExpirationDate(itemId: String, expirationDate: Long): Boolean
+    suspend fun updateExpirationDate(
+        itemId: String,
+        expirationDate: Long,
+    ): Boolean
 
     /**
      * Osserva gli elementi in scadenza entro una soglia di giorni.
@@ -254,7 +278,10 @@ interface PantryRepository {
      * @param amountToDeduct quantità da sottrarre (unità ignorata)
      * @throws Exception in caso di errore
      */
-    suspend fun deductIngredientQuantity(ingredientName: String, amountToDeduct: Double)
+    suspend fun deductIngredientQuantity(
+        ingredientName: String,
+        amountToDeduct: Double,
+    )
 }
 
 /**
@@ -273,5 +300,5 @@ data class PantryItem(
     val status: String,
     val quantity: Double,
     val unit: String?,
-    val expirationDate: Long?
+    val expirationDate: Long?,
 )

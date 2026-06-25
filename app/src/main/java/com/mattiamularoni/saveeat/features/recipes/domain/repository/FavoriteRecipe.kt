@@ -9,5 +9,5 @@ package com.mattiamularoni.saveeat.features.recipes.domain.repository
 data class FavoriteRecipe(
     val userId: String,
     val recipeId: String,
-    val savedAt: Long
+    val savedAt: Long,
 )

@@ -5,5 +5,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface PantryAssetRepository {
     fun observeAssets(): Flow<Map<String, PantryAsset>>
+
     suspend fun syncAssets()
 }

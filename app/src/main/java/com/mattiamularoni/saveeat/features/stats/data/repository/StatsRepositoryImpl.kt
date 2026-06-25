@@ -35,11 +35,11 @@ import kotlinx.coroutines.withContext
 class StatsRepositoryImpl(
     private val userStatsDao: UserStatsDao,
     private val remoteDataSource: UserStatsRemoteDataSource,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
 ) : StatsRepository {
-
     override fun getUserStats(): Flow<UserStats> =
-        userStatsDao.observe(sessionProvider.getCurrentUserId())
+        userStatsDao
+            .observe(sessionProvider.getCurrentUserId())
             .map { entity -> entity?.toDomain() ?: UserStats() }
 
     override suspend fun refreshUserStats(): Result<Unit> =
@@ -53,18 +53,23 @@ class StatsRepositoryImpl(
             }
         }
 
-    override suspend fun addRecipeCookedStats(kg: Double, euros: Double, points: Int): Result<Unit> =
+    override suspend fun addRecipeCookedStats(
+        kg: Double,
+        euros: Double,
+        points: Int,
+    ): Result<Unit> =
         withContext(Dispatchers.IO) {
             runCatching {
                 val userId = sessionProvider.getCurrentUserId()
                 if (userId.isBlank()) return@runCatching
 
                 val current = userStatsDao.getByUserId(userId)?.toDomain() ?: UserStats()
-                val updated = UserStats(
-                    totalKgSaved = current.totalKgSaved + kg,
-                    totalEurosSaved = current.totalEurosSaved + euros,
-                    totalEcoPoints = current.totalEcoPoints + points
-                )
+                val updated =
+                    UserStats(
+                        totalKgSaved = current.totalKgSaved + kg,
+                        totalEurosSaved = current.totalEurosSaved + euros,
+                        totalEcoPoints = current.totalEcoPoints + points,
+                    )
 
                 val dto = updated.toDto(userId)
                 val remoteResponse = remoteDataSource.upsertUserStats(dto)
@@ -98,7 +103,7 @@ class StatsRepositoryImpl(
             userId = userId,
             totalKgSaved = totalKgSaved,
             totalEurosSaved = totalEurosSaved,
-            totalEcoPoints = totalEcoPoints
+            totalEcoPoints = totalEcoPoints,
         )
 
     private fun UserStatsDto.toEntity(): UserStatsEntity =
@@ -106,6 +111,6 @@ class StatsRepositoryImpl(
             userId = userId,
             totalKgSaved = totalKgSaved,
             totalEurosSaved = totalEurosSaved,
-            totalEcoPoints = totalEcoPoints
+            totalEcoPoints = totalEcoPoints,
         )
 }
