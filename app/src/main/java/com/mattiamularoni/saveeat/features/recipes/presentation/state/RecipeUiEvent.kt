@@ -40,4 +40,18 @@ sealed class RecipeUiEvent {
      * o utente non autenticato).
      */
     data object PremiumUnlockFailed : RecipeUiEvent()
+
+    /**
+     * La ricetta è stata eliminata con successo (locale + remoto).
+     */
+    data object RecipeDeleted : RecipeUiEvent()
+
+    /**
+     * Errore durante l'eliminazione della ricetta.
+     *
+     * @param message descrizione dell'errore per l'utente
+     */
+    data class DeleteError(
+        val message: String,
+    ) : RecipeUiEvent()
 }

@@ -10,6 +10,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Eco
 import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material.icons.filled.RestaurantMenu
@@ -62,6 +63,7 @@ fun RecipeDetailScreen(
 
     val snackbarHostState = remember { SnackbarHostState() }
     val context = LocalContext.current
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         recipeViewModel.events.collect { event ->
@@ -79,8 +81,36 @@ fun RecipeDetailScreen(
                     snackbarHostState.showSnackbar("Aggiunto alla lista della spesa")
                 }
                 is RecipeUiEvent.PremiumUnlockFailed -> Unit // gestito da RecipeScreen
+                is RecipeUiEvent.RecipeDeleted -> Unit // navigazione già avvenuta on-click
+                is RecipeUiEvent.DeleteError -> {
+                    snackbarHostState.showSnackbar(event.message)
+                }
             }
         }
+    }
+
+    if (showDeleteDialog && recipe != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Eliminare la ricetta?") },
+            text = { Text("Questa azione è irreversibile.") },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showDeleteDialog = false
+                        recipeViewModel.deleteRecipe(recipe)
+                        onNavigateBack()
+                    },
+                ) {
+                    Text("Elimina", color = MaterialTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Annulla")
+                }
+            },
+        )
     }
 
     Scaffold(
@@ -145,6 +175,7 @@ fun RecipeDetailScreen(
                 contentPadding = padding,
                 onAddIngredient = { name -> recipeViewModel.addIngredientToShoppingList(name) },
                 ecoPoints = recipeViewModel.pointsPreviewFor(recipe),
+                onDelete = { showDeleteDialog = true },
             )
         }
     }
@@ -158,6 +189,7 @@ private fun DetailContent(
     contentPadding: PaddingValues,
     onAddIngredient: (String) -> Unit,
     ecoPoints: Int,
+    onDelete: () -> Unit,
 ) {
     val steps = remember(recipe.instructions) { splitSteps(recipe.instructions) }
 
@@ -194,10 +226,17 @@ private fun DetailContent(
             Row(
                 modifier =
                     Modifier
+                        .fillMaxWidth()
                         .statusBarsPadding()
-                        .padding(start = 12.dp, top = 4.dp),
+                        .padding(start = 12.dp, end = 12.dp, top = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 CircleIconButton(Icons.AutoMirrored.Filled.ArrowBack, "Indietro") { onNavigateBack() }
+                CircleIconButton(
+                    Icons.Filled.Delete,
+                    "Elimina ricetta",
+                    tint = MaterialTheme.colorScheme.error,
+                ) { onDelete() }
             }
         }
 

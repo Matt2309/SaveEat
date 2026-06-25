@@ -176,6 +176,22 @@ class RecipeRemoteDataSourceImpl(
             }
         }
 
+    override suspend fun deleteRecipe(recipeId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                supabaseClient
+                    .from("recipes")
+                    .delete {
+                        filter {
+                            eq("id", recipeId)
+                        }
+                    }
+                true
+            } catch (e: Exception) {
+                throw Exception("Failed to delete recipe: ${e.message}", e)
+            }
+        }
+
     override suspend fun getFavoriteRecipes(userId: String): List<FavoriteRecipeDto> =
         withContext(Dispatchers.IO) {
             try {

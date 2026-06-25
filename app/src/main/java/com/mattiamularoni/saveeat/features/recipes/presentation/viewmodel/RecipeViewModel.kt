@@ -324,6 +324,24 @@ class RecipeViewModel(
      */
     fun pointsPreviewFor(recipe: Recipe): Int = CookRecipeUseCase.pointsFor(recipe)
 
+    /**
+     * Elimina una ricetta (locale + remoto).
+     *
+     * @param recipe ricetta da eliminare
+     */
+    fun deleteRecipe(recipe: Recipe) {
+        viewModelScope.launch {
+            try {
+                recipeRepository.deleteRecipe(recipe.id)
+                _events.emit(RecipeUiEvent.RecipeDeleted)
+            } catch (e: Exception) {
+                _events.emit(
+                    RecipeUiEvent.DeleteError(e.message ?: "Errore durante l'eliminazione"),
+                )
+            }
+        }
+    }
+
     // ===== SHOPPING LIST OPERATIONS =====
 
     /**

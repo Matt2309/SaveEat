@@ -276,6 +276,23 @@ class RecipeRepositoryImpl(
         }
 
     /**
+     * Elimina una ricetta.
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata
+     */
+    override suspend fun deleteRecipe(recipeId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                remoteDataSource.deleteRecipe(recipeId)
+                val deletedCount = recipeDao.deleteRecipe(recipeId)
+                deletedCount > 0
+            } catch (e: Exception) {
+                throw Exception("Failed to delete recipe: ${e.message}", e)
+            }
+        }
+
+    /**
      * Verifica se una ricetta è nei preferiti dell'utente.
      *
      * @param userId UUID dell'utente

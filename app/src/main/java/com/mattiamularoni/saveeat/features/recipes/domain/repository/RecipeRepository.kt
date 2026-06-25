@@ -75,6 +75,20 @@ interface RecipeRepository {
      */
     suspend fun getRecipesByTags(tags: List<String>): List<Recipe>
 
+    /**
+     * Elimina una ricetta.
+     *
+     * Logica:
+     * - Delete da Supabase recipes
+     * - Delete da Room
+     * - Ritorna true se eliminata
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata, false se non trovata
+     * @throws Exception in caso di errore
+     */
+    suspend fun deleteRecipe(recipeId: String): Boolean
+
     // ===== INTELLIGENT GENERATION =====
 
     /**

@@ -111,4 +111,13 @@ interface RecipeRemoteDataSource {
         userId: String,
         recipeId: String,
     ): Boolean
+
+    /**
+     * Elimina una ricetta dalla tabella recipes di Supabase.
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata
+     * @throws Exception in caso di errore
+     */
+    suspend fun deleteRecipe(recipeId: String): Boolean
 }
