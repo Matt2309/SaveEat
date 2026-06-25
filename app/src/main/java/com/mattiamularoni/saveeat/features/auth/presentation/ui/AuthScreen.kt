@@ -2,7 +2,6 @@ package com.mattiamularoni.saveeat.features.auth.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -17,10 +16,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -30,6 +26,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -38,6 +35,7 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.mattiamularoni.saveeat.BuildConfig
+import com.mattiamularoni.saveeat.R
 import com.mattiamularoni.saveeat.features.auth.presentation.util.AuthValidation
 import kotlinx.coroutines.launch
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthEffect
@@ -446,37 +444,12 @@ private fun SaveEatTextField(
     )
 }
 
-/** Logo Google "G" multicolore disegnato a mano (nessun asset esterno). */
 @Composable
 private fun GoogleLogo(modifier: Modifier = Modifier) {
-    val blue = Color(0xFF4285F4)
-    val red = Color(0xFFEA4335)
-    val yellow = Color(0xFFFBBC05)
-    val green = Color(0xFF34A853)
-
-    Canvas(modifier = modifier) {
-        val strokeWidth = size.minDimension * 0.22f
-        val inset = strokeWidth / 2f
-        val arcTopLeft = Offset(inset, inset)
-        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
-        val stroke = Stroke(width = strokeWidth)
-
-        // Angoli in convenzione Compose: 0° = destra, 90° = basso (y verso il basso).
-        // Apertura sulla destra per il "trattino" del G.
-        drawArc(red, startAngle = 200f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-sinistra
-        drawArc(blue, startAngle = 270f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-destra
-        drawArc(yellow, startAngle = 130f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // sinistra
-        drawArc(green, startAngle = 70f, sweepAngle = 60f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // basso
-
-        // Trattino orizzontale blu (dal centro verso destra)
-        drawRect(
-            color = blue,
-            topLeft = Offset(size.width / 2f, size.height / 2f - strokeWidth / 2f),
-            size = Size(size.width / 2f - inset, strokeWidth)
-        )
-    }
+    Icon(
+        painter = painterResource(id = R.drawable.glogo),
+        contentDescription = "Logo Google",
+        modifier = modifier,
+        tint = Color.Unspecified
+    )
 }
