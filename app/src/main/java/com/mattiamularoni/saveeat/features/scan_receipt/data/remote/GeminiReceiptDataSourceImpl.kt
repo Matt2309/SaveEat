@@ -14,7 +14,7 @@ class GeminiReceiptDataSourceImpl : GeminiReceiptDataSource {
     // Configuriamo il modello forzando la risposta come JSON puro
     private val generativeModel =
         GenerativeModel(
-            modelName = "gemini-3.5-flash",
+            modelName = "gemini-3.1-flash-lite",
             apiKey = BuildConfig.GEMINI_API_KEY,
             generationConfig =
                 generationConfig {
