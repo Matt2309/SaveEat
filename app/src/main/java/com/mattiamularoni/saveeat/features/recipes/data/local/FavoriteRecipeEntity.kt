@@ -17,14 +17,14 @@ import androidx.room.PrimaryKey
             entity = RecipeEntity::class,
             parentColumns = ["id"],
             childColumns = ["recipeId"],
-            onDelete = ForeignKey.CASCADE
-        )
-    ]
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
 )
 data class FavoriteRecipeEntity(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
     val userId: String,
     val recipeId: String,
-    val savedAt: Long
+    val savedAt: Long,
 )

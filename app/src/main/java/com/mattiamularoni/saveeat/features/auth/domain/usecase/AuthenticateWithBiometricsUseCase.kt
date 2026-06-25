@@ -15,10 +15,10 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.BiometricRepos
  * @return `true` se il prompt biometrico può essere mostrato, `false` altrimenti.
  */
 class AuthenticateWithBiometricsUseCase(
-    private val biometricRepository: BiometricRepository
+    private val biometricRepository: BiometricRepository,
 ) {
     operator fun invoke(): Boolean =
         biometricRepository.isSessionAuthenticated() &&
-        biometricRepository.isBiometricLoginEnabled() &&
-        biometricRepository.getBiometricAvailabilityStatus() == BiometricAvailabilityStatus.Available
+            biometricRepository.isBiometricLoginEnabled() &&
+            biometricRepository.getBiometricAvailabilityStatus() == BiometricAvailabilityStatus.Available
 }

@@ -5,7 +5,7 @@ import com.mattiamularoni.saveeat.features.shopping_list.domain.repository.Shopp
 import kotlinx.coroutines.flow.Flow
 
 class GetShoppingListUseCase(
-    private val repository: ShoppingListRepository
+    private val repository: ShoppingListRepository,
 ) {
     operator fun invoke(): Flow<List<ShoppingListItem>> = repository.getShoppingList()
 }

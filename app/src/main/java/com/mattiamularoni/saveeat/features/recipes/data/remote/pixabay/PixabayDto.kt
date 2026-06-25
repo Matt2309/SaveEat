@@ -9,11 +9,11 @@ import kotlinx.serialization.Serializable
  */
 @Serializable
 data class PixabayResponseDto(
-    val hits: List<PixabayHitDto> = emptyList()
+    val hits: List<PixabayHitDto> = emptyList(),
 )
 
 @Serializable
 data class PixabayHitDto(
     @SerialName("webformatURL")
-    val webformatUrl: String? = null
+    val webformatUrl: String? = null,
 )

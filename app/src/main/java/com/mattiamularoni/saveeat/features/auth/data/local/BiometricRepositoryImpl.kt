@@ -26,9 +26,8 @@ import kotlinx.coroutines.withContext
 class BiometricRepositoryImpl(
     context: Context,
     private val supabaseClient: SupabaseClient,
-    private val preferenceDataSource: BiometricPreferenceDataSource
+    private val preferenceDataSource: BiometricPreferenceDataSource,
 ) : BiometricRepository {
-
     private val biometricManager = BiometricManager.from(context)
 
     /**
@@ -49,16 +48,14 @@ class BiometricRepositoryImpl(
      *
      * @return `true` se la biometria è abilitata dall'utente, `false` altrimenti.
      */
-    override fun isBiometricLoginEnabled(): Boolean =
-        preferenceDataSource.isBiometricEnabled()
+    override fun isBiometricLoginEnabled(): Boolean = preferenceDataSource.isBiometricEnabled()
 
     /**
      * Verifica se esiste una sessione Supabase autenticata e attiva.
      *
      * @return `true` se [SessionStatus] è [SessionStatus.Authenticated].
      */
-    override fun isSessionAuthenticated(): Boolean =
-        supabaseClient.auth.sessionStatus.value is SessionStatus.Authenticated
+    override fun isSessionAuthenticated(): Boolean = supabaseClient.auth.sessionStatus.value is SessionStatus.Authenticated
 
     /**
      * Verifica se l'identità dell'utente è già stata confermata nella sessione app corrente.
@@ -68,8 +65,7 @@ class BiometricRepositoryImpl(
      *
      * @return `true` se la sessione è già stata confermata.
      */
-    override fun isBiometricConfirmedThisSession(): Boolean =
-        preferenceDataSource.biometricConfirmedThisSession
+    override fun isBiometricConfirmedThisSession(): Boolean = preferenceDataSource.biometricConfirmedThisSession
 
     /**
      * Segna la sessione corrente come confermata.

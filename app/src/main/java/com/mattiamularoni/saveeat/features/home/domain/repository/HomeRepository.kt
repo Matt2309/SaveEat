@@ -70,7 +70,7 @@ data class HomeDashboard(
     val suggestedRecipes: List<SuggestedRecipe>,
     val userStats: UserStats,
     val userProfile: UserProfile,
-    val lastSyncedAt: Long
+    val lastSyncedAt: Long,
 )
 
 /**
@@ -85,7 +85,7 @@ data class ExpiringItem(
     val categoryKey: String? = null,
     val expirationDate: Long,
     val quantity: Double? = null,
-    val unit: String? = null
+    val unit: String? = null,
 )
 
 /**
@@ -98,7 +98,7 @@ data class LeaderboardUser(
     val email: String,
     val displayName: String,
     val avatarUrl: String? = null,
-    val ecoPoints: Int = 0
+    val ecoPoints: Int = 0,
 )
 
 /**
@@ -113,7 +113,7 @@ data class SuggestedRecipe(
     val tags: List<String> = emptyList(),
     val prepTimeMinutes: Int? = null,
     val matchingIngredients: Int = 0,
-    val imageUrl: String? = null
+    val imageUrl: String? = null,
 )
 
 /**
@@ -125,7 +125,7 @@ data class UserStats(
     val totalItems: Int = 0,
     val expiringCount: Int = 0,
     val activePlaceholders: Int = 0,
-    val ecoPoints: Int = 0
+    val ecoPoints: Int = 0,
 )
 
 /**
@@ -137,5 +137,5 @@ data class UserProfile(
     val id: String,
     val displayName: String,
     val avatarUrl: String? = null,
-    val rankPosition: Int = 0
+    val rankPosition: Int = 0,
 )

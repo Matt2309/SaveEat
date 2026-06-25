@@ -9,5 +9,5 @@ data class UserProfileDto(
     val email: String,
     @SerialName("display_name") val displayName: String?,
     @SerialName("avatar_url") val avatarUrl: String?,
-    @SerialName("auth_provider") val authProvider: String
+    @SerialName("auth_provider") val authProvider: String,
 )

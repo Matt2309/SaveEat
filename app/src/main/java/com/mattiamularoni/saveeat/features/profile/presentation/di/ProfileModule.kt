@@ -4,6 +4,7 @@ import com.mattiamularoni.saveeat.features.profile.presentation.viewmodel.Profil
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val profileModule = module {
-    viewModelOf(::ProfileViewModel)
-}
+val profileModule =
+    module {
+        viewModelOf(::ProfileViewModel)
+    }

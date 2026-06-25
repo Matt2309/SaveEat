@@ -39,9 +39,8 @@ class HomeViewModel(
     private val getUserStatsUseCase: GetUserStatsUseCase,
     private val refreshUserStatsUseCase: RefreshUserStatsUseCase,
     private val pantryAssetRepository: PantryAssetRepository,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
 ) : ViewModel() {
-
     val currentUserName = sessionProvider.getUserDisplayName()
     val currentUserId = sessionProvider.getCurrentUserId()
 
@@ -54,13 +53,16 @@ class HomeViewModel(
     val isRefreshing: StateFlow<Boolean> = _isRefreshing.asStateFlow()
 
     // Statistiche di risparmio (kg cibo salvato) per la SavedFoodCard
-    val userStats: StateFlow<UserStats> = getUserStatsUseCase()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserStats())
+    val userStats: StateFlow<UserStats> =
+        getUserStatsUseCase()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), UserStats())
 
     // Mappa categoryKey -> PantryAsset (nome localizzato + immagine), usata per mostrare la
     // foto del prodotto nelle card "In scadenza", con lo stesso pattern della Pantry.
-    val pantryAssets: StateFlow<Map<String, PantryAsset>> = pantryAssetRepository.observeAssets()
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
+    val pantryAssets: StateFlow<Map<String, PantryAsset>> =
+        pantryAssetRepository
+            .observeAssets()
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 
     init {
         // Subscribe al Flow della dashboard per aggiornamenti real-time
@@ -103,17 +105,18 @@ class HomeViewModel(
             getHomeDashboardUseCase()
                 .map { dashboard ->
                     try {
-                        if (dashboard != null) HomeUiState.Success(dashboard) as HomeUiState
-                        else HomeUiState.Empty
+                        if (dashboard != null) {
+                            HomeUiState.Success(dashboard) as HomeUiState
+                        } else {
+                            HomeUiState.Empty
+                        }
                     } catch (exception: Exception) {
                         HomeUiState.Error("Dashboard update failed: ${exception.message}")
                     }
-                }
-                .catch { exception ->
+                }.catch { exception ->
                     // Fallback: mantieni stato precedente oppure mostra errore
                     _uiState.value = HomeUiState.Error("Dashboard update failed: ${exception.message}")
-                }
-                .collect { newState ->
+                }.collect { newState ->
                     _uiState.value = newState
                 }
         }

@@ -38,5 +38,5 @@ data class HomeDashboardEntity(
     @ColumnInfo(name = "last_synced_at")
     val lastSyncedAt: Long,
     @ColumnInfo(name = "created_at")
-    val createdAt: Long
+    val createdAt: Long,
 )

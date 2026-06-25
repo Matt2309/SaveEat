@@ -17,6 +17,7 @@ import androidx.compose.material.icons.outlined.DeleteOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -27,7 +28,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,7 +52,7 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ShoppingListScreen(
     onNavigateBack: () -> Unit = {},
-    viewModel: ShoppingListViewModel = koinViewModel()
+    viewModel: ShoppingListViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -80,12 +80,12 @@ fun ShoppingListScreen(
                         viewModel.clearList()
                         showClearDialog = false
                     },
-                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error),
                 ) { Text("Svuota") }
             },
             dismissButton = {
                 TextButton(onClick = { showClearDialog = false }) { Text("Annulla") }
-            }
+            },
         )
     }
 
@@ -103,31 +103,32 @@ fun ShoppingListScreen(
                 actions = {
                     IconButton(
                         onClick = { NotesIntentHelper.openNotesWithShoppingList(context, items) },
-                        enabled = items.isNotEmpty()
+                        enabled = items.isNotEmpty(),
                     ) {
                         Icon(Icons.AutoMirrored.Outlined.StickyNote2, contentDescription = "Esporta in Note")
                     }
                     IconButton(
                         onClick = { showClearDialog = true },
-                        enabled = items.isNotEmpty()
+                        enabled = items.isNotEmpty(),
                     ) {
                         Icon(
                             Icons.Outlined.DeleteOutline,
                             contentDescription = "Svuota lista",
-                            tint = MaterialTheme.colorScheme.error
+                            tint = MaterialTheme.colorScheme.error,
                         )
                     }
-                }
+                },
             )
-        }
+        },
     ) { padding ->
         when (val state = uiState) {
-            is ShoppingListUiState.Loading -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            is ShoppingListUiState.Loading ->
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
 
             is ShoppingListUiState.Success -> {
                 if (state.items.isEmpty()) {
@@ -136,7 +137,7 @@ fun ShoppingListScreen(
                     LazyColumn(
                         modifier = Modifier.fillMaxSize().padding(padding),
                         contentPadding = PaddingValues(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
                         items(state.items, key = { it.id }) { item ->
                             ShoppingListRow(item = item, onRemove = { viewModel.removeItem(item.id) })
@@ -145,17 +146,18 @@ fun ShoppingListScreen(
                 }
             }
 
-            is ShoppingListUiState.Error -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = state.message,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(24.dp)
-                )
-            }
+            is ShoppingListUiState.Error ->
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = state.message,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(24.dp),
+                    )
+                }
         }
     }
 }
@@ -165,34 +167,38 @@ private fun EmptyShoppingList(modifier: Modifier = Modifier) {
     Box(modifier = modifier, contentAlignment = Alignment.Center) {
         Text(
             text = "Lista della spesa vuota",
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
 @Composable
-private fun ShoppingListRow(item: ShoppingListItem, onRemove: () -> Unit) {
+private fun ShoppingListRow(
+    item: ShoppingListItem,
+    onRemove: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(12.dp)
+        shape = RoundedCornerShape(12.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
                 text = item.name,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Medium,
-                modifier = Modifier.weight(1f)
+                modifier = Modifier.weight(1f),
             )
             IconButton(onClick = onRemove) {
                 Icon(
                     Icons.Outlined.DeleteOutline,
                     contentDescription = "Rimuovi",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

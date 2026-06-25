@@ -20,7 +20,9 @@ import kotlinx.coroutines.launch
  * Sealed interface per gli effetti secondari del ViewModel.
  */
 sealed interface LeaderboardEffect {
-    data class ShowSnackbar(val message: String) : LeaderboardEffect
+    data class ShowSnackbar(
+        val message: String,
+    ) : LeaderboardEffect
 }
 
 /**
@@ -33,9 +35,8 @@ sealed interface LeaderboardEffect {
  * - Emettere effetti (snackbar, etc.)
  */
 class LeaderboardViewModel(
-    private val getLeaderboardUseCase: GetLeaderboardUseCase
+    private val getLeaderboardUseCase: GetLeaderboardUseCase,
 ) : ViewModel() {
-
     private val _uiState = MutableStateFlow<LeaderboardUiState>(LeaderboardUiState.Loading)
     private val _effects = MutableSharedFlow<LeaderboardEffect>()
 
@@ -62,20 +63,19 @@ class LeaderboardViewModel(
 
     private fun observeLeaderboard() {
         observeLeaderboardJob?.cancel()
-        observeLeaderboardJob = viewModelScope.launch {
-            getLeaderboardUseCase()
-                .onEach { users ->
-                    hasLoaded = true
-                    errorMessage = null
-                    _uiState.value = LeaderboardUiState.Success(users)
-                }
-                .catch { throwable ->
-                    hasLoaded = true
-                    errorMessage = throwable.message ?: "Unable to load leaderboard"
-                    _uiState.value = LeaderboardUiState.Error(errorMessage.orEmpty())
-                    _effects.emit(LeaderboardEffect.ShowSnackbar(errorMessage.orEmpty()))
-                }
-                .collect()
-        }
+        observeLeaderboardJob =
+            viewModelScope.launch {
+                getLeaderboardUseCase()
+                    .onEach { users ->
+                        hasLoaded = true
+                        errorMessage = null
+                        _uiState.value = LeaderboardUiState.Success(users)
+                    }.catch { throwable ->
+                        hasLoaded = true
+                        errorMessage = throwable.message ?: "Unable to load leaderboard"
+                        _uiState.value = LeaderboardUiState.Error(errorMessage.orEmpty())
+                        _effects.emit(LeaderboardEffect.ShowSnackbar(errorMessage.orEmpty()))
+                    }.collect()
+            }
     }
 }

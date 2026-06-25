@@ -31,9 +31,8 @@ import java.util.UUID
 class PantryRepositoryImpl(
     private val pantryDao: PantryDao,
     private val remoteDataSource: PantryRemoteDataSource,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
 ) : PantryRepository {
-
     // ===== OBSERVE & SYNC =====
 
     /**
@@ -47,11 +46,10 @@ class PantryRepositoryImpl(
      *
      * @return Flow della lista pantry items aggiornato
      */
-    override fun observePantryItems(): Flow<List<PantryItem>> {
-        return pantryDao
+    override fun observePantryItems(): Flow<List<PantryItem>> =
+        pantryDao
             .getPantryItems(sessionProvider.getCurrentUserId())
             .map { entities -> entities.map { entity -> entityToDomain(entity) } }
-    }
 
     /**
      * Sincronizza la dispensa con Supabase.
@@ -66,16 +64,17 @@ class PantryRepositoryImpl(
      * @return numero di item sincronizzati
      * @throws Exception in caso di errore rete o parsing
      */
-    override suspend fun syncPantry(): Int = withContext(Dispatchers.IO) {
-        try {
-            val remoteItems = remoteDataSource.getPantryItems(sessionProvider.getCurrentUserId())
-            val entities = PantryMapper.dtosToEntities(remoteItems)
-            pantryDao.insertPantryItems(entities)
-            entities.size
-        } catch (e: Exception) {
-            throw Exception("Sync failed: ${e.message}", e)
+    override suspend fun syncPantry(): Int =
+        withContext(Dispatchers.IO) {
+            try {
+                val remoteItems = remoteDataSource.getPantryItems(sessionProvider.getCurrentUserId())
+                val entities = PantryMapper.dtosToEntities(remoteItems)
+                pantryDao.insertPantryItems(entities)
+                entities.size
+            } catch (e: Exception) {
+                throw Exception("Sync failed: ${e.message}", e)
+            }
         }
-    }
 
     // ===== CRUD BASIC =====
 
@@ -113,21 +112,22 @@ class PantryRepositoryImpl(
                 val newId = UUID.randomUUID().toString()
                 val now = System.currentTimeMillis()
 
-                val entity = PantryEntity(
-                    id = newId,
-                    userId = sessionProvider.getCurrentUserId(),
-                    receiptId = item.receiptId,
-                    name = item.name,
-                    category = item.category,
-                    categoryKey = item.categoryKey,
-                    isPlaceholder = item.isPlaceholder,
-                    status = item.status,
-                    quantity = item.quantity,
-                    unit = item.unit,
-                    expirationDate = item.expirationDate,
-                    createdAt = now,
-                    updatedAt = now
-                )
+                val entity =
+                    PantryEntity(
+                        id = newId,
+                        userId = sessionProvider.getCurrentUserId(),
+                        receiptId = item.receiptId,
+                        name = item.name,
+                        category = item.category,
+                        categoryKey = item.categoryKey,
+                        isPlaceholder = item.isPlaceholder,
+                        status = item.status,
+                        quantity = item.quantity,
+                        unit = item.unit,
+                        expirationDate = item.expirationDate,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
 
                 val dto = PantryMapper.entityToDto(entity)
                 val remoteResponse = remoteDataSource.addPantryItem(dto)
@@ -157,34 +157,40 @@ class PantryRepositoryImpl(
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    override suspend fun updatePantryItem(itemId: String, item: PantryItem): Boolean =
+    override suspend fun updatePantryItem(
+        itemId: String,
+        item: PantryItem,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 val existing = pantryDao.getPantryItemById(itemId) ?: return@withContext false
 
-                val updateMap: Map<String, Any?> = mapOf(
-                    "name" to item.name,
-                    "category" to item.category,
-                    "quantity" to item.quantity,
-                    "unit" to (item.unit ?: ""),
-                    "expiration_date" to item.expirationDate?.let {
-                        Instant.ofEpochMilli(it).toString()
-                    },
-                    "status" to item.status,
-                    "updated_at" to Instant.now().toString()
-                )
+                val updateMap: Map<String, Any?> =
+                    mapOf(
+                        "name" to item.name,
+                        "category" to item.category,
+                        "quantity" to item.quantity,
+                        "unit" to (item.unit ?: ""),
+                        "expiration_date" to
+                            item.expirationDate?.let {
+                                Instant.ofEpochMilli(it).toString()
+                            },
+                        "status" to item.status,
+                        "updated_at" to Instant.now().toString(),
+                    )
 
                 remoteDataSource.updatePantryItem(itemId, updateMap)
 
-                val updatedEntity = existing.copy(
-                    name = item.name,
-                    category = item.category,
-                    quantity = item.quantity,
-                    unit = item.unit,
-                    expirationDate = item.expirationDate,
-                    status = item.status,
-                    updatedAt = System.currentTimeMillis()
-                )
+                val updatedEntity =
+                    existing.copy(
+                        name = item.name,
+                        category = item.category,
+                        quantity = item.quantity,
+                        unit = item.unit,
+                        expirationDate = item.expirationDate,
+                        status = item.status,
+                        updatedAt = System.currentTimeMillis(),
+                    )
 
                 pantryDao.updatePantryItem(updatedEntity)
                 true
@@ -236,26 +242,30 @@ class PantryRepositoryImpl(
      * @return UUID del placeholder creato
      * @throws Exception in caso di errore
      */
-    override suspend fun addPlaceholder(name: String, category: String): String =
+    override suspend fun addPlaceholder(
+        name: String,
+        category: String,
+    ): String =
         withContext(Dispatchers.IO) {
             try {
                 val placeholderId = UUID.randomUUID().toString()
                 val now = System.currentTimeMillis()
 
-                val entity = PantryEntity(
-                    id = placeholderId,
-                    userId = sessionProvider.getCurrentUserId(),
-                    receiptId = null,
-                    name = name,
-                    category = category,
-                    isPlaceholder = true,
-                    status = "ACTIVE",
-                    quantity = 1.0,
-                    unit = null,
-                    expirationDate = null,
-                    createdAt = now,
-                    updatedAt = now
-                )
+                val entity =
+                    PantryEntity(
+                        id = placeholderId,
+                        userId = sessionProvider.getCurrentUserId(),
+                        receiptId = null,
+                        name = name,
+                        category = category,
+                        isPlaceholder = true,
+                        status = "ACTIVE",
+                        quantity = 1.0,
+                        unit = null,
+                        expirationDate = null,
+                        createdAt = now,
+                        updatedAt = now,
+                    )
 
                 val dto = PantryMapper.entityToDto(entity)
                 val remoteResponse = remoteDataSource.addPantryItem(dto)
@@ -285,46 +295,51 @@ class PantryRepositoryImpl(
      */
     override suspend fun convertPlaceholderToRealItem(
         placeholderId: String,
-        realItem: PantryItem
-    ): Unit = withContext(Dispatchers.IO) {
-        try {
-            val placeholder = pantryDao.getPantryItemById(placeholderId)
-                ?: throw Exception("Placeholder not found: $placeholderId")
+        realItem: PantryItem,
+    ): Unit =
+        withContext(Dispatchers.IO) {
+            try {
+                val placeholder =
+                    pantryDao.getPantryItemById(placeholderId)
+                        ?: throw Exception("Placeholder not found: $placeholderId")
 
-            val updateMap: Map<String, Any?> = mapOf(
-                "is_placeholder" to false,
-                "receipt_id" to (realItem.receiptId ?: ""),
-                "name" to realItem.name,
-                "category" to realItem.category,
-                "quantity" to realItem.quantity,
-                "unit" to (realItem.unit ?: ""),
-                "expiration_date" to realItem.expirationDate?.let {
-                    Instant.ofEpochMilli(it).toString()
-                },
-                "status" to "ACTIVE",
-                "updated_at" to Instant.now().toString()
-            )
+                val updateMap: Map<String, Any?> =
+                    mapOf(
+                        "is_placeholder" to false,
+                        "receipt_id" to (realItem.receiptId ?: ""),
+                        "name" to realItem.name,
+                        "category" to realItem.category,
+                        "quantity" to realItem.quantity,
+                        "unit" to (realItem.unit ?: ""),
+                        "expiration_date" to
+                            realItem.expirationDate?.let {
+                                Instant.ofEpochMilli(it).toString()
+                            },
+                        "status" to "ACTIVE",
+                        "updated_at" to Instant.now().toString(),
+                    )
 
-            remoteDataSource.updatePantryItem(placeholderId, updateMap)
+                remoteDataSource.updatePantryItem(placeholderId, updateMap)
 
-            val convertedEntity = placeholder.copy(
-                isPlaceholder = false,
-                receiptId = realItem.receiptId,
-                name = realItem.name,
-                category = realItem.category,
-                categoryKey = realItem.categoryKey,
-                quantity = realItem.quantity,
-                unit = realItem.unit,
-                expirationDate = realItem.expirationDate,
-                status = "ACTIVE",
-                updatedAt = System.currentTimeMillis()
-            )
+                val convertedEntity =
+                    placeholder.copy(
+                        isPlaceholder = false,
+                        receiptId = realItem.receiptId,
+                        name = realItem.name,
+                        category = realItem.category,
+                        categoryKey = realItem.categoryKey,
+                        quantity = realItem.quantity,
+                        unit = realItem.unit,
+                        expirationDate = realItem.expirationDate,
+                        status = "ACTIVE",
+                        updatedAt = System.currentTimeMillis(),
+                    )
 
-            pantryDao.updatePantryItem(convertedEntity)
-        } catch (e: Exception) {
-            throw Exception("Failed to convert placeholder: ${e.message}", e)
+                pantryDao.updatePantryItem(convertedEntity)
+            } catch (e: Exception) {
+                throw Exception("Failed to convert placeholder: ${e.message}", e)
+            }
         }
-    }
 
     /**
      * Trova il miglior placeholder matching per un nome di prodotto.
@@ -343,17 +358,18 @@ class PantryRepositoryImpl(
             try {
                 val placeholders = pantryDao.getPlaceholders(sessionProvider.getCurrentUserId())
 
-                val bestMatch = placeholders
-                    .filter { placeholder ->
-                        PlaceholderMatcher.fuzzyMatch(placeholder.name, itemName)
-                    }
-                    .maxByOrNull { placeholder ->
-                        PlaceholderMatcher.similarityScore(placeholder.name, itemName)
-                    }
+                val bestMatch =
+                    placeholders
+                        .filter { placeholder ->
+                            PlaceholderMatcher.fuzzyMatch(placeholder.name, itemName)
+                        }.maxByOrNull { placeholder ->
+                            PlaceholderMatcher.similarityScore(placeholder.name, itemName)
+                        }
 
-                val score = bestMatch?.let {
-                    PlaceholderMatcher.similarityScore(it.name, itemName)
-                } ?: 0.0
+                val score =
+                    bestMatch?.let {
+                        PlaceholderMatcher.similarityScore(it.name, itemName)
+                    } ?: 0.0
 
                 if (bestMatch != null && score > 0.7) {
                     entityToDomain(bestMatch)
@@ -375,33 +391,36 @@ class PantryRepositoryImpl(
      */
     override suspend fun updatePlaceholder(
         placeholderId: String,
-        updates: Map<String, Any>
-    ): Boolean = withContext(Dispatchers.IO) {
-        try {
-            val existing = pantryDao.getPantryItemById(placeholderId) ?: return@withContext false
+        updates: Map<String, Any>,
+    ): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                val existing = pantryDao.getPantryItemById(placeholderId) ?: return@withContext false
 
-            if (!existing.isPlaceholder) {
-                throw Exception("Item is not a placeholder")
+                if (!existing.isPlaceholder) {
+                    throw Exception("Item is not a placeholder")
+                }
+
+                val updateMap: Map<String, Any> =
+                    updates.toMutableMap().apply {
+                        this["updated_at"] = Instant.now().toString()
+                    }
+
+                remoteDataSource.updatePantryItem(placeholderId, updateMap)
+
+                val updatedEntity =
+                    existing.copy(
+                        name = (updates["name"] as? String) ?: existing.name,
+                        category = (updates["category"] as? String) ?: existing.category,
+                        updatedAt = System.currentTimeMillis(),
+                    )
+
+                pantryDao.updatePantryItem(updatedEntity)
+                true
+            } catch (e: Exception) {
+                throw Exception("Failed to update placeholder: ${e.message}", e)
             }
-
-            val updateMap: Map<String, Any> = updates.toMutableMap().apply {
-                this["updated_at"] = Instant.now().toString()
-            }
-
-            remoteDataSource.updatePantryItem(placeholderId, updateMap)
-
-            val updatedEntity = existing.copy(
-                name = (updates["name"] as? String) ?: existing.name,
-                category = (updates["category"] as? String) ?: existing.category,
-                updatedAt = System.currentTimeMillis()
-            )
-
-            pantryDao.updatePantryItem(updatedEntity)
-            true
-        } catch (e: Exception) {
-            throw Exception("Failed to update placeholder: ${e.message}", e)
         }
-    }
 
     /**
      * Rimuove un placeholder dalla dispensa.
@@ -442,14 +461,16 @@ class PantryRepositoryImpl(
      * @param items elementi estratti da Gemini OCR
      * @throws Exception in caso di errore
      */
-    override suspend fun saveReceiptItems(receiptId: String, items: List<PantryItem>) =
-        withContext(Dispatchers.IO) {
-            try {
-                mergeReceiptItemsWithPantry(receiptId, items)
-            } catch (e: Exception) {
-                throw Exception("Failed to save receipt items: ${e.message}", e)
-            }
+    override suspend fun saveReceiptItems(
+        receiptId: String,
+        items: List<PantryItem>,
+    ) = withContext(Dispatchers.IO) {
+        try {
+            mergeReceiptItemsWithPantry(receiptId, items)
+        } catch (e: Exception) {
+            throw Exception("Failed to save receipt items: ${e.message}", e)
         }
+    }
 
     /**
      * Merge automatico di items estratti da scontrino con placeholder existenti.
@@ -465,7 +486,7 @@ class PantryRepositoryImpl(
      */
     override suspend fun mergeReceiptItemsWithPantry(
         receiptId: String,
-        receiptItems: List<PantryItem>
+        receiptItems: List<PantryItem>,
     ) = withContext(Dispatchers.IO) {
         try {
             val validReceiptId = if (receiptId.isBlank()) null else receiptId
@@ -478,16 +499,16 @@ class PantryRepositoryImpl(
                         matchingPlaceholder.id,
                         receiptItem.copy(
                             receiptId = validReceiptId,
-                            isPlaceholder = false
-                        )
+                            isPlaceholder = false,
+                        ),
                     )
                 } else {
                     // Create new item if no match
                     addPantryItem(
                         receiptItem.copy(
                             receiptId = validReceiptId,
-                            isPlaceholder = false
-                        )
+                            isPlaceholder = false,
+                        ),
                     )
                 }
             }
@@ -509,37 +530,42 @@ class PantryRepositoryImpl(
      * @return numero di duplicati rimossi
      * @throws Exception in caso di errore
      */
-    override suspend fun deduplicatePantryItems(): Int = withContext(Dispatchers.IO) {
-        try {
-            var removed = 0
+    override suspend fun deduplicatePantryItems(): Int =
+        withContext(Dispatchers.IO) {
+            try {
+                var removed = 0
 
-            // Fetch all pantry items from local cache
-            val allItems: List<PantryEntity> = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
+                // Fetch all pantry items from local cache
+                val allItems: List<PantryEntity> = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
 
-            // Group by (name, category)
-            val grouped = allItems.groupBy { Pair(it.name, it.category) }
+                // Group by (name, category)
+                val grouped = allItems.groupBy { Pair(it.name, it.category) }
 
-            for ((_, group) in grouped) {
-                if (group.size > 1) {
-                    // Keep the most recent, delete others
-                    val sorted = group.sortedByDescending { it.updatedAt }
-                    for (i in 1 until sorted.size) {
-                        try {
-                            remoteDataSource.deletePantryItem(sorted[i].id)
-                        } catch (e: Exception) {
-                            android.util.Log.e("PantryRepositoryImpl", "Eliminazione remota duplicato fallita per id=${sorted[i].id}: ${e.message}", e)
+                for ((_, group) in grouped) {
+                    if (group.size > 1) {
+                        // Keep the most recent, delete others
+                        val sorted = group.sortedByDescending { it.updatedAt }
+                        for (i in 1 until sorted.size) {
+                            try {
+                                remoteDataSource.deletePantryItem(sorted[i].id)
+                            } catch (e: Exception) {
+                                android.util.Log.e(
+                                    "PantryRepositoryImpl",
+                                    "Eliminazione remota duplicato fallita per id=${sorted[i].id}: ${e.message}",
+                                    e,
+                                )
+                            }
+                            pantryDao.deletePantryItemById(sorted[i].id)
+                            removed++
                         }
-                        pantryDao.deletePantryItemById(sorted[i].id)
-                        removed++
                     }
                 }
-            }
 
-            removed
-        } catch (e: Exception) {
-            throw Exception("Failed to deduplicate: ${e.message}", e)
+                removed
+            } catch (e: Exception) {
+                throw Exception("Failed to deduplicate: ${e.message}", e)
+            }
         }
-    }
 
     // ===== STATUS & EXPIRATION =====
 
@@ -551,22 +577,27 @@ class PantryRepositoryImpl(
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    override suspend fun updateItemStatus(itemId: String, status: String): Boolean =
+    override suspend fun updateItemStatus(
+        itemId: String,
+        status: String,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 val existing = pantryDao.getPantryItemById(itemId) ?: return@withContext false
 
-                val updateMap: Map<String, Any> = mapOf(
-                    "status" to status,
-                    "updated_at" to Instant.now().toString()
-                )
+                val updateMap: Map<String, Any> =
+                    mapOf(
+                        "status" to status,
+                        "updated_at" to Instant.now().toString(),
+                    )
 
                 remoteDataSource.updatePantryItem(itemId, updateMap)
 
-                val updatedEntity = existing.copy(
-                    status = status,
-                    updatedAt = System.currentTimeMillis()
-                )
+                val updatedEntity =
+                    existing.copy(
+                        status = status,
+                        updatedAt = System.currentTimeMillis(),
+                    )
 
                 pantryDao.updatePantryItem(updatedEntity)
                 true
@@ -583,23 +614,28 @@ class PantryRepositoryImpl(
      * @return true se successo, false se non trovato
      * @throws Exception in caso di errore
      */
-    override suspend fun updateExpirationDate(itemId: String, expirationDate: Long): Boolean =
+    override suspend fun updateExpirationDate(
+        itemId: String,
+        expirationDate: Long,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 val existing = pantryDao.getPantryItemById(itemId) ?: return@withContext false
 
                 val expirationIso = Instant.ofEpochMilli(expirationDate).toString()
-                val updateMap = mapOf(
-                    "expiration_date" to expirationIso,
-                    "updated_at" to Instant.now().toString()
-                )
+                val updateMap =
+                    mapOf(
+                        "expiration_date" to expirationIso,
+                        "updated_at" to Instant.now().toString(),
+                    )
 
                 remoteDataSource.updatePantryItem(itemId, updateMap)
 
-                val updatedEntity = existing.copy(
-                    expirationDate = expirationDate,
-                    updatedAt = System.currentTimeMillis()
-                )
+                val updatedEntity =
+                    existing.copy(
+                        expirationDate = expirationDate,
+                        updatedAt = System.currentTimeMillis(),
+                    )
 
                 pantryDao.updatePantryItem(updatedEntity)
                 true
@@ -637,7 +673,8 @@ class PantryRepositoryImpl(
 
     override suspend fun getItemsDueForNotification(windowEnd: Long): List<PantryItem> =
         withContext(Dispatchers.IO) {
-            pantryDao.getItemsDueForNotification(sessionProvider.getCurrentUserId(), windowEnd)
+            pantryDao
+                .getItemsDueForNotification(sessionProvider.getCurrentUserId(), windowEnd)
                 .map { entityToDomain(it) }
         }
 
@@ -656,24 +693,27 @@ class PantryRepositoryImpl(
      * - Se nessun match, non fa nulla (fail-safe)
      * - Se newQuantity <= 0, elimina l'elemento; altrimenti aggiorna la quantità
      */
-    override suspend fun deductIngredientQuantity(ingredientName: String, amountToDeduct: Double) =
-        withContext(Dispatchers.IO) {
-            try {
-                val items = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
-                val match = items.firstOrNull { entity ->
+    override suspend fun deductIngredientQuantity(
+        ingredientName: String,
+        amountToDeduct: Double,
+    ) = withContext(Dispatchers.IO) {
+        try {
+            val items = pantryDao.getPantryItems(sessionProvider.getCurrentUserId()).first()
+            val match =
+                items.firstOrNull { entity ->
                     !entity.isPlaceholder && ingredientMatchesPantryName(ingredientName, entity.name)
                 } ?: return@withContext
 
-                val newQuantity = match.quantity - amountToDeduct
-                if (newQuantity <= 0) {
-                    deletePantryItem(match.id)
-                } else {
-                    updatePantryItem(match.id, entityToDomain(match).copy(quantity = newQuantity))
-                }
-            } catch (e: Exception) {
-                throw Exception("Failed to deduct ingredient quantity: ${e.message}", e)
+            val newQuantity = match.quantity - amountToDeduct
+            if (newQuantity <= 0) {
+                deletePantryItem(match.id)
+            } else {
+                updatePantryItem(match.id, entityToDomain(match).copy(quantity = newQuantity))
             }
+        } catch (e: Exception) {
+            throw Exception("Failed to deduct ingredient quantity: ${e.message}", e)
         }
+    }
 
     // ===== HELPERS =====
 
@@ -683,8 +723,8 @@ class PantryRepositoryImpl(
      * @param entity entità Room
      * @return modello PantryItem di dominio
      */
-    private fun entityToDomain(entity: PantryEntity): PantryItem {
-        return PantryItem(
+    private fun entityToDomain(entity: PantryEntity): PantryItem =
+        PantryItem(
             id = entity.id,
             userId = entity.userId,
             receiptId = entity.receiptId,
@@ -695,7 +735,6 @@ class PantryRepositoryImpl(
             status = entity.status,
             quantity = entity.quantity,
             unit = entity.unit,
-            expirationDate = entity.expirationDate
+            expirationDate = entity.expirationDate,
         )
-    }
 }

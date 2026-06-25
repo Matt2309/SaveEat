@@ -2,14 +2,12 @@ package com.mattiamularoni.saveeat.features.leaderboard.presentation.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.NotificationsOff
@@ -43,7 +41,7 @@ fun LeaderboardScreen(
     onNavigateBack: () -> Unit = {},
     onNavigateToProfile: () -> Unit = {},
     viewModel: LeaderboardViewModel = koinViewModel(),
-    sessionProvider: SessionProvider = koinInject()
+    sessionProvider: SessionProvider = koinInject(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val currentUserId = remember { sessionProvider.getCurrentUserId() }
@@ -55,21 +53,23 @@ fun LeaderboardScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.surface,
-        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
-        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) }
+        contentWindowInsets =
+            androidx.compose.foundation.layout
+                .WindowInsets(0),
+        topBar = { LeaderboardTopBar(onAvatarClick = onNavigateToProfile, expiryAlertsEnabled = expiryAlertsEnabled) },
     ) { padding ->
         Box(modifier = Modifier.fillMaxSize().padding(padding)) {
             when (val state = uiState) {
                 is LeaderboardUiState.Loading ->
                     com.mattiamularoni.saveeat.core.ui.SaveEatLoadingSkeleton(
-                        modifier = Modifier.align(Alignment.TopCenter)
+                        modifier = Modifier.align(Alignment.TopCenter),
                     )
 
                 is LeaderboardUiState.Error ->
                     Text(
                         text = state.message,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.align(Alignment.Center).padding(24.dp)
+                        modifier = Modifier.align(Alignment.Center).padding(24.dp),
                     )
 
                 is LeaderboardUiState.Success ->
@@ -80,54 +80,64 @@ fun LeaderboardScreen(
 }
 
 @Composable
-private fun LeaderboardTopBar(onAvatarClick: () -> Unit, expiryAlertsEnabled: Boolean = true) {
+private fun LeaderboardTopBar(
+    onAvatarClick: () -> Unit,
+    expiryAlertsEnabled: Boolean = true,
+) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
-            .statusBarsPadding()
-            .height(56.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface)
+                .statusBarsPadding()
+                .height(56.dp),
     ) {
         com.mattiamularoni.saveeat.core.ui.UserAvatar(
             size = 32.dp,
             onClick = onAvatarClick,
-            modifier = Modifier
-                .align(Alignment.CenterStart)
-                .padding(start = 16.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 16.dp),
         )
         Text(
             text = "SaveEat",
             color = MaterialTheme.colorScheme.primary,
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.align(Alignment.Center)
+            modifier = Modifier.align(Alignment.Center),
         )
         IconButton(
             onClick = { /* TODO: notifiche */ },
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .padding(end = 8.dp)
+            modifier =
+                Modifier
+                    .align(Alignment.CenterEnd)
+                    .padding(end = 8.dp),
         ) {
             Icon(
                 imageVector = if (expiryAlertsEnabled) Icons.Outlined.Notifications else Icons.Outlined.NotificationsOff,
                 contentDescription = "Notifiche",
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.primary,
             )
         }
     }
 }
 
 @Composable
-private fun LeaderboardContent(users: List<LeaderboardUserUi>, currentUserId: String) {
+private fun LeaderboardContent(
+    users: List<LeaderboardUserUi>,
+    currentUserId: String,
+) {
     val currentUser = users.firstOrNull { it.id == currentUserId }
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 16.dp)
-            .padding(top = 8.dp, bottom = 96.dp),
-        verticalArrangement = Arrangement.spacedBy(24.dp)
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp)
+                .padding(top = 8.dp, bottom = 96.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         // Intestazione
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -135,12 +145,12 @@ private fun LeaderboardContent(users: List<LeaderboardUserUi>, currentUserId: St
                 text = "Classifica Globale",
                 style = MaterialTheme.typography.headlineMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurface
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = "Confrontati con la community e scala la vetta dell'ecosostenibilità.",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
 
@@ -153,7 +163,7 @@ private fun LeaderboardContent(users: List<LeaderboardUserUi>, currentUserId: St
         if (users.isEmpty()) {
             Text(
                 text = "Nessun utente nella classifica.",
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         } else {
             LeaderboardBoard(users = users, currentUser = currentUser)
@@ -166,7 +176,7 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
     Surface(
         shape = RoundedCornerShape(24.dp),
         color = MaterialTheme.colorScheme.secondaryContainer,
-        modifier = Modifier.fillMaxWidth()
+        modifier = Modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -178,7 +188,7 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
                             style = MaterialTheme.typography.labelSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                         )
                     }
                 }
@@ -187,13 +197,13 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
                         text = "La tua posizione",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.SemiBold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                     Text(
                         text = "%,d Eco-punti".format(user.ecoPoints),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }
@@ -205,13 +215,14 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
                         Text(
                             text = user.ecoTitle.label,
                             style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(horizontal = 4.dp)
+                            modifier = Modifier.padding(horizontal = 4.dp),
                         )
                     },
-                    colors = AssistChipDefaults.assistChipColors(
-                        disabledContainerColor = MaterialTheme.colorScheme.surface,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
+                    colors =
+                        AssistChipDefaults.assistChipColors(
+                            disabledContainerColor = MaterialTheme.colorScheme.surface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                        ),
                 )
             }
         }
@@ -219,7 +230,10 @@ private fun YourPositionCard(user: LeaderboardUserUi) {
 }
 
 @Composable
-private fun LeaderboardBoard(users: List<LeaderboardUserUi>, currentUser: LeaderboardUserUi?) {
+private fun LeaderboardBoard(
+    users: List<LeaderboardUserUi>,
+    currentUser: LeaderboardUserUi?,
+) {
     Surface(shape = RoundedCornerShape(24.dp), color = MaterialTheme.colorScheme.surfaceContainer) {
         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
             // Podio top 3
@@ -250,7 +264,7 @@ private fun Podium(top: List<LeaderboardUserUi>) {
     Row(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.SpaceEvenly,
-        verticalAlignment = Alignment.Bottom
+        verticalAlignment = Alignment.Bottom,
     ) {
         top.getOrNull(1)?.let { PodiumItem(it, Silver, big = false, modifier = Modifier.weight(1f)) }
             ?: Spacer(Modifier.weight(1f))
@@ -262,11 +276,16 @@ private fun Podium(top: List<LeaderboardUserUi>) {
 }
 
 @Composable
-private fun PodiumItem(user: LeaderboardUserUi, accent: Color, big: Boolean, modifier: Modifier = Modifier) {
+private fun PodiumItem(
+    user: LeaderboardUserUi,
+    accent: Color,
+    big: Boolean,
+    modifier: Modifier = Modifier,
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
         Box(contentAlignment = Alignment.BottomCenter) {
             if (big) {
@@ -274,7 +293,7 @@ private fun PodiumItem(user: LeaderboardUserUi, accent: Color, big: Boolean, mod
                     Icons.Filled.Star,
                     contentDescription = null,
                     tint = Gold,
-                    modifier = Modifier.size(24.dp).align(Alignment.TopCenter).offset(y = (-16).dp)
+                    modifier = Modifier.size(24.dp).align(Alignment.TopCenter).offset(y = (-16).dp),
                 )
             }
             LbAvatar(user.avatarUrl, user.displayName, if (big) 76.dp else 60.dp, ringColor = accent)
@@ -284,7 +303,7 @@ private fun PodiumItem(user: LeaderboardUserUi, accent: Color, big: Boolean, mod
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp)
+                    modifier = Modifier.padding(horizontal = 9.dp, vertical = 3.dp),
                 )
             }
         }
@@ -296,13 +315,13 @@ private fun PodiumItem(user: LeaderboardUserUi, accent: Color, big: Boolean, mod
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
         Text(
             text = "%,d pt".format(user.ecoPoints),
             style = MaterialTheme.typography.bodyMedium,
             fontWeight = if (big) FontWeight.Bold else FontWeight.Normal,
-            color = if (big) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            color = if (big) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -311,22 +330,23 @@ private fun PodiumItem(user: LeaderboardUserUi, accent: Color, big: Boolean, mod
 private fun LeaderboardRow(
     user: LeaderboardUserUi,
     highlighted: Boolean,
-    nameOverride: String? = null
+    nameOverride: String? = null,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(if (highlighted) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .background(if (highlighted) MaterialTheme.colorScheme.secondaryContainer else Color.Transparent)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Text(
             text = user.rank.toString(),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.widthIn(min = 24.dp)
+            modifier = Modifier.widthIn(min = 24.dp),
         )
         LbAvatar(user.avatarUrl, user.displayName, 36.dp)
         Column(modifier = Modifier.weight(1f)) {
@@ -336,7 +356,7 @@ private fun LeaderboardRow(
                 fontWeight = FontWeight.SemiBold,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow = TextOverflow.Ellipsis,
             )
             AssistChip(
                 onClick = {},
@@ -344,30 +364,36 @@ private fun LeaderboardRow(
                 label = {
                     Text(
                         text = user.ecoTitle.label,
-                        style = MaterialTheme.typography.labelSmall
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 },
-                modifier = Modifier.height(24.dp)
+                modifier = Modifier.height(24.dp),
             )
         }
         Text(
             text = "%,d pt".format(user.ecoPoints),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+            color = if (highlighted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
         )
     }
 }
 
 @Composable
-private fun LbAvatar(url: String?, name: String, size: Dp, ringColor: Color? = null) {
+private fun LbAvatar(
+    url: String?,
+    name: String,
+    size: Dp,
+    ringColor: Color? = null,
+) {
     Box(
-        modifier = Modifier
-            .size(size)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .then(if (ringColor != null) Modifier.border(3.dp, ringColor, CircleShape) else Modifier),
-        contentAlignment = Alignment.Center
+        modifier =
+            Modifier
+                .size(size)
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant)
+                .then(if (ringColor != null) Modifier.border(3.dp, ringColor, CircleShape) else Modifier),
+        contentAlignment = Alignment.Center,
     ) {
         if (!url.isNullOrBlank()) {
             AsyncImage(model = url, contentDescription = name, modifier = Modifier.fillMaxSize().clip(CircleShape))
@@ -376,7 +402,7 @@ private fun LbAvatar(url: String?, name: String, size: Dp, ringColor: Color? = n
                 text = name.trim().take(1).uppercase(),
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }

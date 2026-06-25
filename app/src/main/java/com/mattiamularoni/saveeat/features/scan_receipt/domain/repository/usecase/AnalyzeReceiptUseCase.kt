@@ -7,7 +7,7 @@ import com.mattiamularoni.saveeat.features.scan_receipt.domain.repository.ScanRe
 
 data class AnalyzedReceipt(
     val receiptId: String,
-    val items: List<ParsedReceiptItem>
+    val items: List<ParsedReceiptItem>,
 )
 
 /**
@@ -19,14 +19,14 @@ data class AnalyzedReceipt(
  */
 class AnalyzeReceiptUseCase(
     private val scanReceiptRepository: ScanReceiptRepository,
-    private val receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository,
 ) {
     /**
      * @param bitmap La foto dello scontrino
      * @return Result.success con lo scontrino registrato e i prodotti estratti, Result.failure in caso di errore
      */
-    suspend operator fun invoke(bitmap: Bitmap): Result<AnalyzedReceipt> {
-        return try {
+    suspend operator fun invoke(bitmap: Bitmap): Result<AnalyzedReceipt> =
+        try {
             // 1. Analyze image with IA (store name, total price, items)
             val scanned = scanReceiptRepository.analyzeReceiptImage(bitmap)
 
@@ -38,15 +38,15 @@ class AnalyzeReceiptUseCase(
             val imageUrl = receiptRepository.uploadReceiptImage(bitmap)
 
             // 3. Insert the receipt row (store name, total price, image url)
-            val receipt = receiptRepository.insertReceipt(
-                storeName = scanned.storeName,
-                totalPrice = scanned.totalPrice,
-                imageUrl = imageUrl
-            )
+            val receipt =
+                receiptRepository.insertReceipt(
+                    storeName = scanned.storeName,
+                    totalPrice = scanned.totalPrice,
+                    imageUrl = imageUrl,
+                )
 
             Result.success(AnalyzedReceipt(receiptId = receipt.id, items = scanned.items))
         } catch (e: Exception) {
             Result.failure(e)
         }
-    }
 }

@@ -15,13 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CameraAlt
 import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -40,19 +40,20 @@ import org.koin.androidx.compose.koinViewModel
 @Composable
 fun ScanReceiptScreen(
     onNavigateBack: () -> Unit,
-    viewModel: ScanReceiptViewModel = koinViewModel()
+    viewModel: ScanReceiptViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Launcher per la fotocamera: Android scatta la foto e ci restituisce un Bitmap
-    val cameraLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.TakePicturePreview()
-    ) { bitmap: Bitmap? ->
-        if (bitmap != null) {
-            // Se l'utente ha scattato la foto (non ha annullato), la passiamo a Gemini!
-            viewModel.analyzeReceipt(bitmap)
+    val cameraLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.TakePicturePreview(),
+        ) { bitmap: Bitmap? ->
+            if (bitmap != null) {
+                // Se l'utente ha scattato la foto (non ha annullato), la passiamo a Gemini!
+                viewModel.analyzeReceipt(bitmap)
+            }
         }
-    }
 
     // Effetto di navigazione one-shot: quando la revisione è completa torniamo alla dispensa
     LaunchedEffect(Unit) {
@@ -69,17 +70,18 @@ fun ScanReceiptScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Scansiona Scontrino") }
+                title = { Text("Scansiona Scontrino") },
             )
-        }
+        },
     ) { padding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .padding(24.dp),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .padding(24.dp),
             verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             when (val state = uiState) {
                 is ScanReceiptUiState.Idle -> {
@@ -87,18 +89,18 @@ fun ScanReceiptScreen(
                         imageVector = Icons.Rounded.CameraAlt,
                         contentDescription = "Camera",
                         modifier = Modifier.size(100.dp),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Text(
                         text = "Scatta una foto al tuo scontrino per aggiungere automaticamente i prodotti alla dispensa.",
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = { cameraLauncher.launch() },
-                        modifier = Modifier.fillMaxWidth().height(56.dp)
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
                     ) {
                         Text("Apri Fotocamera")
                     }
@@ -110,7 +112,7 @@ fun ScanReceiptScreen(
                     Text(
                         text = "L'Intelligenza Artificiale sta leggendo lo scontrino...\nPotrebbe volerci qualche secondo.",
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyLarge
+                        style = MaterialTheme.typography.bodyLarge,
                     )
                 }
 
@@ -118,18 +120,18 @@ fun ScanReceiptScreen(
                     Text(
                         text = "Qualcosa è andato storto",
                         style = MaterialTheme.typography.headlineSmall,
-                        color = MaterialTheme.colorScheme.error
+                        color = MaterialTheme.colorScheme.error,
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = state.message,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
                     )
                     Spacer(modifier = Modifier.height(32.dp))
                     Button(
                         onClick = { viewModel.resetState() },
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
                     ) {
                         Text("Riprova")
                     }
@@ -146,7 +148,7 @@ fun ScanReceiptScreen(
                         onDecrementDays = viewModel::onDecrementDays,
                         onConfirm = viewModel::onConfirmItem,
                         onSkip = viewModel::onSkipItem,
-                        onDismiss = viewModel::onDismiss
+                        onDismiss = viewModel::onDismiss,
                     )
                 }
             }

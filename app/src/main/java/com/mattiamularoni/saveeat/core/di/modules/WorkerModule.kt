@@ -4,6 +4,7 @@ import com.mattiamularoni.saveeat.features.notifications.data.worker.Notificatio
 import org.koin.androidx.workmanager.dsl.workerOf
 import org.koin.dsl.module
 
-val workerModule = module {
-    workerOf(::NotificationWorker)
-}
+val workerModule =
+    module {
+        workerOf(::NotificationWorker)
+    }

@@ -13,25 +13,45 @@ sealed class RecipeUiEvent {
      *
      * @param pointsAwarded eco-punti assegnati per l'azione
      */
-    data class CookSuccess(val pointsAwarded: Int) : RecipeUiEvent()
+    data class CookSuccess(
+        val pointsAwarded: Int,
+    ) : RecipeUiEvent()
 
     /**
      * Un ingrediente è stato aggiunto alla lista della spesa locale.
      *
      * @param items lista della spesa aggiornata, da passare all'app Note
      */
-    data class AddedToShoppingList(val items: List<ShoppingListItem>) : RecipeUiEvent()
+    data class AddedToShoppingList(
+        val items: List<ShoppingListItem>,
+    ) : RecipeUiEvent()
 
     /**
      * Errore durante l'azione "segna come cucinata".
      *
      * @param message descrizione dell'errore per l'utente
      */
-    data class CookError(val message: String) : RecipeUiEvent()
+    data class CookError(
+        val message: String,
+    ) : RecipeUiEvent()
 
     /**
      * Sblocco dei filtri avanzati di generazione ricette fallito (eco-punti insufficienti
      * o utente non autenticato).
      */
     data object PremiumUnlockFailed : RecipeUiEvent()
+
+    /**
+     * La ricetta è stata eliminata con successo (locale + remoto).
+     */
+    data object RecipeDeleted : RecipeUiEvent()
+
+    /**
+     * Errore durante l'eliminazione della ricetta.
+     *
+     * @param message descrizione dell'errore per l'utente
+     */
+    data class DeleteError(
+        val message: String,
+    ) : RecipeUiEvent()
 }

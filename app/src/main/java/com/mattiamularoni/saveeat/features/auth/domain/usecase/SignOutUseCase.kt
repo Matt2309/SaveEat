@@ -9,7 +9,7 @@ import com.mattiamularoni.saveeat.features.auth.domain.repository.AuthRepository
  * Allows domain layer to maintain clean separation from data layer.
  */
 class SignOutUseCase(
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
 ) {
     suspend operator fun invoke() {
         authRepository.signOut()

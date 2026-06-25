@@ -8,17 +8,18 @@ import com.mattiamularoni.saveeat.features.stats.domain.usecase.GetUserStatsUseC
 import com.mattiamularoni.saveeat.features.stats.domain.usecase.RefreshUserStatsUseCase
 import org.koin.dsl.module
 
-val statsModule = module {
-    factory<UserStatsRemoteDataSource> {
-        UserStatsRemoteDataSourceImpl(supabaseClient = get())
+val statsModule =
+    module {
+        factory<UserStatsRemoteDataSource> {
+            UserStatsRemoteDataSourceImpl(supabaseClient = get())
+        }
+        factory<StatsRepository> {
+            StatsRepositoryImpl(
+                userStatsDao = get(),
+                remoteDataSource = get(),
+                sessionProvider = get(),
+            )
+        }
+        factory { GetUserStatsUseCase(get()) }
+        factory { RefreshUserStatsUseCase(get()) }
     }
-    factory<StatsRepository> {
-        StatsRepositoryImpl(
-            userStatsDao = get(),
-            remoteDataSource = get(),
-            sessionProvider = get()
-        )
-    }
-    factory { GetUserStatsUseCase(get()) }
-    factory { RefreshUserStatsUseCase(get()) }
-}

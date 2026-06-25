@@ -13,16 +13,17 @@ import com.mattiamularoni.saveeat.features.shopping_list.presentation.di.shoppin
 import com.mattiamularoni.saveeat.features.stats.presentation.di.statsModule
 import org.koin.core.module.Module
 
-val featureModules: List<Module> = listOf(
-    authModule,
-    homeScreenModule,
-    pantryScreenModule,
-    leaderboardScreenModule,
-    recipeScreenModule,
-    profileModule,
-    scanReceiptModule,
-    receiptHistoryModule,
-    notificationsModule,
-    statsModule,
-    shoppingListModule
-)
+val featureModules: List<Module> =
+    listOf(
+        authModule,
+        homeScreenModule,
+        pantryScreenModule,
+        leaderboardScreenModule,
+        recipeScreenModule,
+        profileModule,
+        scanReceiptModule,
+        receiptHistoryModule,
+        notificationsModule,
+        statsModule,
+        shoppingListModule,
+    )

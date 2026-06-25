@@ -9,34 +9,36 @@ import kotlinx.coroutines.flow.map
 import java.util.UUID
 
 class ShoppingListRepositoryImpl(
-    private val dao: ShoppingListDao
+    private val dao: ShoppingListDao,
 ) : ShoppingListRepository {
+    override fun getShoppingList(): Flow<List<ShoppingListItem>> = dao.observeAll().map { entities -> entities.map { it.toDomain() } }
 
-    override fun getShoppingList(): Flow<List<ShoppingListItem>> =
-        dao.observeAll().map { entities -> entities.map { it.toDomain() } }
-
-    override suspend fun addItem(name: String): Result<Unit> = runCatching {
-        dao.insert(
-            ShoppingListItemEntity(
-                id = UUID.randomUUID().toString(),
-                name = name,
-                normalizedName = name.trim().lowercase(),
-                addedAt = System.currentTimeMillis()
+    override suspend fun addItem(name: String): Result<Unit> =
+        runCatching {
+            dao.insert(
+                ShoppingListItemEntity(
+                    id = UUID.randomUUID().toString(),
+                    name = name,
+                    normalizedName = name.trim().lowercase(),
+                    addedAt = System.currentTimeMillis(),
+                ),
             )
+        }.map { }
+
+    override suspend fun removeItem(id: String): Result<Unit> =
+        runCatching {
+            dao.deleteById(id)
+        }.map { }
+
+    override suspend fun clearList(): Result<Unit> =
+        runCatching {
+            dao.clear()
+        }.map { }
+
+    private fun ShoppingListItemEntity.toDomain() =
+        ShoppingListItem(
+            id = id,
+            name = name,
+            addedAt = addedAt,
         )
-    }.map { }
-
-    override suspend fun removeItem(id: String): Result<Unit> = runCatching {
-        dao.deleteById(id)
-    }.map { }
-
-    override suspend fun clearList(): Result<Unit> = runCatching {
-        dao.clear()
-    }.map { }
-
-    private fun ShoppingListItemEntity.toDomain() = ShoppingListItem(
-        id = id,
-        name = name,
-        addedAt = addedAt
-    )
 }

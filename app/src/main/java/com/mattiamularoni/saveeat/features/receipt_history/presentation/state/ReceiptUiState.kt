@@ -5,11 +5,11 @@ data class ReceiptUiState(
     val storeName: String,
     val date: String,
     val totalPrice: String,
-    val imageUrl: String
+    val imageUrl: String,
 )
 
 data class ReceiptHistoryUiState(
     val receipts: List<ReceiptUiState> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
 )

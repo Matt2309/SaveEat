@@ -13,7 +13,7 @@ data class PantryAssetEntity(
     @ColumnInfo(name = "names")
     val names: Map<String, String>,
     @ColumnInfo(name = "image_url")
-    val imageUrl: String?
+    val imageUrl: String?,
 )
 
 fun PantryAssetEntity.toDomain() = PantryAsset(categoryKey, names, imageUrl)

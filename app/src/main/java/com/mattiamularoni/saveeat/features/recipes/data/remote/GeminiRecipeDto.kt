@@ -18,12 +18,12 @@ data class GeminiRecipeDto(
     @SerialName("estimated_cost_euros")
     val estimatedCostEuros: Double = 0.0,
     @SerialName("pixabay_query")
-    val pixabayQuery: String = ""
+    val pixabayQuery: String = "",
 )
 
 @Serializable
 data class GeminiIngredientDto(
     val name: String,
     val amount: Double = 1.0,
-    val unit: String = "qb"
+    val unit: String = "qb",
 )

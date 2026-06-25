@@ -14,5 +14,5 @@ data class FavoriteRecipeDto(
     @SerialName("recipe_id")
     val recipeId: String,
     @SerialName("saved_at")
-    val savedAt: String
+    val savedAt: String,
 )

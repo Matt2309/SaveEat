@@ -10,9 +10,10 @@ interface PantryAssetRemoteDataSource {
 }
 
 class PantryAssetRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : PantryAssetRemoteDataSource {
-    override suspend fun getAllAssets(): List<PantryAssetDto> = withContext(Dispatchers.IO) {
-        supabaseClient.from("pantry_item_assets").select().decodeList()
-    }
+    override suspend fun getAllAssets(): List<PantryAssetDto> =
+        withContext(Dispatchers.IO) {
+            supabaseClient.from("pantry_item_assets").select().decodeList()
+        }
 }

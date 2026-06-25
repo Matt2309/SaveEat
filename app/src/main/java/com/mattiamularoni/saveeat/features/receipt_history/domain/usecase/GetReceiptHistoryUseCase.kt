@@ -4,7 +4,7 @@ import com.mattiamularoni.saveeat.features.receipt_history.domain.repository.Rec
 import com.mattiamularoni.saveeat.features.receipt_history.domain.repository.ReceiptRepository
 
 class GetReceiptHistoryUseCase(
-    private val receiptRepository: ReceiptRepository
+    private val receiptRepository: ReceiptRepository,
 ) {
     suspend operator fun invoke(): List<Receipt> = receiptRepository.getReceipts()
 }

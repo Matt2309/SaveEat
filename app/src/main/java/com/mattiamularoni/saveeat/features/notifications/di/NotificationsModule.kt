@@ -4,7 +4,8 @@ import com.mattiamularoni.saveeat.features.notifications.domain.usecase.GetItems
 import com.mattiamularoni.saveeat.features.notifications.domain.usecase.MarkItemsNotifiedUseCase
 import org.koin.dsl.module
 
-val notificationsModule = module {
-    single { GetItemsDueForNotificationUseCase(get()) }
-    single { MarkItemsNotifiedUseCase(get()) }
-}
+val notificationsModule =
+    module {
+        single { GetItemsDueForNotificationUseCase(get()) }
+        single { MarkItemsNotifiedUseCase(get()) }
+    }

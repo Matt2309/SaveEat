@@ -20,6 +20,7 @@ import org.koin.compose.koinInject
 
 class MainActivity : ComponentActivity() {
     private val supabaseClient: SupabaseClient by inject()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         supabaseClient.handleDeeplinks(intent)
@@ -35,7 +36,7 @@ fun SaveEatApp() {
     val themeController: ThemeController = koinInject()
     val darkMode by themeController.darkMode.collectAsState()
     SaveEatTheme(themeMode = if (darkMode) ThemeMode.Dark else ThemeMode.Light) {
-    	RequestNotificationPermission()
+        RequestNotificationPermission()
         SaveEatNavHost()
     }
 }

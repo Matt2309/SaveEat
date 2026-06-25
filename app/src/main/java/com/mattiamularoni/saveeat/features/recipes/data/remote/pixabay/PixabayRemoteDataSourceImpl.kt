@@ -9,9 +9,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class PixabayRemoteDataSourceImpl(
-    private val httpClient: HttpClient
+    private val httpClient: HttpClient,
 ) : PixabayRemoteDataSource {
-
     override suspend fun fetchImageUrl(query: String): String? =
         withContext(Dispatchers.IO) {
             val apiKey = BuildConfig.PIXABAY_API_KEY
@@ -20,14 +19,16 @@ class PixabayRemoteDataSourceImpl(
             }
 
             try {
-                val response = httpClient.get("https://pixabay.com/api/") {
-                    parameter("key", apiKey)
-                    parameter("q", query)
-                    parameter("image_type", "photo")
-                    parameter("category", "food")
-                    parameter("per_page", 3)
-                    parameter("safesearch", true)
-                }.body<PixabayResponseDto>()
+                val response =
+                    httpClient
+                        .get("https://pixabay.com/api/") {
+                            parameter("key", apiKey)
+                            parameter("q", query)
+                            parameter("image_type", "photo")
+                            parameter("category", "food")
+                            parameter("per_page", 3)
+                            parameter("safesearch", true)
+                        }.body<PixabayResponseDto>()
 
                 response.hits.firstOrNull()?.webformatUrl
             } catch (e: Exception) {

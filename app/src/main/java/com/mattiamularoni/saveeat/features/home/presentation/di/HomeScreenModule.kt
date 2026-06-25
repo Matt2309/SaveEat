@@ -27,26 +27,26 @@ import org.koin.dsl.module
  * - homeDao: injected da databaseModule (core)
  * - userId: Managed internally in repository (MVP: "test-user-uuid")
  */
-val homeScreenModule = module {
-    single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
+val homeScreenModule =
+    module {
+        single<SessionProvider> { AuthSessionProviderImpl(supabaseClient = get()) }
 
-    factory<HomeRemoteDataSource> {
-        HomeRemoteDataSourceImpl(supabaseClient = get())
+        factory<HomeRemoteDataSource> {
+            HomeRemoteDataSourceImpl(supabaseClient = get())
+        }
+
+        // Repository
+        factory<HomeRepository> {
+            HomeRepositoryImpl(
+                homeDao = get(),
+                remoteDataSource = get(),
+                sessionProvider = get(),
+            )
+        }
+
+        // Use Case
+        factory { GetHomeDashboardUseCase(get()) }
+
+        // ViewModel
+        viewModelOf(::HomeViewModel)
     }
-
-    // Repository
-    factory<HomeRepository> {
-        HomeRepositoryImpl(
-            homeDao = get(),
-            remoteDataSource = get(),
-            sessionProvider = get()
-        )
-    }
-
-    // Use Case
-    factory { GetHomeDashboardUseCase(get()) }
-
-    // ViewModel
-    viewModelOf(::HomeViewModel)
-}
-

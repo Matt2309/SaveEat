@@ -12,5 +12,5 @@ data class LeaderboardUser(
     val displayName: String,
     val avatarUrl: String?,
     val ecoPoints: Int,
-    val rank: Int? = null
+    val rank: Int? = null,
 )

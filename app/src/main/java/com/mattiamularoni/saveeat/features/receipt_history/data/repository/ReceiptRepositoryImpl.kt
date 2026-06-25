@@ -14,9 +14,8 @@ import java.util.UUID
 
 class ReceiptRepositoryImpl(
     private val remoteDataSource: ReceiptRemoteDataSource,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
 ) : ReceiptRepository {
-
     override suspend fun uploadReceiptImage(bitmap: Bitmap): String =
         withContext(Dispatchers.IO) {
             val stream = ByteArrayOutputStream()
@@ -29,30 +28,33 @@ class ReceiptRepositoryImpl(
     override suspend fun insertReceipt(
         storeName: String,
         totalPrice: Double,
-        imageUrl: String
-    ): Receipt = withContext(Dispatchers.IO) {
-        val dto = ReceiptDto(
-            id = UUID.randomUUID().toString(),
-            userId = sessionProvider.getCurrentUserId(),
-            storeName = storeName,
-            totalPrice = totalPrice,
-            imageUrl = imageUrl,
-            scannedAt = DateTimeUtils.formatToIso8601(System.currentTimeMillis())
-        )
-        remoteDataSource.insertReceipt(dto).toDomain()
-    }
+        imageUrl: String,
+    ): Receipt =
+        withContext(Dispatchers.IO) {
+            val dto =
+                ReceiptDto(
+                    id = UUID.randomUUID().toString(),
+                    userId = sessionProvider.getCurrentUserId(),
+                    storeName = storeName,
+                    totalPrice = totalPrice,
+                    imageUrl = imageUrl,
+                    scannedAt = DateTimeUtils.formatToIso8601(System.currentTimeMillis()),
+                )
+            remoteDataSource.insertReceipt(dto).toDomain()
+        }
 
     override suspend fun getReceipts(): List<Receipt> =
         withContext(Dispatchers.IO) {
             remoteDataSource.getReceipts(sessionProvider.getCurrentUserId()).map { it.toDomain() }
         }
 
-    private fun ReceiptDto.toDomain() = Receipt(
-        id = id,
-        userId = userId,
-        storeName = storeName,
-        totalPrice = totalPrice,
-        imageUrl = imageUrl,
-        scannedAt = DateTimeUtils.parseIso8601OrDefault(scannedAt)
-    )
+    private fun ReceiptDto.toDomain() =
+        Receipt(
+            id = id,
+            userId = userId,
+            storeName = storeName,
+            totalPrice = totalPrice,
+            imageUrl = imageUrl,
+            scannedAt = DateTimeUtils.parseIso8601OrDefault(scannedAt),
+        )
 }

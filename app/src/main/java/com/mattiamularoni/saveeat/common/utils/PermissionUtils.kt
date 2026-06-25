@@ -13,9 +13,10 @@ import androidx.core.content.ContextCompat
 fun RequestNotificationPermission() {
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         val context = LocalContext.current
-        val launcher = rememberLauncherForActivityResult(
-            ActivityResultContracts.RequestPermission()
-        ) { /* granted or denied: no forced action */ }
+        val launcher =
+            rememberLauncherForActivityResult(
+                ActivityResultContracts.RequestPermission(),
+            ) { /* granted or denied: no forced action */ }
         LaunchedEffect(Unit) {
             val perm = android.Manifest.permission.POST_NOTIFICATIONS
             if (ContextCompat.checkSelfPermission(context, perm) != PackageManager.PERMISSION_GRANTED) {

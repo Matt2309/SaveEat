@@ -15,5 +15,5 @@ data class UserStatsDto(
     @SerialName("total_euros_saved")
     val totalEurosSaved: Double = 0.0,
     @SerialName("total_eco_points")
-    val totalEcoPoints: Int = 0
+    val totalEcoPoints: Int = 0,
 )

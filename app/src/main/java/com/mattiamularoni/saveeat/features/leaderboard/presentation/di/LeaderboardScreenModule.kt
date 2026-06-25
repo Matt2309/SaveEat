@@ -18,15 +18,16 @@ import org.koin.dsl.module
  * - UseCase: factory
  * - ViewModel: viewModel
  */
-val leaderboardScreenModule = module {
-    factory<LeaderboardRemoteDataSource> {
-        LeaderboardRemoteDataSourceImpl(supabaseClient = get())
+val leaderboardScreenModule =
+    module {
+        factory<LeaderboardRemoteDataSource> {
+            LeaderboardRemoteDataSourceImpl(supabaseClient = get())
+        }
+        factory<LeaderboardRepository> {
+            LeaderboardRepositoryImpl(
+                remoteDataSource = get(),
+            )
+        }
+        factory { GetLeaderboardUseCase(get()) }
+        viewModelOf(::LeaderboardViewModel)
     }
-    factory<LeaderboardRepository> {
-        LeaderboardRepositoryImpl(
-            remoteDataSource = get()
-        )
-    }
-    factory { GetLeaderboardUseCase(get()) }
-    viewModelOf(::LeaderboardViewModel)
-}

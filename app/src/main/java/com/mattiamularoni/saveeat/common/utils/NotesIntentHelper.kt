@@ -17,11 +17,13 @@ import java.time.format.DateTimeFormatter
  * dato che le regole di package-visibility di Android 11+ riguardano solo le query.
  */
 object NotesIntentHelper {
-
     private const val SAMSUNG_NOTES_PACKAGE = "com.samsung.android.app.notes"
     private const val GOOGLE_KEEP_PACKAGE = "com.google.android.keep"
 
-    fun openNotesWithShoppingList(context: Context, items: List<ShoppingListItem>) {
+    fun openNotesWithShoppingList(
+        context: Context,
+        items: List<ShoppingListItem>,
+    ) {
         val content = buildNoteContent(items)
 
         if (trySend(context, content, SAMSUNG_NOTES_PACKAGE)) return
@@ -36,25 +38,34 @@ object NotesIntentHelper {
             "\n\nAggiornata il: $timestamp"
     }
 
-    private fun trySend(context: Context, content: String, packageName: String): Boolean =
+    private fun trySend(
+        context: Context,
+        content: String,
+        packageName: String,
+    ): Boolean =
         try {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, content)
-                setPackage(packageName)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, content)
+                    setPackage(packageName)
+                }
             context.startActivity(intent)
             true
         } catch (e: ActivityNotFoundException) {
             false
         }
 
-    private fun trySendChooser(context: Context, content: String) {
+    private fun trySendChooser(
+        context: Context,
+        content: String,
+    ) {
         try {
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, content)
-            }
+            val intent =
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "text/plain"
+                    putExtra(Intent.EXTRA_TEXT, content)
+                }
             context.startActivity(Intent.createChooser(intent, "Apri con"))
         } catch (e: ActivityNotFoundException) {
             // Nessuna app gestisce ACTION_SEND text/plain: no-op.

@@ -24,26 +24,34 @@ import kotlinx.serialization.json.put
  * - Session status observation
  */
 class AuthRepositoryImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : AuthRepository {
-
     override val sessionStatus: StateFlow<SessionStatus> =
         supabaseClient.auth.sessionStatus
 
-    override suspend fun signUpWithEmail(email: String, password: String, firstName: String, lastName: String) {
+    override suspend fun signUpWithEmail(
+        email: String,
+        password: String,
+        firstName: String,
+        lastName: String,
+    ) {
         supabaseClient.auth.signUpWith(Email) {
             this.email = email
             this.password = password
 
-            this.data = buildJsonObject {
-                put("first_name", firstName)
-                put("last_name", lastName)
-                put("display_name", "$firstName $lastName".trim())
-            }
+            this.data =
+                buildJsonObject {
+                    put("first_name", firstName)
+                    put("last_name", lastName)
+                    put("display_name", "$firstName $lastName".trim())
+                }
         }
     }
 
-    override suspend fun signInWithEmail(email: String, password: String) {
+    override suspend fun signInWithEmail(
+        email: String,
+        password: String,
+    ) {
         supabaseClient.auth.signInWith(Email) {
             this.email = email
             this.password = password
@@ -58,10 +66,12 @@ class AuthRepositoryImpl(
 
         val user = supabaseClient.auth.currentSessionOrNull()?.user ?: return
         val metadata = user.userMetadata
-        val displayName = metadata?.get("full_name")?.jsonPrimitive?.contentOrNull
-            ?: metadata?.get("name")?.jsonPrimitive?.contentOrNull
-        val avatarUrl = metadata?.get("avatar_url")?.jsonPrimitive?.contentOrNull
-            ?: metadata?.get("picture")?.jsonPrimitive?.contentOrNull
+        val displayName =
+            metadata?.get("full_name")?.jsonPrimitive?.contentOrNull
+                ?: metadata?.get("name")?.jsonPrimitive?.contentOrNull
+        val avatarUrl =
+            metadata?.get("avatar_url")?.jsonPrimitive?.contentOrNull
+                ?: metadata?.get("picture")?.jsonPrimitive?.contentOrNull
 
         supabaseClient.from("users").upsert(
             UserProfileDto(
@@ -69,8 +79,8 @@ class AuthRepositoryImpl(
                 email = user.email ?: "",
                 displayName = displayName,
                 avatarUrl = avatarUrl,
-                authProvider = "google"
-            )
+                authProvider = "google",
+            ),
         )
     }
 

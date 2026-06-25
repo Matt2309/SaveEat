@@ -2,11 +2,11 @@ package com.mattiamularoni.saveeat.features.auth.presentation.ui
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -17,10 +17,9 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -28,8 +27,6 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.platform.LocalContext
 import androidx.credentials.CredentialManager
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
@@ -38,19 +35,20 @@ import androidx.credentials.exceptions.GetCredentialException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.mattiamularoni.saveeat.BuildConfig
+import com.mattiamularoni.saveeat.R
 import com.mattiamularoni.saveeat.features.auth.presentation.util.AuthValidation
-import kotlinx.coroutines.launch
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthEffect
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthUiState
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun AuthScreen(
     onNavigateToPantry: () -> Unit = {},
-    viewModel: AuthViewModel = koinViewModel()
+    viewModel: AuthViewModel = koinViewModel(),
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -71,7 +69,7 @@ fun AuthScreen(
                 is AuthEffect.ShowSnackbar -> {
                     snackbarHostState.showSnackbar(
                         message = effect.message,
-                        duration = SnackbarDuration.Short
+                        duration = SnackbarDuration.Short,
                     )
                 }
             }
@@ -81,96 +79,105 @@ fun AuthScreen(
     val emailError = AuthValidation.getEmailError(email)
     val passwordError = AuthValidation.getPasswordError(password)
 
-    val isFormValid = if (isLoginMode) {
-        emailError == null && passwordError == null && email.isNotEmpty() && password.isNotEmpty()
-    } else {
-        emailError == null && passwordError == null && email.isNotEmpty() && password.isNotEmpty() &&
-                firstName.isNotBlank() && lastName.isNotBlank()
-    }
+    val isFormValid =
+        if (isLoginMode) {
+            emailError == null && passwordError == null && email.isNotEmpty() && password.isNotEmpty()
+        } else {
+            emailError == null &&
+                passwordError == null &&
+                email.isNotEmpty() &&
+                password.isNotEmpty() &&
+                firstName.isNotBlank() &&
+                lastName.isNotBlank()
+        }
 
     val isLoading = authUiState is AuthUiState.Loading
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
+        snackbarHost = { SnackbarHost(snackbarHostState) },
     ) { padding ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 24.dp),
-            contentAlignment = Alignment.Center
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 16.dp, vertical = 24.dp),
+            contentAlignment = Alignment.Center,
         ) {
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .widthIn(max = 448.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 448.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
                 border = BorderStroke(1.dp, MaterialTheme.colorScheme.surfaceVariant),
-                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(24.dp),
-                    verticalArrangement = Arrangement.spacedBy(24.dp)
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
                 ) {
                     // ---------- Header ----------
                     Column(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Text(
                             text = "SaveEat",
                             color = MaterialTheme.colorScheme.primary,
                             fontSize = 28.sp,
                             lineHeight = 36.sp,
-                            fontWeight = FontWeight.SemiBold
+                            fontWeight = FontWeight.SemiBold,
                         )
                         Text(
-                            text = if (isLoginMode)
-                                "Bentornato! Accedi al tuo account."
-                            else
-                                "Crea un account per iniziare a salvare cibo.",
+                            text =
+                                if (isLoginMode) {
+                                    "Bentornato! Accedi al tuo account."
+                                } else {
+                                    "Crea un account per iniziare a salvare cibo."
+                                },
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
-                            textAlign = TextAlign.Center
+                            textAlign = TextAlign.Center,
                         )
                     }
 
                     // ---------- Form ----------
                     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
                         // Nome / Cognome (solo registrazione)
                         AnimatedVisibility(visible = !isLoginMode) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 LabeledField(
                                     label = "Nome",
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
                                 ) {
                                     SaveEatTextField(
                                         value = firstName,
                                         onValueChange = { firstName = it },
                                         placeholder = "Mario",
-                                        enabled = !isLoading
+                                        enabled = !isLoading,
                                     )
                                 }
                                 LabeledField(
                                     label = "Cognome",
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier.weight(1f),
                                 ) {
                                     SaveEatTextField(
                                         value = lastName,
                                         onValueChange = { lastName = it },
                                         placeholder = "Rossi",
-                                        enabled = !isLoading
+                                        enabled = !isLoading,
                                     )
                                 }
                             }
@@ -189,9 +196,9 @@ fun AuthScreen(
                                     Icon(
                                         Icons.Filled.Email,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
-                                }
+                                },
                             )
                             if (emailError != null && email.isNotEmpty()) {
                                 FieldError(emailError)
@@ -207,30 +214,38 @@ fun AuthScreen(
                                 enabled = !isLoading,
                                 isError = passwordError != null && password.isNotEmpty(),
                                 keyboardType = KeyboardType.Password,
-                                visualTransformation = if (passwordVisible)
-                                    VisualTransformation.None
-                                else
-                                    PasswordVisualTransformation(),
+                                visualTransformation =
+                                    if (passwordVisible) {
+                                        VisualTransformation.None
+                                    } else {
+                                        PasswordVisualTransformation()
+                                    },
                                 leadingIcon = {
                                     Icon(
                                         Icons.Filled.Lock,
                                         contentDescription = null,
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 },
                                 trailingIcon = {
                                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                                         Icon(
-                                            imageVector = if (passwordVisible)
-                                                Icons.Filled.Visibility
-                                            else
-                                                Icons.Filled.VisibilityOff,
-                                            contentDescription = if (passwordVisible)
-                                                "Nascondi password" else "Mostra password",
-                                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                            imageVector =
+                                                if (passwordVisible) {
+                                                    Icons.Filled.Visibility
+                                                } else {
+                                                    Icons.Filled.VisibilityOff
+                                                },
+                                            contentDescription =
+                                                if (passwordVisible) {
+                                                    "Nascondi password"
+                                                } else {
+                                                    "Mostra password"
+                                                },
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                                         )
                                     }
-                                }
+                                },
                             )
                             if (passwordError != null && password.isNotEmpty()) {
                                 FieldError(passwordError)
@@ -247,26 +262,28 @@ fun AuthScreen(
                                 }
                             },
                             enabled = isFormValid && !isLoading,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(52.dp)
-                                .padding(top = 4.dp),
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .height(52.dp)
+                                    .padding(top = 4.dp),
                             shape = CircleShape,
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor = MaterialTheme.colorScheme.primary,
-                                contentColor = MaterialTheme.colorScheme.onPrimary
-                            )
+                            colors =
+                                ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.primary,
+                                    contentColor = MaterialTheme.colorScheme.onPrimary,
+                                ),
                         ) {
                             if (isLoading) {
                                 CircularProgressIndicator(
                                     modifier = Modifier.size(22.dp),
                                     strokeWidth = 2.dp,
-                                    color = MaterialTheme.colorScheme.onPrimary
+                                    color = MaterialTheme.colorScheme.onPrimary,
                                 )
                             } else {
                                 Text(
                                     text = if (isLoginMode) "Accedi" else "Registrati",
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.titleMedium,
                                 )
                             }
                         }
@@ -276,20 +293,20 @@ fun AuthScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.outlineVariant
+                            color = MaterialTheme.colorScheme.outlineVariant,
                         )
                         Text(
                             text = "Oppure continua con",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall
+                            style = MaterialTheme.typography.labelSmall,
                         )
                         HorizontalDivider(
                             modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.outlineVariant
+                            color = MaterialTheme.colorScheme.outlineVariant,
                         )
                     }
 
@@ -299,14 +316,18 @@ fun AuthScreen(
                             scope.launch {
                                 try {
                                     val credentialManager = CredentialManager.create(context)
-                                    val googleIdOption = GetGoogleIdOption.Builder()
-                                        .setFilterByAuthorizedAccounts(false)
-                                        .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
-                                        .setAutoSelectEnabled(true)
-                                        .build()
-                                    val request = GetCredentialRequest.Builder()
-                                        .addCredentialOption(googleIdOption)
-                                        .build()
+                                    val googleIdOption =
+                                        GetGoogleIdOption
+                                            .Builder()
+                                            .setFilterByAuthorizedAccounts(false)
+                                            .setServerClientId(BuildConfig.GOOGLE_WEB_CLIENT_ID)
+                                            .setAutoSelectEnabled(true)
+                                            .build()
+                                    val request =
+                                        GetCredentialRequest
+                                            .Builder()
+                                            .addCredentialOption(googleIdOption)
+                                            .build()
                                     val result = credentialManager.getCredential(context, request)
                                     val credential = result.credential
                                     if (credential is CustomCredential &&
@@ -324,20 +345,22 @@ fun AuthScreen(
                                 }
                             }
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(52.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(52.dp),
                         shape = CircleShape,
                         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
+                        colors =
+                            ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
                     ) {
                         GoogleLogo(modifier = Modifier.size(20.dp))
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = "Accedi con Google",
-                            style = MaterialTheme.typography.titleMedium
+                            style = MaterialTheme.typography.titleMedium,
                         )
                     }
 
@@ -345,24 +368,24 @@ fun AuthScreen(
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
+                        verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Text(
                             text = if (isLoginMode) "Non hai un account?" else "Hai già un account?",
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium
+                            style = MaterialTheme.typography.bodyMedium,
                         )
                         TextButton(
                             onClick = {
                                 isLoginMode = !isLoginMode
                                 viewModel.resetState()
-                            }
+                            },
                         ) {
                             Text(
                                 text = if (isLoginMode) "Registrati" else "Accedi",
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Medium,
-                                style = MaterialTheme.typography.bodyMedium
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
@@ -377,16 +400,16 @@ fun AuthScreen(
 private fun LabeledField(
     label: String,
     modifier: Modifier = Modifier,
-    content: @Composable ColumnScope.() -> Unit
+    content: @Composable ColumnScope.() -> Unit,
 ) {
     Column(
         modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(
             text = label,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall
+            style = MaterialTheme.typography.labelSmall,
         )
         content()
     }
@@ -398,7 +421,7 @@ private fun FieldError(message: String) {
         text = message,
         color = MaterialTheme.colorScheme.error,
         style = MaterialTheme.typography.bodySmall,
-        modifier = Modifier.padding(start = 4.dp, top = 2.dp)
+        modifier = Modifier.padding(start = 4.dp, top = 2.dp),
     )
 }
 
@@ -414,7 +437,7 @@ private fun SaveEatTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     leadingIcon: (@Composable () -> Unit)? = null,
-    trailingIcon: (@Composable () -> Unit)? = null
+    trailingIcon: (@Composable () -> Unit)? = null,
 ) {
     OutlinedTextField(
         value = value,
@@ -426,7 +449,7 @@ private fun SaveEatTextField(
         placeholder = {
             Text(
                 text = placeholder,
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
             )
         },
         leadingIcon = leadingIcon,
@@ -434,49 +457,25 @@ private fun SaveEatTextField(
         visualTransformation = visualTransformation,
         keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
         shape = RoundedCornerShape(8.dp),
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
-            focusedBorderColor = MaterialTheme.colorScheme.primary,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-            focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
-            unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        colors =
+            OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerLow,
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
     )
 }
 
-/** Logo Google "G" multicolore disegnato a mano (nessun asset esterno). */
 @Composable
 private fun GoogleLogo(modifier: Modifier = Modifier) {
-    val blue = Color(0xFF4285F4)
-    val red = Color(0xFFEA4335)
-    val yellow = Color(0xFFFBBC05)
-    val green = Color(0xFF34A853)
-
-    Canvas(modifier = modifier) {
-        val strokeWidth = size.minDimension * 0.22f
-        val inset = strokeWidth / 2f
-        val arcTopLeft = Offset(inset, inset)
-        val arcSize = Size(size.width - strokeWidth, size.height - strokeWidth)
-        val stroke = Stroke(width = strokeWidth)
-
-        // Angoli in convenzione Compose: 0° = destra, 90° = basso (y verso il basso).
-        // Apertura sulla destra per il "trattino" del G.
-        drawArc(red, startAngle = 200f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-sinistra
-        drawArc(blue, startAngle = 270f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // alto-destra
-        drawArc(yellow, startAngle = 130f, sweepAngle = 70f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // sinistra
-        drawArc(green, startAngle = 70f, sweepAngle = 60f,
-            useCenter = false, topLeft = arcTopLeft, size = arcSize, style = stroke)   // basso
-
-        // Trattino orizzontale blu (dal centro verso destra)
-        drawRect(
-            color = blue,
-            topLeft = Offset(size.width / 2f, size.height / 2f - strokeWidth / 2f),
-            size = Size(size.width / 2f - inset, strokeWidth)
-        )
-    }
+    Icon(
+        painter = painterResource(id = R.drawable.glogo),
+        contentDescription = "Logo Google",
+        modifier = modifier,
+        tint = Color.Unspecified,
+    )
 }

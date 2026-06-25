@@ -4,6 +4,12 @@ import com.mattiamularoni.saveeat.features.shopping_list.domain.model.ShoppingLi
 
 sealed class ShoppingListUiState {
     data object Loading : ShoppingListUiState()
-    data class Success(val items: List<ShoppingListItem> = emptyList()) : ShoppingListUiState()
-    data class Error(val message: String) : ShoppingListUiState()
+
+    data class Success(
+        val items: List<ShoppingListItem> = emptyList(),
+    ) : ShoppingListUiState()
+
+    data class Error(
+        val message: String,
+    ) : ShoppingListUiState()
 }

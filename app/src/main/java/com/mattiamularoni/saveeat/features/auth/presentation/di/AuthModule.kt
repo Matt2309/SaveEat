@@ -34,43 +34,44 @@ import org.koin.dsl.module
  * - Use case come `factory`: stateless, creati on demand
  * - ViewModel come `viewModel`: lifecycle-aware, uno per schermata
  */
-val authModule = module {
+val authModule =
+    module {
 
-    // ---- Data Layer ----
+        // ---- Data Layer ----
 
-    single<AuthRepository> {
-        AuthRepositoryImpl(
-            supabaseClient = get<SupabaseClient>()
-        )
+        single<AuthRepository> {
+            AuthRepositoryImpl(
+                supabaseClient = get<SupabaseClient>(),
+            )
+        }
+
+        single { BiometricPreferenceDataSource(androidApplication()) }
+
+        single<BiometricRepository> {
+            BiometricRepositoryImpl(
+                context = androidApplication(),
+                supabaseClient = get(),
+                preferenceDataSource = get(),
+            )
+        }
+
+        // ---- Domain Layer — Use Cases Email/Password + Google ----
+
+        factory { SignInWithEmailUseCase(authRepository = get()) }
+        factory { SignUpWithEmailUseCase(authRepository = get()) }
+        factory { SignOutUseCase(authRepository = get()) }
+        factory { SignInWithGoogleUseCase(authRepository = get()) }
+        factory { ObserveSessionStatusUseCase(authRepository = get()) }
+
+        // ---- Domain Layer — Use Cases Biometria ----
+
+        factory { CheckBiometricAvailabilityUseCase(biometricRepository = get()) }
+        factory { EnableBiometricUseCase(biometricRepository = get()) }
+        factory { DisableBiometricUseCase(biometricRepository = get()) }
+        factory { AuthenticateWithBiometricsUseCase(biometricRepository = get()) }
+        factory { RestoreAuthenticatedSessionUseCase(biometricRepository = get()) }
+
+        // ---- Presentation Layer ----
+
+        viewModelOf(::AuthViewModel)
     }
-
-    single { BiometricPreferenceDataSource(androidApplication()) }
-
-    single<BiometricRepository> {
-        BiometricRepositoryImpl(
-            context = androidApplication(),
-            supabaseClient = get(),
-            preferenceDataSource = get()
-        )
-    }
-
-    // ---- Domain Layer — Use Cases Email/Password + Google ----
-
-    factory { SignInWithEmailUseCase(authRepository = get()) }
-    factory { SignUpWithEmailUseCase(authRepository = get()) }
-    factory { SignOutUseCase(authRepository = get()) }
-    factory { SignInWithGoogleUseCase(authRepository = get()) }
-    factory { ObserveSessionStatusUseCase(authRepository = get()) }
-
-    // ---- Domain Layer — Use Cases Biometria ----
-
-    factory { CheckBiometricAvailabilityUseCase(biometricRepository = get()) }
-    factory { EnableBiometricUseCase(biometricRepository = get()) }
-    factory { DisableBiometricUseCase(biometricRepository = get()) }
-    factory { AuthenticateWithBiometricsUseCase(biometricRepository = get()) }
-    factory { RestoreAuthenticatedSessionUseCase(biometricRepository = get()) }
-
-    // ---- Presentation Layer ----
-
-    viewModelOf(::AuthViewModel)
-}

@@ -8,10 +8,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 class ReceiptRemoteDataSourceImpl(
-    private val supabaseClient: SupabaseClient
+    private val supabaseClient: SupabaseClient,
 ) : ReceiptRemoteDataSource {
-
-    override suspend fun uploadImage(path: String, bytes: ByteArray): String =
+    override suspend fun uploadImage(
+        path: String,
+        bytes: ByteArray,
+    ): String =
         withContext(Dispatchers.IO) {
             try {
                 supabaseClient.storage.from("receipt-images").upload(path, bytes) {
@@ -30,8 +32,7 @@ class ReceiptRemoteDataSourceImpl(
                     .from("receipts")
                     .insert(dto) {
                         select()
-                    }
-                    .decodeSingle<ReceiptDto>()
+                    }.decodeSingle<ReceiptDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to insert receipt: ${e.message}", e)
             }
@@ -47,8 +48,7 @@ class ReceiptRemoteDataSourceImpl(
                             eq("user_id", userId)
                         }
                         order("scanned_at", Order.DESCENDING)
-                    }
-                    .decodeList<ReceiptDto>()
+                    }.decodeList<ReceiptDto>()
             } catch (e: Exception) {
                 throw Exception("Failed to fetch receipts: ${e.message}", e)
             }

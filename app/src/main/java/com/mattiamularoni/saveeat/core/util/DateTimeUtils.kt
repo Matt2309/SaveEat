@@ -10,7 +10,6 @@ import java.util.Locale
  * Conversioni condivise tra timestamp ISO8601 (remote) e epoch millis (locale).
  */
 object DateTimeUtils {
-
     /**
      * Converte un timestamp ISO8601 in epoch millis.
      *
@@ -21,21 +20,21 @@ object DateTimeUtils {
      * @param isoString timestamp ISO8601, oppure null
      * @param fallback valore restituito se [isoString] è null o non parsabile
      */
-    fun parseIso8601OrDefault(isoString: String?, fallback: Long = System.currentTimeMillis()): Long =
-        parseToInstant(isoString)?.toEpochMilli() ?: fallback
+    fun parseIso8601OrDefault(
+        isoString: String?,
+        fallback: Long = System.currentTimeMillis(),
+    ): Long = parseToInstant(isoString)?.toEpochMilli() ?: fallback
 
     /**
      * Converte un timestamp ISO8601 in epoch millis, oppure null se [isoString]
      * è null o non parsabile.
      */
-    fun parseIso8601OrNull(isoString: String?): Long? =
-        parseToInstant(isoString)?.toEpochMilli()
+    fun parseIso8601OrNull(isoString: String?): Long? = parseToInstant(isoString)?.toEpochMilli()
 
     /**
      * Converte un timestamp epoch millis in stringa ISO8601 con suffisso Z (UTC).
      */
-    fun formatToIso8601(epochMillis: Long): String =
-        Instant.ofEpochMilli(epochMillis).toString()
+    fun formatToIso8601(epochMillis: Long): String = Instant.ofEpochMilli(epochMillis).toString()
 
     /**
      * Formatta un epoch millis come data leggibile in italiano, es. "12 Ottobre 2023 • 14:30".
@@ -46,8 +45,10 @@ object DateTimeUtils {
      */
     fun formatReceiptDisplayDate(epochMillis: Long): String {
         val dateTime = Instant.ofEpochMilli(epochMillis).atZone(ZoneId.systemDefault())
-        val month = dateTime.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.ITALIAN)
-            .replaceFirstChar { it.uppercase() }
+        val month =
+            dateTime.month
+                .getDisplayName(java.time.format.TextStyle.FULL, Locale.ITALIAN)
+                .replaceFirstChar { it.uppercase() }
         val time = dateTime.format(DateTimeFormatter.ofPattern("HH:mm"))
         return "${dateTime.dayOfMonth} $month ${dateTime.year} • $time"
     }

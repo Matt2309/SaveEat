@@ -10,7 +10,6 @@ import com.mattiamularoni.saveeat.features.pantry.data.remote.PantryItemDto
  * - PantryEntity ↔ PantryItem (domain)
  */
 object PantryMapper {
-
     /**
      * Converte un DTO remoto in entità Room locale.
      *
@@ -21,8 +20,8 @@ object PantryMapper {
      * @param dto DTO dalla risposta Postgrest Supabase
      * @return entità Room pronta per il caching locale
      */
-    fun dtoToEntity(dto: PantryItemDto): PantryEntity {
-        return PantryEntity(
+    fun dtoToEntity(dto: PantryItemDto): PantryEntity =
+        PantryEntity(
             id = dto.id,
             userId = dto.userId,
             receiptId = dto.receiptId,
@@ -35,9 +34,8 @@ object PantryMapper {
             unit = dto.unit,
             expirationDate = DateTimeUtils.parseIso8601OrNull(dto.expirationDate),
             createdAt = DateTimeUtils.parseIso8601OrDefault(dto.createdAt),
-            updatedAt = DateTimeUtils.parseIso8601OrDefault(dto.updatedAt)
+            updatedAt = DateTimeUtils.parseIso8601OrDefault(dto.updatedAt),
         )
-    }
 
     /**
      * Converte un'entità Room in DTO remoto per upload/sync su Supabase.
@@ -48,8 +46,8 @@ object PantryMapper {
      * @param entity entità Room
      * @return DTO pronto per l'invio a Postgrest
      */
-    fun entityToDto(entity: PantryEntity): PantryItemDto {
-        return PantryItemDto(
+    fun entityToDto(entity: PantryEntity): PantryItemDto =
+        PantryItemDto(
             id = entity.id,
             userId = entity.userId,
             receiptId = entity.receiptId,
@@ -60,13 +58,13 @@ object PantryMapper {
             status = entity.status,
             quantity = entity.quantity,
             unit = entity.unit,
-            expirationDate = entity.expirationDate?.let {
-                DateTimeUtils.formatToIso8601(it)
-            },
+            expirationDate =
+                entity.expirationDate?.let {
+                    DateTimeUtils.formatToIso8601(it)
+                },
             createdAt = DateTimeUtils.formatToIso8601(entity.createdAt),
-            updatedAt = DateTimeUtils.formatToIso8601(entity.updatedAt)
+            updatedAt = DateTimeUtils.formatToIso8601(entity.updatedAt),
         )
-    }
 
     /**
      * Converte una lista di DTO remoti in entità Room.
@@ -75,7 +73,5 @@ object PantryMapper {
      * @param dtos lista di DTO dalla risposta Postgrest
      * @return lista di entità Room
      */
-    fun dtosToEntities(dtos: List<PantryItemDto>): List<PantryEntity> {
-        return dtos.map { dtoToEntity(it) }
-    }
+    fun dtosToEntities(dtos: List<PantryItemDto>): List<PantryEntity> = dtos.map { dtoToEntity(it) }
 }

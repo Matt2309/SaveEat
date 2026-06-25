@@ -75,6 +75,20 @@ interface RecipeRepository {
      */
     suspend fun getRecipesByTags(tags: List<String>): List<Recipe>
 
+    /**
+     * Elimina una ricetta.
+     *
+     * Logica:
+     * - Delete da Supabase recipes
+     * - Delete da Room
+     * - Ritorna true se eliminata
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata, false se non trovata
+     * @throws Exception in caso di errore
+     */
+    suspend fun deleteRecipe(recipeId: String): Boolean
+
     // ===== INTELLIGENT GENERATION =====
 
     /**
@@ -91,7 +105,7 @@ interface RecipeRepository {
      */
     suspend fun generateRecipes(
         ingredients: List<String>,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ): List<Recipe>
 
     /**
@@ -107,7 +121,7 @@ interface RecipeRepository {
      */
     suspend fun getSuggestedRecipesForExpiringItems(
         expiringItems: List<String>,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ): List<Recipe>
 
     /**
@@ -122,7 +136,7 @@ interface RecipeRepository {
      */
     suspend fun getSeasonalRecipes(
         season: String,
-        preferences: Map<String, Any> = emptyMap()
+        preferences: Map<String, Any> = emptyMap(),
     ): List<Recipe>
 
     // ===== FAVORITE MANAGEMENT =====
@@ -162,7 +176,10 @@ interface RecipeRepository {
      * @return true se aggiunto, false se già preferita
      * @throws Exception in caso di errore
      */
-    suspend fun addFavoriteRecipe(userId: String, recipeId: String): Boolean
+    suspend fun addFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean
 
     /**
      * Rimuove una ricetta dai preferiti dell'utente.
@@ -177,7 +194,10 @@ interface RecipeRepository {
      * @return true se rimosso, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Boolean
+    suspend fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean
 
     /**
      * Verifica se una ricetta è nei preferiti dell'utente.
@@ -186,7 +206,10 @@ interface RecipeRepository {
      * @param recipeId UUID della ricetta
      * @return Flow che emette true se preferita, false altrimenti
      */
-    fun isFavoriteRecipe(userId: String, recipeId: String): Flow<Boolean>
+    fun isFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Flow<Boolean>
 
     /**
      * Sincronizza i preferiti dell'utente con Supabase.

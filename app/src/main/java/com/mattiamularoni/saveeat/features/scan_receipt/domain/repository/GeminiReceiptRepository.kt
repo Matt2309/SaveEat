@@ -6,7 +6,7 @@ import com.mattiamularoni.saveeat.features.scan_receipt.domain.model.ParsedRecei
 data class ScannedReceiptData(
     val storeName: String,
     val totalPrice: Double,
-    val items: List<ParsedReceiptItem>
+    val items: List<ParsedReceiptItem>,
 )
 
 interface ScanReceiptRepository {

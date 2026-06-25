@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mattiamularoni.saveeat.core.data.remote.SessionProvider
 import com.mattiamularoni.saveeat.features.pantry.domain.model.PantryAsset
-import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryAssetRepository
 import com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryRepository
 import com.mattiamularoni.saveeat.features.pantry.presentation.FreshnessLevel
@@ -13,6 +12,7 @@ import com.mattiamularoni.saveeat.features.pantry.presentation.PantryItem
 import com.mattiamularoni.saveeat.features.pantry.presentation.components.ManualItemFormState
 import com.mattiamularoni.saveeat.features.pantry.presentation.domain.GetPantryItemsUseCase
 import com.mattiamularoni.saveeat.features.pantry.presentation.state.PantryUiState
+import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsRepository
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -25,7 +25,9 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 sealed interface PantryEffect {
-    data class ShowSnackbar(val message: String) : PantryEffect
+    data class ShowSnackbar(
+        val message: String,
+    ) : PantryEffect
 }
 
 class PantryViewModel(
@@ -33,9 +35,10 @@ class PantryViewModel(
     private val pantryRepository: PantryRepository,
     private val pantryAssetRepository: PantryAssetRepository,
     private val sessionProvider: SessionProvider,
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
 ) : ViewModel() {
     private val allItems = MutableStateFlow<List<PantryItem>>(emptyList())
+
     // Id rimossi in modo "ottimistico" lato UI: spariscono subito, prima che la
     // cancellazione async sul repository propaghi al flow.
     private val _removedIds = MutableStateFlow<Set<String>>(emptySet())
@@ -70,10 +73,11 @@ class PantryViewModel(
         selectedCategory = category
         val current = _uiState.value
         if (current is PantryUiState.Success) {
-            _uiState.value = current.copy(
-                items = filterItems(allItems.value, selectedCategory),
-                selectedCategory = selectedCategory
-            )
+            _uiState.value =
+                current.copy(
+                    items = filterItems(allItems.value, selectedCategory),
+                    selectedCategory = selectedCategory,
+                )
         }
     }
 
@@ -108,7 +112,8 @@ class PantryViewModel(
      */
     fun onConsumeItem(itemId: String) {
         val item = allItems.value.firstOrNull { it.id == itemId }
-        val expiring = item?.freshnessLevel == FreshnessLevel.CRITICAL ||
+        val expiring =
+            item?.freshnessLevel == FreshnessLevel.CRITICAL ||
                 item?.freshnessLevel == FreshnessLevel.MEDIUM
         _removedIds.value += itemId // sparisce subito dalla UI
         viewModelScope.launch {
@@ -118,17 +123,19 @@ class PantryViewModel(
 
                 // Se in scadenza, assegna davvero gli eco-punti all'utente.
                 if (expiring) {
-                    statsRepository.addRecipeCookedStats(kg = 0.0, euros = 0.0, points = CONSUME_POINTS)
+                    statsRepository
+                        .addRecipeCookedStats(kg = 0.0, euros = 0.0, points = CONSUME_POINTS)
                         .onFailure {
                             android.util.Log.e("PantryViewModel", "Aggiornamento eco-punti fallito: ${it.message}")
                         }
                 }
 
-                val msg = if (expiring) {
-                    "${item?.name ?: "Prodotto"} consumato! +$CONSUME_POINTS Eco-punti"
-                } else {
-                    "${item?.name ?: "Prodotto"} segnato come consumato"
-                }
+                val msg =
+                    if (expiring) {
+                        "${item?.name ?: "Prodotto"} consumato! +$CONSUME_POINTS Eco-punti"
+                    } else {
+                        "${item?.name ?: "Prodotto"} segnato come consumato"
+                    }
                 _effects.emit(PantryEffect.ShowSnackbar(msg))
             } catch (e: Exception) {
                 _removedIds.value = _removedIds.value - itemId // ripristina se fallisce
@@ -144,32 +151,36 @@ class PantryViewModel(
     fun onManualItemInsert(formState: ManualItemFormState) {
         viewModelScope.launch {
             try {
-                val categoryString = when (formState.category) {
-                    PantryCategory.FRIDGE -> "FRIDGE"
-                    PantryCategory.PANTRY -> "PANTRY"
-                    PantryCategory.FREEZER -> "FREEZER"
-                    else -> "PANTRY"
-                }
+                val categoryString =
+                    when (formState.category) {
+                        PantryCategory.FRIDGE -> "FRIDGE"
+                        PantryCategory.PANTRY -> "PANTRY"
+                        PantryCategory.FREEZER -> "FREEZER"
+                        else -> "PANTRY"
+                    }
 
-                val expirationDate = formState.expirationDate?.let {
-                    java.time.Instant.from(
-                        it.atStartOfDay(java.time.ZoneId.systemDefault())
-                    ).toEpochMilli()
-                }
+                val expirationDate =
+                    formState.expirationDate?.let {
+                        java.time.Instant
+                            .from(
+                                it.atStartOfDay(java.time.ZoneId.systemDefault()),
+                            ).toEpochMilli()
+                    }
 
-                val newItem = com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem(
-                    id = UUID.randomUUID().toString(),
-                    userId = sessionProvider.getCurrentUserId(),
-                    receiptId = null,
-                    name = formState.itemName,
-                    category = categoryString,
-                    categoryKey = "",
-                    isPlaceholder = false,
-                    status = "ACTIVE",
-                    quantity = if (formState.quantity.isNotEmpty()) formState.quantity.toDoubleOrNull() ?: 0.0 else 0.0,
-                    unit = if (formState.unit.isNotEmpty()) formState.unit else null,
-                    expirationDate = expirationDate
-                )
+                val newItem =
+                    com.mattiamularoni.saveeat.features.pantry.domain.repository.PantryItem(
+                        id = UUID.randomUUID().toString(),
+                        userId = sessionProvider.getCurrentUserId(),
+                        receiptId = null,
+                        name = formState.itemName,
+                        category = categoryString,
+                        categoryKey = "",
+                        isPlaceholder = false,
+                        status = "ACTIVE",
+                        quantity = if (formState.quantity.isNotEmpty()) formState.quantity.toDoubleOrNull() ?: 0.0 else 0.0,
+                        unit = if (formState.unit.isNotEmpty()) formState.unit else null,
+                        expirationDate = expirationDate,
+                    )
 
                 pantryRepository.addPantryItem(newItem)
                 _effects.emit(PantryEffect.ShowSnackbar("${formState.itemName} aggiunto con successo"))
@@ -184,31 +195,28 @@ class PantryViewModel(
             combine(
                 getPantryItemsUseCase(),
                 pantryAssetRepository.observeAssets(),
-                _removedIds
+                _removedIds,
             ) { items: List<PantryItem>, assets: Map<String, PantryAsset>, removed: Set<String> ->
                 val visible = items.filterNot { it.id in removed }
                 allItems.value = visible
                 PantryUiState.Success(
                     items = filterItems(visible, selectedCategory),
                     assets = assets,
-                    selectedCategory = selectedCategory
+                    selectedCategory = selectedCategory,
                 )
-            }
-                .catch { throwable ->
-                    _uiState.value = PantryUiState.Error(throwable.message ?: "Unable to load pantry items")
-                }
-                .collect { _uiState.value = it }
+            }.catch { throwable ->
+                _uiState.value = PantryUiState.Error(throwable.message ?: "Unable to load pantry items")
+            }.collect { _uiState.value = it }
         }
     }
 
     private fun filterItems(
         items: List<PantryItem>,
-        category: PantryCategory
-    ): List<PantryItem> {
-        return if (category == PantryCategory.ALL) {
+        category: PantryCategory,
+    ): List<PantryItem> =
+        if (category == PantryCategory.ALL) {
             items
         } else {
             items.filter { it.category == category }
         }
-    }
 }

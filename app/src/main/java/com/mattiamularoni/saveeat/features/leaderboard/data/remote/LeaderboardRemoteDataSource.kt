@@ -12,7 +12,6 @@ package com.mattiamularoni.saveeat.features.leaderboard.data.remote
  * la vista `leaderboard` lo espone con lo stesso nome di colonna per compatibilità con i DTO.
  */
 interface LeaderboardRemoteDataSource {
-
     /**
      * Recupera la leaderboard globale ordinata per eco_points DESC.
      *

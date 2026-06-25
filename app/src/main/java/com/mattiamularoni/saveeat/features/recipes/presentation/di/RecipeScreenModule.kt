@@ -14,35 +14,36 @@ import com.mattiamularoni.saveeat.features.recipes.presentation.viewmodel.Recipe
 import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
-val recipeScreenModule = module {
-    single<GeminiRecipeDataSource> { GeminiRecipeDataSourceImpl() }
+val recipeScreenModule =
+    module {
+        single<GeminiRecipeDataSource> { GeminiRecipeDataSourceImpl() }
 
-    single<PixabayRemoteDataSource> { PixabayRemoteDataSourceImpl(httpClient = get()) }
+        single<PixabayRemoteDataSource> { PixabayRemoteDataSourceImpl(httpClient = get()) }
 
-    factory<RecipeRemoteDataSource> {
-        RecipeRemoteDataSourceImpl(
-            supabaseClient = get(),
-            geminiRecipeDataSource = get(),
-            pixabayRemoteDataSource = get()
-        )
+        factory<RecipeRemoteDataSource> {
+            RecipeRemoteDataSourceImpl(
+                supabaseClient = get(),
+                geminiRecipeDataSource = get(),
+                pixabayRemoteDataSource = get(),
+            )
+        }
+
+        factory<RecipeRepository> {
+            RecipeRepositoryImpl(
+                recipeDao = get(),
+                remoteDataSource = get(),
+            )
+        }
+
+        factory { GenerateRecipesUseCase(pantryRepository = get(), recipeRepository = get()) }
+
+        factory {
+            CookRecipeUseCase(
+                pantryRepository = get(),
+                statsRepository = get(),
+                sessionProvider = get(),
+            )
+        }
+
+        viewModelOf(::RecipeViewModel)
     }
-
-    factory<RecipeRepository> {
-        RecipeRepositoryImpl(
-            recipeDao = get(),
-            remoteDataSource = get()
-        )
-    }
-
-    factory { GenerateRecipesUseCase(pantryRepository = get(), recipeRepository = get()) }
-
-    factory {
-        CookRecipeUseCase(
-            pantryRepository = get(),
-            statsRepository = get(),
-            sessionProvider = get()
-        )
-    }
-
-    viewModelOf(::RecipeViewModel)
-}

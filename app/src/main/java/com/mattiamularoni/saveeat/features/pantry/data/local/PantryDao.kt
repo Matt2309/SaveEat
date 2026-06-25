@@ -17,19 +17,31 @@ interface PantryDao {
     suspend fun getPantryItemById(itemId: String): PantryEntity?
 
     @Query("SELECT * FROM pantry_items WHERE user_id = :userId AND category = :category ORDER BY name ASC")
-    fun getPantryItemsByCategory(userId: String, category: String): Flow<List<PantryEntity>>
+    fun getPantryItemsByCategory(
+        userId: String,
+        category: String,
+    ): Flow<List<PantryEntity>>
 
     @Query("SELECT * FROM pantry_items WHERE user_id = :userId AND expiration_date <= :thresholdMs ORDER BY expiration_date ASC")
-    fun getExpiringItems(userId: String, thresholdMs: Long): Flow<List<PantryEntity>>
+    fun getExpiringItems(
+        userId: String,
+        thresholdMs: Long,
+    ): Flow<List<PantryEntity>>
 
     @Query("SELECT * FROM pantry_items WHERE user_id = :userId AND is_placeholder = 1 ORDER BY name ASC")
     suspend fun getPlaceholders(userId: String): List<PantryEntity>
 
     @Query("SELECT * FROM pantry_items WHERE user_id = :userId AND is_placeholder = 1 AND name LIKE '%' || :query || '%' ORDER BY name ASC")
-    suspend fun searchPlaceholders(userId: String, query: String): List<PantryEntity>
+    suspend fun searchPlaceholders(
+        userId: String,
+        query: String,
+    ): List<PantryEntity>
 
     @Query("SELECT * FROM pantry_items WHERE user_id = :userId AND name LIKE '%' || :query || '%' ORDER BY name ASC")
-    suspend fun searchPantryItems(userId: String, query: String): List<PantryEntity>
+    suspend fun searchPantryItems(
+        userId: String,
+        query: String,
+    ): List<PantryEntity>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertPantryItem(item: PantryEntity): Long
@@ -47,23 +59,41 @@ interface PantryDao {
     suspend fun deletePantryItemById(itemId: String): Int
 
     @Query("DELETE FROM pantry_items WHERE user_id = :userId AND is_placeholder = 1 AND id = :placeholderId")
-    suspend fun deletePlaceholder(userId: String, placeholderId: String): Int
+    suspend fun deletePlaceholder(
+        userId: String,
+        placeholderId: String,
+    ): Int
 
     @Query("SELECT COUNT(*) FROM pantry_items WHERE user_id = :userId AND name = :name AND category = :category AND is_placeholder = 0")
-    suspend fun countDuplicates(userId: String, name: String, category: String): Int
+    suspend fun countDuplicates(
+        userId: String,
+        name: String,
+        category: String,
+    ): Int
 
-    @Query("""
+    @Query(
+        """
         SELECT * FROM pantry_items
         WHERE user_id = :userId
         AND status = 'ACTIVE'
         AND notified_at IS NULL
         AND expiration_date < :windowEnd
-    """)
-    suspend fun getItemsDueForNotification(userId: String, windowEnd: Long): List<PantryEntity>
+    """,
+    )
+    suspend fun getItemsDueForNotification(
+        userId: String,
+        windowEnd: Long,
+    ): List<PantryEntity>
 
     @Query("UPDATE pantry_items SET notified_at = :timestamp WHERE id = :itemId")
-    suspend fun markAsNotified(itemId: String, timestamp: Long)
+    suspend fun markAsNotified(
+        itemId: String,
+        timestamp: Long,
+    )
 
     @Query("UPDATE pantry_items SET notified_at = :timestamp WHERE id IN (:ids)")
-    suspend fun markAllAsNotified(ids: List<String>, timestamp: Long)
+    suspend fun markAllAsNotified(
+        ids: List<String>,
+        timestamp: Long,
+    )
 }

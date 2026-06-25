@@ -26,9 +26,8 @@ import java.time.Instant
  */
 class RecipeRepositoryImpl(
     private val recipeDao: RecipeDao,
-    private val remoteDataSource: RecipeRemoteDataSource
+    private val remoteDataSource: RecipeRemoteDataSource,
 ) : RecipeRepository {
-
     // ===== OBSERVE & SYNC =====
 
     /**
@@ -36,27 +35,27 @@ class RecipeRepositoryImpl(
      *
      * @return Flow della lista ricette aggiornato
      */
-    override fun observeRecipes(): Flow<List<Recipe>> {
-        return recipeDao
+    override fun observeRecipes(): Flow<List<Recipe>> =
+        recipeDao
             .getAllRecipes()
             .map { entities -> RecipeMapper.entitiesToDomain(entities) }
-    }
 
     /**
      * Sincronizza le ricette con Supabase.
      *
      * @return numero di ricette sincronizzate
      */
-    override suspend fun syncRecipes(): Int = withContext(Dispatchers.IO) {
-        try {
-            val remoteRecipes = remoteDataSource.getRecipes()
-            val entities = RecipeMapper.dtosToEntities(remoteRecipes)
-            recipeDao.insertRecipes(entities)
-            remoteRecipes.size
-        } catch (e: Exception) {
-            throw Exception("Failed to sync recipes: ${e.message}", e)
+    override suspend fun syncRecipes(): Int =
+        withContext(Dispatchers.IO) {
+            try {
+                val remoteRecipes = remoteDataSource.getRecipes()
+                val entities = RecipeMapper.dtosToEntities(remoteRecipes)
+                recipeDao.insertRecipes(entities)
+                remoteRecipes.size
+            } catch (e: Exception) {
+                throw Exception("Failed to sync recipes: ${e.message}", e)
+            }
         }
-    }
 
     // ===== BASIC CRUD =====
 
@@ -120,7 +119,7 @@ class RecipeRepositoryImpl(
      */
     override suspend fun generateRecipes(
         ingredients: List<String>,
-        preferences: Map<String, Any>
+        preferences: Map<String, Any>,
     ): List<Recipe> =
         withContext(Dispatchers.IO) {
             try {
@@ -143,7 +142,7 @@ class RecipeRepositoryImpl(
      */
     override suspend fun getSuggestedRecipesForExpiringItems(
         expiringItems: List<String>,
-        preferences: Map<String, Any>
+        preferences: Map<String, Any>,
     ): List<Recipe> =
         withContext(Dispatchers.IO) {
             try {
@@ -168,7 +167,7 @@ class RecipeRepositoryImpl(
      */
     override suspend fun getSeasonalRecipes(
         season: String,
-        preferences: Map<String, Any>
+        preferences: Map<String, Any>,
     ): List<Recipe> =
         withContext(Dispatchers.IO) {
             try {
@@ -206,11 +205,10 @@ class RecipeRepositoryImpl(
      * @param userId UUID dell'utente
      * @return Flow della lista ricette preferite
      */
-    override fun observeFavoriteRecipes(userId: String): Flow<List<Recipe>> {
-        return recipeDao
+    override fun observeFavoriteRecipes(userId: String): Flow<List<Recipe>> =
+        recipeDao
             .getFavoriteRecipesByUser(userId)
             .map { entities -> RecipeMapper.entitiesToDomain(entities) }
-    }
 
     /**
      * Recupera le ricette preferite di un utente.
@@ -237,7 +235,10 @@ class RecipeRepositoryImpl(
      * @param recipeId UUID della ricetta
      * @return true se successo
      */
-    override suspend fun addFavoriteRecipe(userId: String, recipeId: String): Boolean =
+    override suspend fun addFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 val now = Instant.now().toString()
@@ -260,7 +261,10 @@ class RecipeRepositoryImpl(
      * @param recipeId UUID della ricetta
      * @return true se rimosso
      */
-    override suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Boolean =
+    override suspend fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean =
         withContext(Dispatchers.IO) {
             try {
                 remoteDataSource.removeFavoriteRecipe(userId, recipeId)
@@ -272,15 +276,33 @@ class RecipeRepositoryImpl(
         }
 
     /**
+     * Elimina una ricetta.
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata
+     */
+    override suspend fun deleteRecipe(recipeId: String): Boolean =
+        withContext(Dispatchers.IO) {
+            try {
+                remoteDataSource.deleteRecipe(recipeId)
+                val deletedCount = recipeDao.deleteRecipe(recipeId)
+                deletedCount > 0
+            } catch (e: Exception) {
+                throw Exception("Failed to delete recipe: ${e.message}", e)
+            }
+        }
+
+    /**
      * Verifica se una ricetta è nei preferiti dell'utente.
      *
      * @param userId UUID dell'utente
      * @param recipeId UUID della ricetta
      * @return Flow che emette true se preferita, false altrimenti
      */
-    override fun isFavoriteRecipe(userId: String, recipeId: String): Flow<Boolean> {
-        return recipeDao.isFavoriteRecipe(userId, recipeId)
-    }
+    override fun isFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Flow<Boolean> = recipeDao.isFavoriteRecipe(userId, recipeId)
 
     /**
      * Sincronizza i preferiti dell'utente con Supabase.

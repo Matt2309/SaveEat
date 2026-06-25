@@ -58,7 +58,7 @@ import org.koin.androidx.compose.koinViewModel
 fun ReceiptHistoryScreen(
     onNavigateBack: () -> Unit = {},
     modifier: Modifier = Modifier,
-    viewModel: ReceiptHistoryViewModel = koinViewModel()
+    viewModel: ReceiptHistoryViewModel = koinViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
 
@@ -67,7 +67,7 @@ fun ReceiptHistoryScreen(
         isLoading = uiState.isLoading,
         error = uiState.error,
         onNavigateBack = onNavigateBack,
-        modifier = modifier
+        modifier = modifier,
     )
 }
 
@@ -78,7 +78,7 @@ private fun ReceiptHistoryContent(
     isLoading: Boolean = false,
     error: String? = null,
     onNavigateBack: () -> Unit = {},
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var selectedImageUrl by remember { mutableStateOf<String?>(null) }
 
@@ -90,80 +90,87 @@ private fun ReceiptHistoryContent(
                 title = {
                     Text(
                         text = "Cronologia Scontrini",
-                        style = TextStyle(
-                            fontSize = 28.sp,
-                            lineHeight = 36.sp,
-                            fontWeight = FontWeight.SemiBold
-                        )
+                        style =
+                            TextStyle(
+                                fontSize = 28.sp,
+                                lineHeight = 36.sp,
+                                fontWeight = FontWeight.SemiBold,
+                            ),
                     )
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Indietro"
+                            contentDescription = "Indietro",
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.primary,
-                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface
-                )
+                colors =
+                    TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.primary,
+                        navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    ),
             )
-        }
+        },
     ) { padding ->
         when {
-            isLoading && receipts.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
-            }
+            isLoading && receipts.isEmpty() ->
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+                }
 
-            error != null && receipts.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = error,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(24.dp)
-                )
-            }
-
-            receipts.isEmpty() -> Box(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "Nessuno scontrino trovato",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
-
-            else -> LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                items(receipts, key = { it.id }) { receipt ->
-                    ReceiptCard(
-                        receipt = receipt,
-                        onClick = { url -> selectedImageUrl = url }
+            error != null && receipts.isEmpty() ->
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = error,
+                        color = MaterialTheme.colorScheme.error,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(24.dp),
                     )
                 }
-            }
+
+            receipts.isEmpty() ->
+                Box(
+                    modifier = Modifier.fillMaxSize().padding(padding),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "Nessuno scontrino trovato",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+
+            else ->
+                LazyColumn(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(receipts, key = { it.id }) { receipt ->
+                        ReceiptCard(
+                            receipt = receipt,
+                            onClick = { url -> selectedImageUrl = url },
+                        )
+                    }
+                }
         }
     }
 
     selectedImageUrl?.let { url ->
         ReceiptImageDialog(
             imageUrl = url,
-            onDismiss = { selectedImageUrl = null }
+            onDismiss = { selectedImageUrl = null },
         )
     }
 }
@@ -172,36 +179,39 @@ private fun ReceiptHistoryContent(
 fun ReceiptCard(
     receipt: ReceiptUiState,
     onClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     Card(
         onClick = { onClick(receipt.imageUrl) },
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainer
-        ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        colors =
+            CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainer,
+            ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             AsyncImage(
                 model = receipt.imageUrl,
                 contentDescription = receipt.storeName,
-                modifier = Modifier
-                    .size(64.dp)
-                    .clip(RoundedCornerShape(8.dp)),
-                contentScale = ContentScale.Crop
+                modifier =
+                    Modifier
+                        .size(64.dp)
+                        .clip(RoundedCornerShape(8.dp)),
+                contentScale = ContentScale.Crop,
             )
 
             Column(
                 modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(2.dp)
+                verticalArrangement = Arrangement.spacedBy(2.dp),
             ) {
                 Text(
                     text = receipt.storeName,
@@ -209,12 +219,12 @@ fun ReceiptCard(
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = receipt.date,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -222,7 +232,7 @@ fun ReceiptCard(
                 text = receipt.totalPrice,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
             )
         }
     }
@@ -231,66 +241,69 @@ fun ReceiptCard(
 @Composable
 fun ReceiptImageDialog(
     imageUrl: String,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
 ) {
     Dialog(
         onDismissRequest = onDismiss,
-        properties = DialogProperties(usePlatformDefaultWidth = false)
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f))
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) { onDismiss() },
-            contentAlignment = Alignment.Center
-        ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.9f)
-                    .heightIn(max = 500.dp)
-                    .clip(RoundedCornerShape(12.dp))
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.inverseSurface.copy(alpha = 0.5f))
                     .clickable(
                         interactionSource = remember { MutableInteractionSource() },
-                        indication = null
-                    ) { }
+                        indication = null,
+                    ) { onDismiss() },
+            contentAlignment = Alignment.Center,
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxWidth(0.9f)
+                        .heightIn(max = 500.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(
+                            interactionSource = remember { MutableInteractionSource() },
+                            indication = null,
+                        ) { },
             ) {
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = "Scontrino",
                     modifier = Modifier.fillMaxWidth(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Fit,
                 )
             }
         }
     }
 }
 
-private val sampleReceipts = listOf(
-    ReceiptUiState(
-        id = "1",
-        storeName = "Conad Superstore",
-        date = "12 Ottobre 2023 • 14:30",
-        totalPrice = "€ 45,20",
-        imageUrl = "https://picsum.photos/seed/receipt1/400/600"
-    ),
-    ReceiptUiState(
-        id = "2",
-        storeName = "Esselunga",
-        date = "05 Ottobre 2023 • 09:15",
-        totalPrice = "€ 82,50",
-        imageUrl = "https://picsum.photos/seed/receipt2/400/600"
-    ),
-    ReceiptUiState(
-        id = "3",
-        storeName = "Mercato Contadino",
-        date = "01 Ottobre 2023 • 10:00",
-        totalPrice = "€ 15,00",
-        imageUrl = "https://picsum.photos/seed/receipt3/400/600"
+private val sampleReceipts =
+    listOf(
+        ReceiptUiState(
+            id = "1",
+            storeName = "Conad Superstore",
+            date = "12 Ottobre 2023 • 14:30",
+            totalPrice = "€ 45,20",
+            imageUrl = "https://picsum.photos/seed/receipt1/400/600",
+        ),
+        ReceiptUiState(
+            id = "2",
+            storeName = "Esselunga",
+            date = "05 Ottobre 2023 • 09:15",
+            totalPrice = "€ 82,50",
+            imageUrl = "https://picsum.photos/seed/receipt2/400/600",
+        ),
+        ReceiptUiState(
+            id = "3",
+            storeName = "Mercato Contadino",
+            date = "01 Ottobre 2023 • 10:00",
+            totalPrice = "€ 15,00",
+            imageUrl = "https://picsum.photos/seed/receipt3/400/600",
+        ),
     )
-)
 
 @Preview(showBackground = true, showSystemUi = true)
 @Composable

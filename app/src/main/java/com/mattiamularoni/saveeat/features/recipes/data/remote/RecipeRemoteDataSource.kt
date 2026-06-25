@@ -57,7 +57,7 @@ interface RecipeRemoteDataSource {
      */
     suspend fun generateRecipe(
         ingredients: List<String>,
-        preferences: Map<String, Any>
+        preferences: Map<String, Any>,
     ): List<RecipeDto>
 
     /**
@@ -85,7 +85,10 @@ interface RecipeRemoteDataSource {
      * @return true se rimosso, false se non trovato
      * @throws Exception in caso di errore
      */
-    suspend fun removeFavoriteRecipe(userId: String, recipeId: String): Boolean
+    suspend fun removeFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean
 
     /**
      * Recupera le ricette preferite di un utente da Supabase.
@@ -104,5 +107,17 @@ interface RecipeRemoteDataSource {
      * @return true se preferita, false altrimenti
      * @throws Exception in caso di errore
      */
-    suspend fun isFavoriteRecipe(userId: String, recipeId: String): Boolean
+    suspend fun isFavoriteRecipe(
+        userId: String,
+        recipeId: String,
+    ): Boolean
+
+    /**
+     * Elimina una ricetta dalla tabella recipes di Supabase.
+     *
+     * @param recipeId UUID della ricetta
+     * @return true se eliminata
+     * @throws Exception in caso di errore
+     */
+    suspend fun deleteRecipe(recipeId: String): Boolean
 }

@@ -34,7 +34,10 @@ interface PantryRemoteDataSource {
      * @return DTO aggiornato
      * @throws Exception in caso di errore
      */
-    suspend fun updatePantryItem(itemId: String, updates: Map<String, Any?>): PantryItemDto
+    suspend fun updatePantryItem(
+        itemId: String,
+        updates: Map<String, Any?>,
+    ): PantryItemDto
 
     /**
      * Cancella un elemento da Supabase.
@@ -64,7 +67,10 @@ interface PantryRemoteDataSource {
      * @return lista di DTO matching
      * @throws Exception in caso di errore
      */
-    suspend fun searchPlaceholders(userId: String, query: String): List<PantryItemDto>
+    suspend fun searchPlaceholders(
+        userId: String,
+        query: String,
+    ): List<PantryItemDto>
 
     /**
      * Recupera gli elementi in scadenza entro una soglia di giorni.
@@ -74,7 +80,10 @@ interface PantryRemoteDataSource {
      * @return lista di DTO degli elementi in scadenza
      * @throws Exception in caso di errore
      */
-    suspend fun getExpiringItems(userId: String, thresholdMs: Long): List<PantryItemDto>
+    suspend fun getExpiringItems(
+        userId: String,
+        thresholdMs: Long,
+    ): List<PantryItemDto>
 
     /**
      * Aggiunge items estratti da uno scontrino alla dispensa.
@@ -86,5 +95,8 @@ interface PantryRemoteDataSource {
      * @return lista di DTO inseriti con ID generati
      * @throws Exception in caso di errore
      */
-    suspend fun saveReceiptItems(receiptId: String, items: List<PantryItemDto>): List<PantryItemDto>
+    suspend fun saveReceiptItems(
+        receiptId: String,
+        items: List<PantryItemDto>,
+    ): List<PantryItemDto>
 }

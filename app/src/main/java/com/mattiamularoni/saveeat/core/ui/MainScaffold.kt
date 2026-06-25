@@ -23,59 +23,65 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.mattiamularoni.saveeat.core.navigation.HomeRoute
 import com.mattiamularoni.saveeat.core.navigation.LeaderboardRoute
 import com.mattiamularoni.saveeat.core.navigation.PantryRoute
-import com.mattiamularoni.saveeat.core.navigation.RecipeDetailRoute
 import com.mattiamularoni.saveeat.core.navigation.RecipeRoute
-import com.mattiamularoni.saveeat.core.navigation.LoginRoute
-import com.mattiamularoni.saveeat.core.navigation.ScanReceiptRoute
 
 data class BottomNavigationItem(
     val route: Any,
     val label: String,
-    val icon: androidx.compose.ui.graphics.vector.ImageVector
+    val icon: androidx.compose.ui.graphics.vector.ImageVector,
 )
 
 @Composable
 fun MainScaffold(
     navController: NavHostController,
-    content: @Composable () -> Unit
+    content: @Composable () -> Unit,
 ) {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val navigationItems = listOf(
-        BottomNavigationItem(HomeRoute, "Home", Icons.Outlined.Home),
-        BottomNavigationItem(PantryRoute, "Dispensa", Icons.Outlined.ShoppingBasket),
-        BottomNavigationItem(RecipeRoute, "Ricette", Icons.Outlined.Restaurant),
-        BottomNavigationItem(LeaderboardRoute, "Leaderboard", Icons.Outlined.EmojiEvents)
-    )
+    val navigationItems =
+        listOf(
+            BottomNavigationItem(HomeRoute, "Home", Icons.Outlined.Home),
+            BottomNavigationItem(PantryRoute, "Dispensa", Icons.Outlined.ShoppingBasket),
+            BottomNavigationItem(RecipeRoute, "Ricette", Icons.Outlined.Restaurant),
+            BottomNavigationItem(LeaderboardRoute, "Leaderboard", Icons.Outlined.EmojiEvents),
+        )
 
     // Determine if bottom bar should be shown
-    val isProfileRoute = currentDestination?.route?.contains("ProfileRoute") == true ||
+    val isProfileRoute =
+        currentDestination?.route?.contains("ProfileRoute") == true ||
             currentDestination?.route?.contains("SettingsRoute") == true
-    val shouldShowBottomBar = (currentDestination?.let { destination ->
-        navigationItems.any { item ->
-            destination.hierarchy.any { navDest ->
-                navDest.route?.contains(item.route::class.simpleName ?: "") == true
-            }
-        }
-    } ?: false) || isProfileRoute
+    val shouldShowBottomBar =
+        (
+            currentDestination?.let { destination ->
+                navigationItems.any { item ->
+                    destination.hierarchy.any { navDest ->
+                        navDest.route?.contains(item.route::class.simpleName ?: "") == true
+                    }
+                }
+            } ?: false
+        ) ||
+            isProfileRoute
 
     Scaffold(
         bottomBar = {
             if (shouldShowBottomBar) {
                 NavigationBar {
                     navigationItems.forEach { item ->
-                        val isSelected = currentDestination?.hierarchy?.any { navDestination ->
-                            navDestination.route?.contains(item.route::class.simpleName ?: "") == true
-                        } ?: false
+                        val isSelected =
+                            currentDestination?.hierarchy?.any { navDestination ->
+                                navDestination.route?.contains(item.route::class.simpleName ?: "") == true
+                            } ?: false
 
                         NavigationBarItem(
                             icon = { Icon(item.icon, contentDescription = item.label) },
-                            label = { Text(
-                                text = item.label,
-                                overflow = TextOverflow.Ellipsis,
-                                softWrap = false
-                            ) },
+                            label = {
+                                Text(
+                                    text = item.label,
+                                    overflow = TextOverflow.Ellipsis,
+                                    softWrap = false,
+                                )
+                            },
                             selected = isSelected,
                             onClick = {
                                 navController.navigate(item.route) {
@@ -85,17 +91,18 @@ fun MainScaffold(
                                     launchSingleTop = true
                                     restoreState = true
                                 }
-                            }
+                            },
                         )
                     }
                 }
             }
-        }
+        },
     ) { paddingValues ->
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
         ) {
             content()
         }

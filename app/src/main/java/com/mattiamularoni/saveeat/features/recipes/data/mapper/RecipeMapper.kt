@@ -17,7 +17,6 @@ import kotlinx.serialization.json.Json
  * - Parsing tags da stringa a lista
  */
 object RecipeMapper {
-
     private val json = Json { ignoreUnknownKeys = true }
 
     /**
@@ -28,7 +27,7 @@ object RecipeMapper {
     private data class IngredientJson(
         val name: String,
         val amount: Double = 1.0,
-        val unit: String = "qb"
+        val unit: String = "qb",
     )
 
     /**
@@ -41,8 +40,8 @@ object RecipeMapper {
      * @param dto DTO dalla risposta Postgrest Supabase
      * @return entità Room pronta per il caching locale
      */
-    fun dtoToEntity(dto: RecipeDto): RecipeEntity {
-        return RecipeEntity(
+    fun dtoToEntity(dto: RecipeDto): RecipeEntity =
+        RecipeEntity(
             id = dto.id,
             title = dto.title,
             instructions = dto.instructions,
@@ -53,9 +52,8 @@ object RecipeMapper {
             isVegetarian = dto.isVegetarian,
             estimatedWeightKg = dto.estimatedWeightKg,
             estimatedCostEuros = dto.estimatedCostEuros,
-            imageUrl = dto.imageUrl
+            imageUrl = dto.imageUrl,
         )
-    }
 
     /**
      * Converte un'entità Room in DTO remoto per upload/sync su Supabase.
@@ -66,8 +64,8 @@ object RecipeMapper {
      * @param entity entità Room
      * @return DTO pronto per l'invio a Postgrest
      */
-    fun entityToDto(entity: RecipeEntity): RecipeDto {
-        return RecipeDto(
+    fun entityToDto(entity: RecipeEntity): RecipeDto =
+        RecipeDto(
             id = entity.id,
             title = entity.title,
             instructions = entity.instructions,
@@ -78,9 +76,8 @@ object RecipeMapper {
             isVegetarian = entity.isVegetarian,
             estimatedWeightKg = entity.estimatedWeightKg,
             estimatedCostEuros = entity.estimatedCostEuros,
-            imageUrl = entity.imageUrl
+            imageUrl = entity.imageUrl,
         )
-    }
 
     /**
      * Converte un'entità Room in domain model.
@@ -93,8 +90,8 @@ object RecipeMapper {
      * @param entity entità Room
      * @return domain model pronto per business logic
      */
-    fun entityToDomain(entity: RecipeEntity): Recipe {
-        return Recipe(
+    fun entityToDomain(entity: RecipeEntity): Recipe =
+        Recipe(
             id = entity.id,
             title = entity.title,
             instructions = entity.instructions,
@@ -105,9 +102,8 @@ object RecipeMapper {
             isVegetarian = entity.isVegetarian,
             estimatedWeightKg = entity.estimatedWeightKg,
             estimatedCostEuros = entity.estimatedCostEuros,
-            imageUrl = entity.imageUrl
+            imageUrl = entity.imageUrl,
         )
-    }
 
     /**
      * Converte un DTO remoto in domain model.
@@ -126,8 +122,8 @@ object RecipeMapper {
      * @param domain domain model
      * @return entità Room
      */
-    fun domainToEntity(domain: Recipe): RecipeEntity {
-        return RecipeEntity(
+    fun domainToEntity(domain: Recipe): RecipeEntity =
+        RecipeEntity(
             id = domain.id,
             title = domain.title,
             instructions = domain.instructions,
@@ -138,9 +134,8 @@ object RecipeMapper {
             isVegetarian = domain.isVegetarian,
             estimatedWeightKg = domain.estimatedWeightKg,
             estimatedCostEuros = domain.estimatedCostEuros,
-            imageUrl = domain.imageUrl
+            imageUrl = domain.imageUrl,
         )
-    }
 
     /**
      * Converte una lista di DTO remoti in entità Room.
@@ -149,9 +144,7 @@ object RecipeMapper {
      * @param dtos lista di DTO dalla risposta Postgrest
      * @return lista di entità Room
      */
-    fun dtosToEntities(dtos: List<RecipeDto>): List<RecipeEntity> {
-        return dtos.map { dtoToEntity(it) }
-    }
+    fun dtosToEntities(dtos: List<RecipeDto>): List<RecipeEntity> = dtos.map { dtoToEntity(it) }
 
     /**
      * Converte una lista di entità Room in domain models.
@@ -160,9 +153,7 @@ object RecipeMapper {
      * @param entities lista di entità Room
      * @return lista di domain models
      */
-    fun entitiesToDomain(entities: List<RecipeEntity>): List<Recipe> {
-        return entities.map { entityToDomain(it) }
-    }
+    fun entitiesToDomain(entities: List<RecipeEntity>): List<Recipe> = entities.map { entityToDomain(it) }
 
     /**
      * Converte una lista di DTO remoti in domain models.
@@ -171,9 +162,7 @@ object RecipeMapper {
      * @param dtos lista di DTO dalla risposta Postgrest
      * @return lista di domain models
      */
-    fun dtosToDomain(dtos: List<RecipeDto>): List<Recipe> {
-        return dtos.map { dtoToDomain(it) }
-    }
+    fun dtosToDomain(dtos: List<RecipeDto>): List<Recipe> = dtos.map { dtoToDomain(it) }
 
     // ===== PRIVATE HELPERS =====
 
@@ -194,12 +183,12 @@ object RecipeMapper {
 
             // Parse JSON array using kotlinx.serialization
             val parsedIngredients = json.decodeFromString<List<IngredientJson>>(ingredientsJson)
-             
+
             parsedIngredients.map { ingredient ->
                 Recipe.Ingredient(
                     name = ingredient.name,
                     amount = ingredient.amount,
-                    unit = ingredient.unit
+                    unit = ingredient.unit,
                 )
             }
         } catch (e: Exception) {
@@ -220,7 +209,8 @@ object RecipeMapper {
     private fun parseTags(tagsString: String): List<String> {
         return try {
             if (tagsString.isEmpty()) return emptyList()
-            tagsString.split(",")
+            tagsString
+                .split(",")
                 .map { it.trim() }
                 .filter { it.isNotBlank() }
         } catch (e: Exception) {
@@ -239,16 +229,17 @@ object RecipeMapper {
             if (ingredients.isEmpty()) {
                 return "[]"
             }
-             
+
             val json = Json
-            val ingredientsJson = ingredients.map { ingredient ->
-                IngredientJson(
-                    name = ingredient.name,
-                    amount = ingredient.amount,
-                    unit = ingredient.unit
-                )
-            }
-             
+            val ingredientsJson =
+                ingredients.map { ingredient ->
+                    IngredientJson(
+                        name = ingredient.name,
+                        amount = ingredient.amount,
+                        unit = ingredient.unit,
+                    )
+                }
+
             json.encodeToString(ingredientsJson)
         } catch (e: Exception) {
             // Silently return empty array on JSON encode error
@@ -262,7 +253,5 @@ object RecipeMapper {
      * @param tags lista di tag
      * @return stringa comma-separated
      */
-    private fun serializeTags(tags: List<String>): String {
-        return tags.joinToString(",")
-    }
+    private fun serializeTags(tags: List<String>): String = tags.joinToString(",")
 }

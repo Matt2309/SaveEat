@@ -18,9 +18,8 @@ class NotificationWorker(
     context: Context,
     workerParams: WorkerParameters,
     private val getItemsDueForNotification: GetItemsDueForNotificationUseCase,
-    private val markItemsNotified: MarkItemsNotifiedUseCase
+    private val markItemsNotified: MarkItemsNotifiedUseCase,
 ) : CoroutineWorker(context, workerParams) {
-
     companion object {
         const val WORK_NAME = "pantry_notification_daily_check"
         const val CHANNEL_ID = "pantry_expiration"
@@ -45,13 +44,15 @@ class NotificationWorker(
         val items = getItemsDueForNotification(windowEnd)
 
         items.forEach { item ->
-            val notification = NotificationCompat.Builder(applicationContext, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("Prodotto in scadenza")
-                .setContentText("${item.name} scade tra 3 giorni")
-                .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                .setAutoCancel(true)
-                .build()
+            val notification =
+                NotificationCompat
+                    .Builder(applicationContext, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_launcher_foreground)
+                    .setContentTitle("Prodotto in scadenza")
+                    .setContentText("${item.name} scade tra 3 giorni")
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                    .setAutoCancel(true)
+                    .build()
 
             notifManager.notify(Math.abs(item.id.hashCode()), notification)
         }
@@ -65,11 +66,12 @@ class NotificationWorker(
 
     private fun createChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                CHANNEL_ID,
-                "Scadenza prodotti",
-                NotificationManager.IMPORTANCE_DEFAULT
-            )
+            val channel =
+                NotificationChannel(
+                    CHANNEL_ID,
+                    "Scadenza prodotti",
+                    NotificationManager.IMPORTANCE_DEFAULT,
+                )
             val manager = applicationContext.getSystemService(NotificationManager::class.java)
             manager.createNotificationChannel(channel)
         }
@@ -79,13 +81,14 @@ class NotificationWorker(
     // Qualsiasi giorno il worker gira, recupera tutti i prodotti non ancora
     // notificati che scadono entro 3 giorni (inclusi i giorni già trascorsi
     // se WorkManager ha saltato un'esecuzione).
-    private fun computeWindowEnd(): Long {
-        return Calendar.getInstance().apply {
-            add(Calendar.DAY_OF_YEAR, NOTIFICATION_DAYS_AHEAD + 1)
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }.timeInMillis
-    }
+    private fun computeWindowEnd(): Long =
+        Calendar
+            .getInstance()
+            .apply {
+                add(Calendar.DAY_OF_YEAR, NOTIFICATION_DAYS_AHEAD + 1)
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }.timeInMillis
 }

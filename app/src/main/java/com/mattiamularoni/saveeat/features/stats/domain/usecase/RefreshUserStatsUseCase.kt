@@ -11,7 +11,7 @@ import com.mattiamularoni.saveeat.features.stats.domain.repository.StatsReposito
  * per utenti che non hanno mai cucinato una ricetta su questo device.
  */
 class RefreshUserStatsUseCase(
-    private val statsRepository: StatsRepository
+    private val statsRepository: StatsRepository,
 ) {
     suspend operator fun invoke(): Result<Unit> = statsRepository.refreshUserStats()
 }

@@ -20,5 +20,5 @@ data class ParsedReceiptItem(
     val isPerishable: Boolean,
     val estimatedExpiryDays: Int,
     val quantity: Double,
-    val unit: String
+    val unit: String,
 )

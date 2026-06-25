@@ -8,7 +8,6 @@ import com.mattiamularoni.saveeat.features.home.domain.repository.HomeDashboard
 import com.mattiamularoni.saveeat.features.home.domain.repository.HomeRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -25,9 +24,8 @@ import kotlinx.coroutines.withContext
 class HomeRepositoryImpl(
     private val homeDao: HomeDao,
     private val remoteDataSource: HomeRemoteDataSource,
-    private val sessionProvider: SessionProvider
+    private val sessionProvider: SessionProvider,
 ) : HomeRepository {
-
     /**
      * Osserva i dati completi della dashboard Home.
      *
@@ -40,10 +38,10 @@ class HomeRepositoryImpl(
      */
 
     override fun observeHomeDashboard(): Flow<HomeDashboard?> {
-
         val currentUserId = sessionProvider.getCurrentUserId()
 
-        return homeDao.observeHomeDashboard(currentUserId)
+        return homeDao
+            .observeHomeDashboard(currentUserId)
             .map { list ->
                 list.firstOrNull()?.let { HomeMapper.entityToDomain(it) }
             }

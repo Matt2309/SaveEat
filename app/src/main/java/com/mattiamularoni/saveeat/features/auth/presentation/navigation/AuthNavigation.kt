@@ -5,7 +5,6 @@ import android.hardware.biometrics.BiometricPrompt
 import android.os.Build
 import android.os.CancellationSignal
 import androidx.annotation.RequiresApi
-import androidx.biometric.BiometricPrompt as BiometricCompat
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,6 +21,7 @@ import com.mattiamularoni.saveeat.features.auth.presentation.ui.AuthScreen
 import com.mattiamularoni.saveeat.features.auth.presentation.ui.BiometricUnlockScreen
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.AuthViewModel
 import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.BiometricUiState
+import androidx.biometric.BiometricPrompt as BiometricCompat
 
 /**
  * Composable di navigazione per la schermata di autenticazione email/password.
@@ -34,7 +34,7 @@ import com.mattiamularoni.saveeat.features.auth.presentation.viewmodel.Biometric
  */
 fun NavGraphBuilder.authScreen(
     authViewModel: AuthViewModel,
-    onNavigateToPantry: () -> Unit = {}
+    onNavigateToPantry: () -> Unit = {},
 ) {
     composable<LoginRoute> {
         // Use the Activity-scoped instance from the NavHost so that showBiometricProposal
@@ -60,7 +60,7 @@ fun NavGraphBuilder.authScreen(
                     }) {
                         Text("Non ora")
                     }
-                }
+                },
             )
         }
 
@@ -87,7 +87,7 @@ fun NavGraphBuilder.authScreen(
  */
 fun NavGraphBuilder.biometricScreen(
     authViewModel: AuthViewModel,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
 ) {
     composable<BiometricRoute> {
         val context = LocalContext.current
@@ -114,7 +114,7 @@ fun NavGraphBuilder.biometricScreen(
             subtitle = "Bentornato su SaveEat",
             onTapFingerprint = { launchBiometricPrompt(context, authViewModel) },
             onUsePassword = { authViewModel.onBiometricFallbackToPassword() },
-            errorMessage = (biometricUiState as? BiometricUiState.Error)?.message
+            errorMessage = (biometricUiState as? BiometricUiState.Error)?.message,
         )
     }
 }
@@ -127,7 +127,10 @@ fun NavGraphBuilder.biometricScreen(
  * Su API < 28, delega l'errore al ViewModel — in pratica irraggiungibile perché
  * [RestoreAuthenticatedSessionUseCase] restituisce `false` su dispositivi senza biometria.
  */
-private fun launchBiometricPrompt(context: Context, viewModel: AuthViewModel) {
+private fun launchBiometricPrompt(
+    context: Context,
+    viewModel: AuthViewModel,
+) {
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
         viewModel.onBiometricError(-1, "Biometria non supportata su questa versione di Android.")
         return
@@ -136,39 +139,49 @@ private fun launchBiometricPrompt(context: Context, viewModel: AuthViewModel) {
 }
 
 @RequiresApi(Build.VERSION_CODES.P)
-private fun launchBiometricPromptApi28(context: Context, viewModel: AuthViewModel) {
+private fun launchBiometricPromptApi28(
+    context: Context,
+    viewModel: AuthViewModel,
+) {
     val executor = ContextCompat.getMainExecutor(context)
     val cancellationSignal = CancellationSignal()
 
-    val callback = object : BiometricPrompt.AuthenticationCallback() {
-        override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-            viewModel.onBiometricSuccess()
-        }
+    val callback =
+        object : BiometricPrompt.AuthenticationCallback() {
+            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                viewModel.onBiometricSuccess()
+            }
 
-        override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-            // Stessi valori interi nell'API nativa (13, 10) — usiamo le costanti AndroidX
-            val silentErrors = setOf(
-                BiometricCompat.ERROR_NEGATIVE_BUTTON,
-                BiometricCompat.ERROR_USER_CANCELED
-            )
-            if (errorCode !in silentErrors) {
-                viewModel.onBiometricError(errorCode, errString)
+            override fun onAuthenticationError(
+                errorCode: Int,
+                errString: CharSequence,
+            ) {
+                // Stessi valori interi nell'API nativa (13, 10) — usiamo le costanti AndroidX
+                val silentErrors =
+                    setOf(
+                        BiometricCompat.ERROR_NEGATIVE_BUTTON,
+                        BiometricCompat.ERROR_USER_CANCELED,
+                    )
+                if (errorCode !in silentErrors) {
+                    viewModel.onBiometricError(errorCode, errString)
+                }
+            }
+
+            override fun onAuthenticationFailed() {
+                viewModel.onBiometricError(-1, "Autenticazione non riconosciuta. Riprova.")
             }
         }
 
-        override fun onAuthenticationFailed() {
-            viewModel.onBiometricError(-1, "Autenticazione non riconosciuta. Riprova.")
-        }
-    }
-
-    val prompt = BiometricPrompt.Builder(context)
-        .setTitle("Sblocca SaveEat")
-        .setSubtitle("Usa la biometria per accedere")
-        .setNegativeButton(
-            "Annulla",
-            executor
-        ) { _, _ -> /* silenzioso: l'utente usa il pulsante "Usa password" nella schermata */ }
-        .build()
+    val prompt =
+        BiometricPrompt
+            .Builder(context)
+            .setTitle("Sblocca SaveEat")
+            .setSubtitle("Usa la biometria per accedere")
+            .setNegativeButton(
+                "Annulla",
+                executor,
+            ) { _, _ -> /* silenzioso: l'utente usa il pulsante "Usa password" nella schermata */ }
+            .build()
 
     prompt.authenticate(cancellationSignal, executor, callback)
 }

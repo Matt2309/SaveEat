@@ -37,7 +37,7 @@ import java.io.File
 fun UserAvatar(
     size: Dp,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
 ) {
     val photoController: ProfilePhotoController = koinInject()
     val sessionProvider: SessionProvider = koinInject()
@@ -45,16 +45,18 @@ fun UserAvatar(
     val localPath by photoController.localPhotoPath.collectAsState()
     val googleUrl = remember { sessionProvider.getAvatarUrl() }
 
-    val model: Any? = when {
-        !localPath.isNullOrBlank() -> File(localPath!!)
-        !googleUrl.isNullOrBlank() -> googleUrl
-        else -> null
-    }
+    val model: Any? =
+        when {
+            !localPath.isNullOrBlank() -> File(localPath!!)
+            !googleUrl.isNullOrBlank() -> googleUrl
+            else -> null
+        }
 
-    val baseModifier = modifier
-        .size(size)
-        .clip(CircleShape)
-        .background(MaterialTheme.colorScheme.surfaceVariant)
+    val baseModifier =
+        modifier
+            .size(size)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant)
     val finalModifier = if (onClick != null) baseModifier.clickable { onClick() } else baseModifier
 
     Box(modifier = finalModifier, contentAlignment = Alignment.Center) {
@@ -63,14 +65,14 @@ fun UserAvatar(
                 model = model,
                 contentDescription = "Foto profilo",
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.Crop,
             )
         } else {
             Icon(
                 Icons.Filled.Person,
                 contentDescription = "Profilo",
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(size * 0.6f)
+                modifier = Modifier.size(size * 0.6f),
             )
         }
     }

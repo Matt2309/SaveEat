@@ -4,10 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CalendarToday
@@ -54,19 +51,21 @@ data class ManualItemFormState(
 fun ManualItemFormDialog(
     onDismiss: () -> Unit,
     onSubmit: (ManualItemFormState) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     var formState by remember { mutableStateOf(ManualItemFormState()) }
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var showDatePicker by remember { mutableStateOf(false) }
 
     // Gestione dello stato del DatePicker nativo
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = formState.expirationDate
-            ?.atStartOfDay(ZoneId.systemDefault())
-            ?.toInstant()
-            ?.toEpochMilli()
-    )
+    val datePickerState =
+        rememberDatePickerState(
+            initialSelectedDateMillis =
+                formState.expirationDate
+                    ?.atStartOfDay(ZoneId.systemDefault())
+                    ?.toInstant()
+                    ?.toEpochMilli(),
+        )
 
     if (showDatePicker) {
         DatePickerDialog(
@@ -74,9 +73,11 @@ fun ManualItemFormDialog(
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let { millis ->
-                        val selectedDate = Instant.ofEpochMilli(millis)
-                            .atZone(ZoneId.systemDefault())
-                            .toLocalDate()
+                        val selectedDate =
+                            Instant
+                                .ofEpochMilli(millis)
+                                .atZone(ZoneId.systemDefault())
+                                .toLocalDate()
                         formState = formState.copy(expirationDate = selectedDate)
                     }
                     showDatePicker = false
@@ -88,7 +89,7 @@ fun ManualItemFormDialog(
                 TextButton(onClick = { showDatePicker = false }) {
                     Text("Annulla")
                 }
-            }
+            },
         ) {
             DatePicker(state = datePickerState)
         }
@@ -101,11 +102,11 @@ fun ManualItemFormDialog(
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     "Aggiungi Elemento",
-                    style = MaterialTheme.typography.headlineSmall
+                    style = MaterialTheme.typography.headlineSmall,
                 )
                 IconButton(onClick = onDismiss) {
                     Icon(Icons.Rounded.Close, contentDescription = "Chiudi")
@@ -115,13 +116,13 @@ fun ManualItemFormDialog(
         text = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 if (errorMessage != null) {
                     Text(
                         text = errorMessage!!,
                         color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.bodySmall,
                     )
                 }
 
@@ -135,7 +136,7 @@ fun ManualItemFormDialog(
                     label = { Text("Nome prodotto *") },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
-                    isError = formState.itemName.isBlank() && errorMessage != null
+                    isError = formState.itemName.isBlank() && errorMessage != null,
                 )
 
                 // 2. Categoria (Chips veloci invece del Dropdown)
@@ -143,14 +144,14 @@ fun ManualItemFormDialog(
                     Text("Categoria", style = MaterialTheme.typography.labelMedium)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        horizontalArrangement = Arrangement.SpaceBetween,
                     ) {
                         listOf(PantryCategory.FRIDGE, PantryCategory.PANTRY, PantryCategory.FREEZER)
                             .forEach { category ->
                                 FilterChip(
                                     selected = formState.category == category,
                                     onClick = { formState = formState.copy(category = category) },
-                                    label = { Text(formatCategory(category)) }
+                                    label = { Text(formatCategory(category)) },
                                 )
                             }
                     }
@@ -159,7 +160,7 @@ fun ManualItemFormDialog(
                 // 3. Quantità e Unità affiancate
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     OutlinedTextField(
                         value = formState.quantity,
@@ -167,14 +168,14 @@ fun ManualItemFormDialog(
                         label = { Text("Quantità") },
                         modifier = Modifier.weight(1f),
                         singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     )
                     OutlinedTextField(
                         value = formState.unit,
                         onValueChange = { formState = formState.copy(unit = it) },
                         label = { Text("Unità (es. g)") },
                         modifier = Modifier.weight(1f),
-                        singleLine = true
+                        singleLine = true,
                     )
                 }
 
@@ -186,15 +187,17 @@ fun ManualItemFormDialog(
                     enabled = false, // Lo rende non digitabile ma gestiamo il click sul Modifier
                     label = { Text("Data scadenza (Opzionale)") },
                     trailingIcon = { Icon(Icons.Rounded.CalendarToday, contentDescription = "Calendario") },
-                    colors = OutlinedTextFieldDefaults.colors(
-                        disabledTextColor = MaterialTheme.colorScheme.onSurface,
-                        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledBorderColor = MaterialTheme.colorScheme.outline,
-                        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { showDatePicker = true }
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
+                            disabledTextColor = MaterialTheme.colorScheme.onSurface,
+                            disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledBorderColor = MaterialTheme.colorScheme.outline,
+                            disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clickable { showDatePicker = true },
                 )
             }
         },
@@ -206,7 +209,7 @@ fun ManualItemFormDialog(
                     } else {
                         onSubmit(formState)
                     }
-                }
+                },
             ) {
                 Text("Salva")
             }
@@ -215,15 +218,14 @@ fun ManualItemFormDialog(
             TextButton(onClick = onDismiss) {
                 Text("Annulla")
             }
-        }
+        },
     )
 }
 
-private fun formatCategory(category: PantryCategory): String {
-    return when (category) {
+private fun formatCategory(category: PantryCategory): String =
+    when (category) {
         PantryCategory.FRIDGE -> "Frigo"
         PantryCategory.PANTRY -> "Dispensa"
         PantryCategory.FREEZER -> "Freezer"
         PantryCategory.ALL -> "Tutti"
     }
-}

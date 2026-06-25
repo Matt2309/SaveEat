@@ -7,12 +7,12 @@ import com.mattiamularoni.saveeat.features.settings.presentation.ui.SettingsScre
 
 fun NavGraphBuilder.settingsScreen(
     onNavigateBack: () -> Unit = {},
-    onLogout: () -> Unit = {}
+    onLogout: () -> Unit = {},
 ) {
     composable<SettingsRoute> {
         SettingsScreen(
             onNavigateBack = onNavigateBack,
-            onLogout = onLogout
+            onLogout = onLogout,
         )
     }
 }

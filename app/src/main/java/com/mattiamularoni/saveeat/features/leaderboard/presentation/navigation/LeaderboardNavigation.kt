@@ -7,12 +7,12 @@ import com.mattiamularoni.saveeat.features.leaderboard.presentation.ui.Leaderboa
 
 fun NavGraphBuilder.leaderboardScreen(
     onNavigateBack: () -> Unit = {},
-    onNavigateToProfile: () -> Unit = {}
+    onNavigateToProfile: () -> Unit = {},
 ) {
     composable<LeaderboardRoute> {
         LeaderboardScreen(
             onNavigateBack = onNavigateBack,
-            onNavigateToProfile = onNavigateToProfile
+            onNavigateToProfile = onNavigateToProfile,
         )
     }
 }

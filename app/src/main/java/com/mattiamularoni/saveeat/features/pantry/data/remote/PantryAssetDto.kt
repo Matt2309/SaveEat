@@ -7,5 +7,5 @@ import kotlinx.serialization.Serializable
 data class PantryAssetDto(
     @SerialName("category_key") val categoryKey: String,
     val names: Map<String, String>,
-    @SerialName("image_url") val imageUrl: String? = null
+    @SerialName("image_url") val imageUrl: String? = null,
 )

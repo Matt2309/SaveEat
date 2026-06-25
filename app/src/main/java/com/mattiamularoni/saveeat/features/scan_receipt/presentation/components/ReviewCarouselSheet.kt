@@ -1,6 +1,5 @@
 package com.mattiamularoni.saveeat.features.scan_receipt.presentation.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -34,7 +33,7 @@ data class ReviewItemUiState(
     val title: String,
     val imageUrl: String,
     val aiSuggestedDays: Int,
-    val currentSelectedDays: Int
+    val currentSelectedDays: Int,
 )
 
 /**
@@ -54,7 +53,7 @@ fun ReviewCarouselSheet(
     onConfirm: (id: String) -> Unit,
     onSkip: (id: String) -> Unit,
     onDismiss: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
 ) {
     // TODO: Tech Lead - fornire/ricordare lo stato dello sheet se serve un controllo esterno.
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -63,7 +62,7 @@ fun ReviewCarouselSheet(
         onDismissRequest = onDismiss,
         sheetState = sheetState,
         modifier = modifier,
-        containerColor = MaterialTheme.colorScheme.surface
+        containerColor = MaterialTheme.colorScheme.surface,
     ) {
         ReviewCarouselContent(
             items = items,
@@ -71,7 +70,7 @@ fun ReviewCarouselSheet(
             onDecrementDays = onDecrementDays,
             onIncrementDays = onIncrementDays,
             onConfirm = onConfirm,
-            onSkip = onSkip
+            onSkip = onSkip,
         )
     }
 }
@@ -87,7 +86,7 @@ private fun ReviewCarouselContent(
     onDecrementDays: (id: String) -> Unit,
     onIncrementDays: (id: String) -> Unit,
     onConfirm: (id: String) -> Unit,
-    onSkip: (id: String) -> Unit
+    onSkip: (id: String) -> Unit,
 ) {
     if (items.isEmpty()) return
 
@@ -95,20 +94,22 @@ private fun ReviewCarouselContent(
     val currentItem = items[pagerState.currentPage.coerceIn(0, items.lastIndex)]
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(bottom = 16.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         // ---- Header ----
         Text(
-            text = "Abbiamo salvato $savedLongShelfCount prodotti a lunga scadenza. " +
-                "Controlliamo rapidamente questi ${items.size} ingredienti freschi!",
+            text =
+                "Abbiamo salvato $savedLongShelfCount prodotti a lunga scadenza. " +
+                    "Controlliamo rapidamente questi ${items.size} ingredienti freschi!",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 24.dp)
+            modifier = Modifier.padding(horizontal = 24.dp),
         )
 
         // ---- Indicatore "X DI Y" ----
@@ -116,7 +117,7 @@ private fun ReviewCarouselContent(
             text = "${pagerState.currentPage + 1} DI ${items.size}",
             style = MaterialTheme.typography.labelSmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
         )
 
         // ---- Pager con le card ----
@@ -124,14 +125,15 @@ private fun ReviewCarouselContent(
             state = pagerState,
             contentPadding = PaddingValues(horizontal = 28.dp),
             pageSpacing = 16.dp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(430.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(430.dp),
         ) { page ->
             ReviewCard(
                 item = items[page],
                 onDecrement = { onDecrementDays(items[page].id) },
-                onIncrement = { onIncrementDays(items[page].id) }
+                onIncrement = { onIncrementDays(items[page].id) },
             )
         }
 
@@ -140,45 +142,52 @@ private fun ReviewCarouselContent(
             repeat(items.size) { index ->
                 val active = index == pagerState.currentPage
                 Box(
-                    modifier = Modifier
-                        .size(if (active) 10.dp else 8.dp)
-                        .clip(CircleShape)
-                        .background(
-                            if (active) MaterialTheme.colorScheme.primary
-                            else MaterialTheme.colorScheme.outlineVariant
-                        )
+                    modifier =
+                        Modifier
+                            .size(if (active) 10.dp else 8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                if (active) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    MaterialTheme.colorScheme.outlineVariant
+                                },
+                            ),
                 )
             }
         }
 
         // ---- Azioni ----
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 4.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp, vertical = 4.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             Button(
                 onClick = { onConfirm(currentItem.id) }, // TODO: Tech Lead - conferma + avanza/chiudi
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(52.dp),
                 shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary,
-                    contentColor = MaterialTheme.colorScheme.onPrimary
-                )
+                colors =
+                    ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                    ),
             ) {
                 Text("Conferma", style = MaterialTheme.typography.titleMedium)
             }
             TextButton(
                 onClick = { onSkip(currentItem.id) }, // TODO: Tech Lead - salta (lunga scadenza)
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 Text(
                     "Salta / Lunga scadenza",
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.titleMedium
+                    style = MaterialTheme.typography.titleMedium,
                 )
             }
         }
@@ -189,64 +198,68 @@ private fun ReviewCarouselContent(
 private fun ReviewCard(
     item: ReviewItemUiState,
     onDecrement: () -> Unit,
-    onIncrement: () -> Unit
+    onIncrement: () -> Unit,
 ) {
     ElevatedCard(
         modifier = Modifier.fillMaxSize(),
         shape = RoundedCornerShape(24.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
-        )
+        colors =
+            CardDefaults.elevatedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+            ),
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             // ---- Area immagine + badge "Fresco" ----
             Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(180.dp)
-                    .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(180.dp)
+                        .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             ) {
                 AsyncImage(
                     model = item.imageUrl,
                     contentDescription = item.title,
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
                 )
                 // Badge "Fresco" in alto a sinistra
                 Surface(
                     shape = RoundedCornerShape(50),
                     color = MaterialTheme.colorScheme.surfaceContainerLowest,
                     shadowElevation = 2.dp,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(12.dp)
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopStart)
+                            .padding(12.dp),
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                     ) {
                         Icon(
                             Icons.Filled.Eco,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
                         )
                         Text(
                             "Fresco",
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.onSurface,
                         )
                     }
                 }
             }
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(16.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(14.dp)
+                verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 // ---- Titolo ----
                 Text(
@@ -256,49 +269,51 @@ private fun ReviewCard(
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = TextAlign.Center,
                     maxLines = 2,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
 
                 // ---- Badge AI ----
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer
+                    color = MaterialTheme.colorScheme.secondaryContainer,
                 ) {
                     Row(
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Icon(
                             Icons.Filled.AutoAwesome,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSecondaryContainer,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(16.dp),
                         )
                         Text(
                             "L'AI suggerisce: ${item.aiSuggestedDays} giorni",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Medium,
-                            color = MaterialTheme.colorScheme.onSecondaryContainer
+                            color = MaterialTheme.colorScheme.onSecondaryContainer,
                         )
                     }
                 }
 
                 // ---- Stepper giorni ----
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(50))
-                        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
-                        .padding(horizontal = 12.dp, vertical = 10.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(50))
+                            .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
+                            .padding(horizontal = 12.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
                     TextButton(
                         onClick = onDecrement,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
+                        colors =
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
                     ) {
                         Text("-1", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
                     }
@@ -307,19 +322,20 @@ private fun ReviewCard(
                             text = item.currentSelectedDays.toString(),
                             fontSize = 36.sp,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         Text(
                             text = "GIORNI",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                     TextButton(
                         onClick = onIncrement,
-                        colors = ButtonDefaults.textButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurface
-                        )
+                        colors =
+                            ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.onSurface,
+                            ),
                     ) {
                         Text("+1", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Medium)
                     }
@@ -333,12 +349,13 @@ private fun ReviewCard(
 // Preview
 // ----------------------------------------------------------------------------
 
-private val previewItems = listOf(
-    ReviewItemUiState("1", "Petto di Pollo Fresco", "", aiSuggestedDays = 3, currentSelectedDays = 3),
-    ReviewItemUiState("2", "Insalata Mista", "", aiSuggestedDays = 4, currentSelectedDays = 4),
-    ReviewItemUiState("3", "Salmone Fresco", "", aiSuggestedDays = 2, currentSelectedDays = 2),
-    ReviewItemUiState("4", "Yogurt Greco", "", aiSuggestedDays = 7, currentSelectedDays = 7)
-)
+private val previewItems =
+    listOf(
+        ReviewItemUiState("1", "Petto di Pollo Fresco", "", aiSuggestedDays = 3, currentSelectedDays = 3),
+        ReviewItemUiState("2", "Insalata Mista", "", aiSuggestedDays = 4, currentSelectedDays = 4),
+        ReviewItemUiState("3", "Salmone Fresco", "", aiSuggestedDays = 2, currentSelectedDays = 2),
+        ReviewItemUiState("4", "Yogurt Greco", "", aiSuggestedDays = 7, currentSelectedDays = 7),
+    )
 
 @Preview(showBackground = true, heightDp = 760)
 @Composable
@@ -362,6 +379,6 @@ private fun ReviewCarouselContentPreviewWrapper() {
         onDecrementDays = {},
         onIncrementDays = {},
         onConfirm = {},
-        onSkip = {}
+        onSkip = {},
     )
 }
